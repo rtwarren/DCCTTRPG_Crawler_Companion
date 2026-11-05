@@ -45,7 +45,7 @@
 
 <nav class="hbnav" aria-label="Sections">
   <ol>
-    <li class="calc-link"><a href="#calc" style="--c:var(--ink)"><span class="full">Calculators</span><span class="short">Calc</span></a></li>
+    <li class="calc-link"><a href="#calc" style="--c:var(--ink)"><span class="full">Crawler</span><span class="short">Crawler</span></a></li>
     <li><a href="#checks" style="--c:var(--hb1)">Checks</a></li>
     <li><a href="#results" style="--c:var(--hb2)">Results</a></li>
     <li><a href="#round" style="--c:var(--hb3)">Round</a></li>
@@ -75,14 +75,14 @@
 
 <!-- 0 CALCULATORS -->
 <section class="band calc" id="calc" style="--slot:var(--ink)">
-  <div class="band-head"><div class="in"><h2>Calculators</h2><p>For when your VTT can’t do the math. Link your character sheet or type your numbers in. Hover over or tap any underlined number to see how it was worked out.</p></div></div>
+  <div class="band-head"><div class="in"><h2>Crawler</h2><p>Your Skills, gear, pet and notes, plus the math your VTT can’t do. Link your character sheet or type your numbers in. Hover over or tap any underlined number to see how it was worked out.</p></div></div>
   <div class="calc-wrap">
 
     <aside class="crawler-panel" id="calc-crawler" aria-label="Your crawler">
       <div class="sheetbox" id="sheetbox">
         <div id="sb-off">
           <h3>Character sheet</h3>
-          <p class="sub">Link your fillable PDF to load your numbers. Damage, Mana, AI Favor, ticked Skills and new Ranks save back into it.</p>
+          <p class="sub">Link your fillable PDF to load your numbers. Health, Mana, Skills, gear, Inventory, your pet and your notes save back into it.</p>
           <div class="btnrow">
             <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
             <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
@@ -139,8 +139,8 @@
         <div class="hb mini" id="strip-bar" aria-hidden="true"></div>
         <p id="strip-text"></p>
       </div>
-      <div class="seg tooltabs" role="tablist" aria-label="Calculators">
-        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-health" aria-controls="tp-health" aria-selected="false">Health &amp; Mana</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button>
+      <div class="seg tooltabs" role="tablist" aria-label="Crawler tools">
+        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-health" aria-controls="tp-health" aria-selected="false">Health &amp; Mana</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button><button type="button" role="tab" id="tt-skills" aria-controls="tp-skills" aria-selected="false">Skills</button><button type="button" role="tab" id="tt-gear" aria-controls="tp-gear" aria-selected="false">Gear</button><button type="button" role="tab" id="tt-pet" aria-controls="tp-pet" aria-selected="false">Pet</button><button type="button" role="tab" id="tt-notes" aria-controls="tp-notes" aria-selected="false">Notes</button>
       </div>
 
       <div class="toolpanel" id="tp-check" role="tabpanel" aria-labelledby="tt-check">
@@ -251,19 +251,261 @@
         </div>
         <div class="adv-box">
           <h4>Skill advancement</h4>
-          <div id="adv-sheet" class="hide">
-            <p class="sub" id="adv-list"></p>
-            <div class="btnrow">
-              <button type="button" class="btn" id="adv-2h">Every 2 hours (Rank 4 or lower)</button>
-              <button type="button" class="btn" id="adv-floor">End of floor (every ticked Skill)</button>
-            </div>
-          </div>
+          <p class="sub">For the Skills on your sheet, use the <a href="#tp-skills">Skills tab</a>. This one is for any Rank you type in.</p>
           <div class="fields" id="adv-manual">
             <label class="narrow">Skill Rank<input type="number" id="dt-rank" min="1" max="20" value="1" inputmode="numeric"></label>
             <button type="button" class="btn" data-roll="advance">Roll an advancement check</button>
           </div>
         </div>
         <ol class="hist" id="dt-hist" aria-live="polite"></ol>
+      </div>
+
+      <div class="toolpanel hide" id="tp-skills" role="tabpanel" aria-labelledby="tt-skills">
+        <div class="tbar"><p class="sub" id="sk-sum"></p><button type="button" class="btn" id="sk-add">Add a Skill</button></div>
+        <div class="edit hide" id="sk-edit">
+          <h4 id="se-title">Add a Skill</h4>
+          <div class="fields">
+            <label class="wide">Skill<input type="text" id="se-name" autocomplete="off" maxlength="40"></label>
+            <label class="narrow">Rank<input type="number" id="se-rank" min="0" max="20" inputmode="numeric"></label>
+            <label>Stat<select id="se-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option><option value="none">None</option></select></label>
+            <label>Rolled against<input type="text" id="se-type" list="se-types" autocomplete="off"></label>
+            <datalist id="se-types"><option value="Unopposed"><option value="Opposed"><option value="Evade"><option value="Passive"></datalist>
+          </div>
+          <div class="fields">
+            <label class="wide">Notes<input type="text" id="se-notes" autocomplete="off"></label>
+            <label class="narrow">Grind hours<input type="number" id="se-grind" min="0" max="20" inputmode="numeric"></label>
+          </div>
+          <div class="fields">
+            <label class="narrow">End-of-floor bonus<input type="number" id="se-adv" min="0" max="10" inputmode="numeric"></label>
+            <label class="chk"><input type="checkbox" id="se-max"> Can reach Rank 20 (from your Race or Class)</label>
+          </div>
+          <p class="note">End-of-floor bonus is for perks like a Class that gives +1 to one Skill’s end-of-floor advancement checks. Grind hours, the bonus and Rank 20 are saved at the end of the Skill’s notes on your sheet, like “Grind 2 h; Adv +1; Max 20”.</p>
+          <div class="btnrow"><button type="button" class="btn primary" id="se-save">Save</button><button type="button" class="btn" id="se-cancel">Cancel</button><button type="button" class="btn danger" id="se-del">Remove</button><span class="sub" id="se-msg" role="status"></span></div>
+        </div>
+        <div class="tscroll">
+          <table class="tlist sk" aria-label="Your Skills">
+            <thead><tr><th class="tk">Tick</th><th>Skill</th><th class="n">Rank</th><th class="n">Roll</th><th class="n">Grind</th><th></th></tr></thead>
+            <tbody id="sk-rows"></tbody>
+          </table>
+        </div>
+        <p class="note">Rolling a Skill or attack in the Check tab ticks it. Passive Skills don’t tick; they rise through training, magic, your Race or Class.</p>
+        <div class="fields try">
+          <label class="wide">Try a Skill you don’t have<input type="text" id="st-name" autocomplete="off" maxlength="40" placeholder="e.g. Climbing"></label>
+          <label>Stat<select id="st-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option></select></label>
+          <button type="button" class="btn" id="st-go">Roll it untrained</button>
+        </div>
+        <p class="note" data-floors="1-2">Untrained rolls take Disadvantage and add no Rank. On Floors 1 and 2 the Skill is added at Rank 0 and ticked, and at the end of each 2-hour session you learn one of the Skills you tried at Rank 1.</p>
+        <p class="note" data-floors="3-5">Untrained rolls take Disadvantage and add no Rank. From Floor 3, trying a Skill no longer teaches it: get Rank 1 from a guild, gear, a potion, your Race or Class.</p>
+        <p class="sub" id="st-msg" role="status"></p>
+        <div class="adv-box">
+          <h4>Advancement checks</h4>
+          <p class="sub">Each ticked Skill rolls a d20. Equal to or over its Rank gives +1 Rank (cap 15). Rank 4 or lower rolls every 2 hours of play; Rank 5 and up roll at the end of each floor. Ticks clear after.</p>
+          <div class="fields"><label class="wide-l">End of floor, roll one with Advantage (Human, Rank 9 or less)<select id="sk-advsel"></select></label></div>
+          <div class="fields hide" id="sk-learn-l"><label class="wide-l">Learn one untrained Skill you tried (Floors 1 and 2)<select id="sk-learn"></select></label></div>
+          <div class="btnrow"><button type="button" class="btn" id="sk-2h">Every 2 hours (Rank 4 or lower)</button><button type="button" class="btn" id="sk-floor">End of floor (every ticked Skill)</button></div>
+        </div>
+        <div class="adv-box">
+          <h4>Grinding</h4>
+          <p class="sub">Put grind hours into Skills. When a Skill’s hours reach its Rank, it rolls an advancement check right away. Each Skill once a day. 5 hours a day is safe; hours past 5 each need an Endurance check.</p>
+          <div class="fields">
+            <label class="narrow">Hours<input type="number" id="gr-h" min="1" max="24" value="5" inputmode="numeric"></label>
+            <label>Map<select id="gr-map"><option value="0">None</option><option value="1">Neighborhood Map (+1 at 5+ hours)</option><option value="2">Borough Field Guide (+2 at 5+ hours)</option></select></label>
+          </div>
+          <div class="gr-list" id="gr-list"></div>
+          <p class="sub" id="gr-left"></p>
+          <div class="btnrow"><button type="button" class="btn primary" id="gr-go">Log the grind</button></div>
+          <p class="sub" id="gr-lvl"></p>
+        </div>
+        <ol class="hist" id="sk-log" aria-live="polite"></ol>
+      </div>
+
+      <div class="toolpanel hide" id="tp-gear" role="tabpanel" aria-labelledby="tt-gear">
+        <div id="gear-sum"></div>
+        <h4>Gear slots</h4>
+        <div class="slots" id="gear-slots"></div>
+        <p class="note">Only equipped gear gives bonuses. Equipping or removing gear moves your Enhanced Stats, Armor DR and Evade Buffs by its bonus; your Unenhanced Stats stay put. Accessories hold up to 10 (one belt, one cape). Hands/Holding takes gloves, a main hand and an off hand; a two-handed item takes both hands.</p>
+        <p class="sub" id="gear-log" role="status"></p>
+        <div class="edit hide" id="it-edit">
+          <h4 id="ie-title">Add an item</h4>
+          <div class="fields">
+            <label class="wide">Item<input type="text" id="ie-name" autocomplete="off" maxlength="60"></label>
+            <label class="narrow" id="ie-qty-l">How many<input type="number" id="ie-qty" min="1" inputmode="numeric"></label>
+            <label>Gear Slot<select id="ie-slot"><option value="">None (not wearable)</option><option value="head">Head</option><option value="torso">Torso</option><option value="arms">Arms</option><option value="gloves">Gloves</option><option value="hand">One hand (weapon, shield)</option><option value="twohand">Both hands (two-handed)</option><option value="legs">Legs</option><option value="feet">Feet</option><option value="acc">Accessory</option></select></label>
+          </div>
+          <div class="fields fx">
+            <span class="lab">Bonuses while worn</span>
+            <label class="narrow">All Stats<input type="number" id="ie-all" inputmode="numeric"></label>
+            <label class="narrow">Str<input type="number" id="ie-str" inputmode="numeric"></label>
+            <label class="narrow">Int<input type="number" id="ie-int" inputmode="numeric"></label>
+            <label class="narrow">Con<input type="number" id="ie-con" inputmode="numeric"></label>
+            <label class="narrow">Dex<input type="number" id="ie-dex" inputmode="numeric"></label>
+            <label class="narrow">Cha<input type="number" id="ie-cha" inputmode="numeric"></label>
+            <label class="narrow">Armor DR<input type="number" id="ie-dr" min="0" inputmode="numeric"></label>
+            <label class="narrow">Evade<input type="number" id="ie-ev" inputmode="numeric"></label>
+            <label class="wide">Skill bonuses<input type="text" id="ie-sk" placeholder="e.g. +2 Investigation" autocomplete="off"></label>
+          </div>
+          <div class="fields">
+            <label>When used<select id="ie-use"><option value="">Not usable</option><option value="heal">Heals slots</option><option value="mana">Gives Mana</option><option value="fullhp">Full Health</option><option value="fullmana">Full Mana</option></select></label>
+            <label class="narrow" id="ie-usen-l">Amount<input type="number" id="ie-usen" min="1" inputmode="numeric"></label>
+            <label class="wide">Notes<input type="text" id="ie-notes" autocomplete="off"></label>
+          </div>
+          <div class="btnrow"><button type="button" class="btn primary" id="ie-save">Save</button><button type="button" class="btn" id="ie-cancel">Cancel</button><button type="button" class="btn danger" id="ie-del">Delete</button><span class="sub" id="ie-msg" role="status"></span></div>
+        </div>
+        <h4>Inventory <small id="inv-count"></small></h4>
+        <div class="fields">
+          <label class="narrow">Gold<input type="text" id="inv-gold" autocomplete="off" aria-describedby="inv-hint"></label>
+          <label class="narrow">Misc. Junk<input type="text" id="inv-junk" autocomplete="off" aria-describedby="inv-hint"></label>
+          <button type="button" class="btn" id="inv-sell">Sell all junk (1 gold each)</button>
+          <label class="narrow">Bodies<input type="number" id="inv-bodies" min="1" value="1" inputmode="numeric"></label>
+          <button type="button" class="btn" id="inv-loot">Loot them</button>
+        </div>
+        <p class="sub" id="inv-hint">Type a number, or +50 to add and -20 to spend.</p>
+        <div class="fields invbar">
+          <label class="wide">Search<input type="search" id="inv-q" autocomplete="off" placeholder="Search your Inventory"></label>
+          <label>Sort<select id="inv-sort"><option value="sheet">Sheet order</option><option value="az">A to Z</option><option value="qty">Quantity</option></select></label>
+        </div>
+        <div class="seg cats" id="inv-cats" role="group" aria-label="Show items of one kind"></div>
+        <div class="tscroll">
+          <table class="tlist inv" aria-label="Inventory">
+            <thead><tr><th>Item</th><th class="n">Qty</th><th></th></tr></thead>
+            <tbody id="inv-rows"></tbody>
+          </table>
+        </div>
+        <div class="edit hide" id="bx-box">
+          <h4 id="bx-title">Open a Loot Box</h4>
+          <p class="sub" id="bx-desc"></p>
+          <ul class="cf-list" id="bx-list"></ul>
+          <datalist id="bx-skills"></datalist>
+          <p class="sub" id="bx-warn"></p>
+          <div class="btnrow"><button type="button" class="btn primary" id="bx-go">Open it</button><button type="button" class="btn" id="bx-cancel">Cancel</button></div>
+        </div>
+        <div class="btnrow"><button type="button" class="btn" id="it-add">Add an item</button><button type="button" class="btn" id="cf-load">Load from CrawlerForge</button></div>
+        <input type="file" id="cf-file" accept=".json,application/json" class="hide" tabindex="-1" aria-hidden="true">
+        <p class="sub" id="cf-msg" role="status"></p>
+        <div class="edit hide" id="cf-box">
+          <h4 id="cf-title">From CrawlerForge</h4>
+          <div class="fields hide" id="cf-who-l"><label class="wide-l">Crawler<select id="cf-who"></select></label></div>
+          <p class="sub" id="cf-sum"></p>
+          <ul class="cf-list" id="cf-list"></ul>
+          <div class="fields" id="cf-opts">
+            <label class="chk"><input type="checkbox" id="cf-gear" checked> Gear and Inventory (replaces what’s on your sheet)</label>
+            <label class="chk"><input type="checkbox" id="cf-money" checked> Gold and Misc. Junk</label>
+            <label class="chk"><input type="checkbox" id="cf-hot" checked> Hotlist</label>
+            <label class="chk hide" id="cf-clear-l"><input type="checkbox" id="cf-clear"> Also empty the Gear Slots that are empty in CrawlerForge</label>
+          </div>
+          <p class="sub" id="cf-warn"></p>
+          <div class="btnrow"><button type="button" class="btn primary" id="cf-go">Load it</button><button type="button" class="btn" id="cf-cancel">Cancel</button></div>
+        </div>
+        <p class="note">An item’s Gear Slot, bonuses and use are written at the start of its notes on your sheet, like “Head: +2 Int, DR 1.” or “Use: full Mana.”, so they come back when you reload.</p>
+        <p class="note">Load from CrawlerForge reads a crawler file (CrawlerForge’s crawler export), an Export everything backup, or a pack. A crawler’s file brings in what it’s wearing and carrying, its unopened Loot Boxes, its Gold, Junk and Hotlist; a pack or your Forge lets you pick items and Loot Boxes to add. Stat, Armor, Evade and Skill bonuses come across; anything the sheet can’t track goes into the item’s notes.</p>
+        <p class="note">A Loot Box sits in your Inventory until you open it. Opening one puts its items in your Inventory, adds its Gold and Junk, and drinks its Skill and Stat potions straight away. A crawler can only ever drink two Stat potions and two Skill potions (Core p. 226). CrawlerForge rolls a random box’s contents when it hands the box out; a random box from a pack holds only its Gold here, and your GM rolls the rest (Core p. 219).</p>
+        <h4>Hotlist</h4>
+        <div class="hot" id="hot-grid"></div>
+        <p class="note">Spells and items in your Hotlist can be used with one Action. Spells must be here to cast them in combat.</p>
+      </div>
+
+      <div class="toolpanel hide" id="tp-pet" role="tabpanel" aria-labelledby="tt-pet">
+        <div id="pet-none">
+          <p>No pet on your sheet. One pet per crawler unless your Class says otherwise. Pets start at Level 1 however you get them.</p>
+          <div class="fields">
+            <label class="wide">Name<input type="text" id="pn-name" autocomplete="off" maxlength="40"></label>
+            <label>Starting attitude<select id="pn-att"><option>Hostile</option><option>Calm</option><option>Friendly</option><option selected>Bonded</option></select></label>
+          </div>
+          <div class="btnrow"><button type="button" class="btn primary" id="pet-new">Add a Level 1 pet</button></div>
+        </div>
+        <div id="pet-on" class="hide">
+          <div class="fields">
+            <label class="wide">Name<input type="text" id="pt-name" autocomplete="off" maxlength="40"></label>
+            <label>Attitude<select id="pt-att"><option>Hostile</option><option>Calm</option><option>Friendly</option><option>Bonded</option></select></label>
+            <label>Role<select id="pt-role"><option value="">Not chosen</option><option>Tank</option><option>Aggressive</option><option>Utility</option></select></label>
+          </div>
+          <p class="sub" id="pt-roleinfo"></p>
+          <table class="statin pet" aria-label="Pet stats">
+            <tbody>
+              <tr><td>Strength</td><td><input type="number" id="pt-str" min="1" inputmode="numeric" aria-label="Pet Strength"></td><td><b id="pm-str"></b></td><td>Level</td><td><input type="number" id="pt-level" min="1" inputmode="numeric" aria-label="Pet Level"></td></tr>
+              <tr><td>Intelligence</td><td><input type="number" id="pt-int" min="1" inputmode="numeric" aria-label="Pet Intelligence"></td><td><b id="pm-int"></b></td><td>DR</td><td><input type="number" id="pt-dr" min="0" inputmode="numeric" aria-label="Pet DR"></td></tr>
+              <tr><td>Constitution</td><td><input type="number" id="pt-con" min="1" inputmode="numeric" aria-label="Pet Constitution"></td><td><b id="pm-con"></b></td><td>Evade</td><td><input type="text" id="pt-evade" aria-label="Pet Evade"></td></tr>
+              <tr><td>Dexterity</td><td><input type="number" id="pt-dex" min="1" inputmode="numeric" aria-label="Pet Dexterity"></td><td><b id="pm-dex"></b></td><td>Move</td><td><input type="text" id="pt-move" aria-label="Pet Move"></td></tr>
+              <tr><td>Charisma</td><td><input type="number" id="pt-cha" min="1" inputmode="numeric" aria-label="Pet Charisma"></td><td><b id="pm-cha"></b></td><td>Size</td><td><input type="number" id="pt-size" min="1" max="10" inputmode="numeric" aria-label="Pet Size"></td></tr>
+            </tbody>
+          </table>
+          <p class="sub" id="pt-pts"></p>
+          <div class="btnrow"><button type="button" class="btn" id="pt-lvl">Level up with the party</button><button type="button" class="btn hide" id="pt-pts-done">Points placed</button></div>
+          <h4>Health Bar</h4>
+          <div class="hb" id="pt-bar" aria-hidden="true"></div>
+          <p class="out" id="pt-hbtxt"></p>
+          <div class="fields">
+            <label class="narrow">Damage<input type="number" id="pt-dmg" min="0" inputmode="numeric"></label>
+            <button type="button" class="btn primary" id="pt-hit">Take the hit</button>
+            <label class="narrow">Heal slots<input type="number" id="pt-healn" min="1" value="1" inputmode="numeric"></label>
+            <button type="button" class="btn" id="pt-heal">Heal</button>
+            <button type="button" class="btn" id="pt-full">Full Health</button>
+            <label class="narrow">Slots<input type="number" id="pt-slots" min="1" max="10" inputmode="numeric"></label>
+          </div>
+          <p class="note">Pets start with Health Bar slots equal to their Size and gain 1 each level, up to 10. Each slot holds the pet’s Con Mod.</p>
+          <h4>Attacks</h4>
+          <div class="fields">
+            <label class="wide">Attack<input type="text" id="pt-atk1" autocomplete="off"></label><button type="button" class="btn" id="pt-a1">Roll</button>
+          </div>
+          <div class="fields">
+            <label class="wide">Attack<input type="text" id="pt-atk2" autocomplete="off"></label><button type="button" class="btn" id="pt-a2">Roll</button>
+          </div>
+          <div class="fields"><label class="wide">Special<input type="text" id="pt-special" autocomplete="off"></label></div>
+          <p class="sub" id="pt-rank"></p>
+          <p class="out" id="pt-atkout" aria-live="polite"></p>
+          <div class="btnrow"><button type="button" class="btn" id="pt-cmd">Command it to fight</button><button type="button" class="btn" id="pt-bond">Change its attitude</button><button type="button" class="btn danger" id="pet-clear">Clear the pet box</button></div>
+          <p class="note">Commanding takes an Action and an Int-Opposed Animal Handling check against 10 + Floor + the pet’s Int Mod. The sheet has no boxes for name, attitude or role, so they’re saved at the start of the Special box, like “Jane, Bonded, Utility.” That box is small on the printed sheet, so long text gets cut off there, but all of it is saved.</p>
+        </div>
+        <p class="sub" id="pet-log" role="status"></p>
+        <details class="more">
+          <summary>Mount or vehicle</summary>
+          <div id="mt-none"><p class="sub">No mount on your sheet. Mounts have Health Bar slots equal to their Size and don’t level up.</p><div class="btnrow"><button type="button" class="btn" id="mt-new">Add a mount</button></div></div>
+          <div id="mt-on" class="hide">
+            <div class="fields">
+              <label class="narrow">Size<input type="number" id="mt-size" min="1" max="10" inputmode="numeric"></label>
+              <label class="narrow">Move<input type="text" id="mt-move"></label>
+              <label class="narrow">DR<input type="number" id="mt-dr" min="0" inputmode="numeric"></label>
+              <label>Occupants<input type="text" id="mt-occ"></label>
+            </div>
+            <div class="fields"><label class="wide">Accessories<input type="text" id="mt-acc" autocomplete="off"></label></div>
+            <div class="hb" id="mt-bar" aria-hidden="true"></div>
+            <p class="out" id="mt-hbtxt"></p>
+            <div class="fields">
+              <label class="narrow">Damage<input type="number" id="mt-dmg" min="0" inputmode="numeric"></label><button type="button" class="btn" id="mt-hit">Take the hit</button>
+              <label class="narrow">Heal slots<input type="number" id="mt-healn" min="1" value="1" inputmode="numeric"></label><button type="button" class="btn" id="mt-heal">Heal</button>
+              <button type="button" class="btn danger" id="mt-clear">Clear the mount box</button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="toolpanel hide" id="tp-notes" role="tabpanel" aria-labelledby="tt-notes">
+        <label class="tx"><span>Notes</span><textarea id="nt-notes" data-tx="notes" rows="9"></textarea></label>
+        <p class="note">Everything here saves into your sheet. The PDF’s Notes box is small, so a long note is all there but your PDF reader may only show the start of it.</p>
+        <div class="txgrid">
+          <label class="tx"><span>Past Trauma</span><textarea data-tx="trauma" rows="3"></textarea></label>
+          <label class="tx"><span>Loose Ends</span><textarea data-tx="loose" rows="3"></textarea></label>
+          <label class="tx"><span>Regrets</span><textarea data-tx="regrets" rows="3"></textarea></label>
+          <label class="tx"><span>Popularity</span><input type="text" data-tx="pop" inputmode="numeric"></label>
+        </div>
+        <details class="more">
+          <summary>More from your sheet</summary>
+          <p class="sub">One entry per line.</p>
+          <div class="txgrid">
+            <label class="tx"><span>Important things I’ve killed (13)</span><textarea data-tx="kills" rows="6"></textarea><small id="tx-warn-kills" class="warn"></small></label>
+            <label class="tx"><span>Clubs, societies and guilds (6)</span><textarea data-tx="clubs" rows="6"></textarea><small id="tx-warn-clubs" class="warn"></small></label>
+            <label class="tx"><span>Deity</span><textarea data-tx="deity" rows="6"></textarea></label>
+            <label class="tx"><span>Racial abilities (22)</span><textarea data-tx="racial" rows="6"></textarea><small id="tx-warn-racial" class="warn"></small></label>
+            <label class="tx"><span>Class abilities (22)</span><textarea data-tx="klass" rows="6"></textarea><small id="tx-warn-klass" class="warn"></small></label>
+            <label class="tx"><span>Sponsor 1</span><textarea data-tx="sp1" rows="3"></textarea></label>
+            <label class="tx"><span>Sponsor 2</span><textarea data-tx="sp2" rows="3"></textarea></label>
+            <label class="tx"><span>Sponsor 3</span><textarea data-tx="sp3" rows="3"></textarea></label>
+            <label class="tx"><span>Personal space tier</span><input type="text" data-tx="tier"></label>
+            <label class="tx"><span>Personal space size</span><input type="text" data-tx="psize"></label>
+            <label class="tx"><span>Amenities</span><input type="text" data-tx="amen"></label>
+            <label class="tx"><span>Personal space (10)</span><textarea data-tx="prows" rows="6"></textarea><small id="tx-warn-prows" class="warn"></small></label>
+          </div>
+        </details>
       </div>
     </div>
   </div>

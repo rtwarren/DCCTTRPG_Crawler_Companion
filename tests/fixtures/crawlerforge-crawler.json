@@ -1,0 +1,452 @@
+{
+ "schemaVersion": 1,
+ "kind": "crawler",
+ "exportedAt": "2026-11-02T10:00:00.000Z",
+ "crawlerId": "00000000-0000-4000-8000-000000000001",
+ "events": [
+  {
+   "id": "e01",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:01:00.000Z",
+   "deviceId": "test",
+   "type": "crawler.created",
+   "payload": {
+    "name": "Testcrawler",
+    "floor": 2,
+    "level": 3,
+    "unenhanced": {
+     "str": 4,
+     "int": 5,
+     "con": 4,
+     "dex": 4,
+     "cha": 3
+    },
+    "skills": [],
+    "aiFavor": 0,
+    "size": "medium",
+    "species": "Human"
+   }
+  },
+  {
+   "id": "e02",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:02:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i1",
+    "name": "Fixture Hood",
+    "quantity": 1,
+    "notes": "",
+    "slot": "head",
+    "equipped": true,
+    "effects": [
+     {
+      "type": "stat",
+      "stat": "int",
+      "amount": 2
+     },
+     {
+      "type": "dr",
+      "amount": 1
+     }
+    ],
+    "description": "A **soft** hood.\n\nSecond paragraph is dropped."
+   }
+  },
+  {
+   "id": "e03",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:03:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i2",
+    "name": "Fixture Mana Potion",
+    "quantity": 1,
+    "notes": "",
+    "slot": null,
+    "equipped": false,
+    "effects": [
+     {
+      "type": "consume",
+      "mana": "full"
+     }
+    ]
+   }
+  },
+  {
+   "id": "e04",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:04:00.000Z",
+   "deviceId": "test",
+   "type": "item.updated",
+   "payload": {
+    "id": "i2",
+    "patch": {
+     "quantity": 5
+    }
+   }
+  },
+  {
+   "id": "e05",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:05:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i3",
+    "name": "Fixture Greatsword",
+    "quantity": 1,
+    "notes": "",
+    "slot": "twoHanded",
+    "equipped": true,
+    "effects": [
+     {
+      "type": "stat",
+      "stat": "str",
+      "amount": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "e06",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:06:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i4",
+    "name": "Fixture Dagger",
+    "quantity": 1,
+    "notes": "",
+    "slot": "hand",
+    "equipped": false,
+    "effects": [
+     {
+      "type": "skill",
+      "skill": {
+       "kind": "named",
+       "name": "Sword Fighting"
+      },
+      "ranks": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "e07",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:07:00.000Z",
+   "deviceId": "test",
+   "type": "item.equipped",
+   "payload": {
+    "id": "i4"
+   }
+  },
+  {
+   "id": "e08",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:08:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i5",
+    "name": "Fixture Ring",
+    "quantity": 1,
+    "notes": "",
+    "slot": "accessory",
+    "equipped": true,
+    "effects": [
+     {
+      "type": "stat",
+      "allStats": true,
+      "stat": "str",
+      "amount": 1
+     },
+     {
+      "type": "evade",
+      "amount": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "e09",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:09:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i6",
+    "name": "Fixture Gloves",
+    "quantity": 1,
+    "notes": "",
+    "slot": "gloves",
+    "equipped": true,
+    "effects": [
+     {
+      "type": "move",
+      "feet": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "e10",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:10:00.000Z",
+   "deviceId": "test",
+   "type": "item.added",
+   "payload": {
+    "id": "i7",
+    "name": "Retracted Thing",
+    "quantity": 1,
+    "notes": "",
+    "slot": "feet",
+    "equipped": true,
+    "effects": [
+     {
+      "type": "stat",
+      "stat": "dex",
+      "amount": 9
+     }
+    ]
+   }
+  },
+  {
+   "id": "e11",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:11:00.000Z",
+   "deviceId": "test",
+   "type": "event.retracted",
+   "payload": {
+    "eventId": "e10"
+   }
+  },
+  {
+   "id": "e12",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:12:00.000Z",
+   "deviceId": "test",
+   "type": "item.used",
+   "payload": {
+    "itemId": "i2"
+   }
+  },
+  {
+   "id": "e13",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:13:00.000Z",
+   "deviceId": "test",
+   "type": "gold.changed",
+   "payload": {
+    "gold": 120
+   }
+  },
+  {
+   "id": "e14",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:14:00.000Z",
+   "deviceId": "test",
+   "type": "junk.changed",
+   "payload": {
+    "junk": 7
+   }
+  },
+  {
+   "id": "e15",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:15:00.000Z",
+   "deviceId": "test",
+   "type": "lootBox.opened",
+   "payload": {
+    "instanceId": "box1",
+    "outcome": [
+     {
+      "kind": "gold",
+      "amount": 10
+     },
+     {
+      "kind": "item",
+      "definition": {
+       "id": "d1",
+       "name": "Fixture Scroll",
+       "slot": null,
+       "effects": [],
+       "description": "A scroll of testing."
+      },
+      "quantity": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "e16",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:16:00.000Z",
+   "deviceId": "test",
+   "type": "hotlist.set",
+   "payload": {
+    "entries": [
+     "Fixture Spell",
+     "Sword Fighting",
+     "Fixture Mana Potion"
+    ]
+   }
+  },
+  {
+   "id": "e17",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T12:17:00.000Z",
+   "deviceId": "test",
+   "type": "craft.resolved",
+   "payload": {
+    "recipe": "none"
+   }
+  },
+  {
+   "id": "e18",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T13:18:00.000Z",
+   "deviceId": "test",
+   "type": "lootBox.received",
+   "payload": {
+    "instanceId": "rb1",
+    "source": {
+     "kind": "award"
+    },
+    "box": {
+     "id": "fx-silver",
+     "name": "Fixture Silver Box",
+     "tier": "silver",
+     "type": "Fixture",
+     "description": "",
+     "contents": [
+      {
+       "kind": "item",
+       "quantity": 1,
+       "definition": {
+        "id": "fa",
+        "name": "Fixture Amulet",
+        "slot": "accessory",
+        "effects": [
+         {
+          "type": "stat",
+          "stat": "cha",
+          "amount": 1
+         }
+        ],
+        "description": ""
+       }
+      },
+      {
+       "kind": "gold",
+       "amount": "1d10x100"
+      },
+      {
+       "kind": "skillPotion",
+       "ranks": 2,
+       "skill": {
+        "choice": true
+       }
+      },
+      {
+       "kind": "statPotion",
+       "amount": 1,
+       "stat": "con"
+      },
+      {
+       "kind": "text",
+       "text": "Smells of fixtures."
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "e19",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T13:19:00.000Z",
+   "deviceId": "test",
+   "type": "achievement.awarded",
+   "payload": {
+    "achievement": {
+     "id": "ach1",
+     "name": "Fixture Achievement",
+     "description": "Did a test."
+    },
+    "box": {
+     "instanceId": "rb2",
+     "box": {
+      "id": "fx-bronze",
+      "name": "Fixture Bronze Box",
+      "tier": "bronze",
+      "type": "Fixture",
+      "description": "A small test box.",
+      "contents": [
+       {
+        "kind": "junk",
+        "amount": 5
+       },
+       {
+        "kind": "skill",
+        "name": "Fixture Skill",
+        "rank": 2
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "e20",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T13:20:00.000Z",
+   "deviceId": "test",
+   "type": "lootBox.received",
+   "payload": {
+    "instanceId": "rb3",
+    "source": {
+     "kind": "self"
+    },
+    "box": {
+     "id": "fx-gold",
+     "name": "Fixture Opened Box",
+     "tier": "gold",
+     "type": "Fixture",
+     "description": "",
+     "contents": [
+      {
+       "kind": "gold",
+       "amount": 50
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "e21",
+   "crawlerId": "00000000-0000-4000-8000-000000000001",
+   "occurredAt": "2026-11-01T13:21:00.000Z",
+   "deviceId": "test",
+   "type": "lootBox.opened",
+   "payload": {
+    "instanceId": "rb3",
+    "outcome": [
+     {
+      "kind": "gold",
+      "amount": 50
+     }
+    ],
+    "goldGross": 50,
+    "tithe": {
+     "rate": 0.1,
+     "amount": 5,
+     "deity": "Fixture God"
+    }
+   }
+  }
+ ]
+}

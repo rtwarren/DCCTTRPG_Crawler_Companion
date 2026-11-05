@@ -1,0 +1,93 @@
+{
+ "schemaVersion": 90,
+ "id": "fixture-pack",
+ "name": "Fixture Pack",
+ "version": "1.0.0",
+ "description": "Test items.",
+ "author": "Test",
+ "provenance": "homebrew",
+ "license": "",
+ "skills": [],
+ "races": [],
+ "classes": [],
+ "tables": [],
+ "companions": [],
+ "items": [
+  {
+   "id": "p1",
+   "name": "Fixture Boots",
+   "description": "Light boots.",
+   "flavor": "",
+   "slot": "feet",
+   "effects": [
+    {
+     "type": "stat",
+     "stat": "dex",
+     "amount": 1
+    }
+   ],
+   "tags": [
+    "loot:armor"
+   ]
+  },
+  {
+   "id": "p2",
+   "name": "Fixture Hammer",
+   "description": "Heavy.",
+   "slot": "twoHanded",
+   "effects": [
+    {
+     "type": "stat",
+     "stat": "str",
+     "amount": 3
+    }
+   ],
+   "detriments": [
+    {
+     "type": "stat",
+     "stat": "dex",
+     "amount": 1
+    }
+   ],
+   "tags": [
+    "loot:weapon"
+   ]
+  }
+ ],
+ "lootBoxes": [
+  {
+   "id": "pb1",
+   "name": "Fixture Pack Box",
+   "tier": "gold",
+   "type": "Fixture",
+   "description": "",
+   "contents": [
+    {
+     "kind": "item",
+     "itemId": "p1",
+     "quantity": 1
+    },
+    {
+     "kind": "gold",
+     "amount": 100
+    },
+    {
+     "kind": "statPotion",
+     "amount": 2,
+     "stat": {
+      "choice": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "pb2",
+   "name": "Fixture Random Box",
+   "tier": "platinum",
+   "type": "Fixture",
+   "description": "",
+   "rolled": true,
+   "contents": []
+  }
+ ]
+}

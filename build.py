@@ -33,7 +33,11 @@ def version():
 
 def build():
     css = read("styles.css")
-    script = read("main.js").replace("/*__PDFENGINE__*/\n", read("pdf-engine.js"), 1)
+    script = read("main.js")
+    for marker, name in (("/*__PDFENGINE__*/\n", "pdf-engine.js"), ("/*__TOOLS__*/\n", "tools.js")):
+        if marker not in script:
+            sys.exit("Missing " + marker.strip() + " in src/main.js")
+        script = script.replace(marker, read(name), 1)
     html = read("index.html")
     for marker, value in (("/*__STYLES__*/", css), ("/*__SCRIPT__*/", script)):
         if marker not in html:

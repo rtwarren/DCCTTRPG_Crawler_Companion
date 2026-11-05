@@ -18,7 +18,7 @@
   function total(a){ return a.reduce(function(s, v){ return s + v; }, 0); }
   function sgn(n){ return (n < 0 ? "−" : "+") + Math.abs(n); }
   function op(n){ return (n < 0 ? "− " : "+ ") + Math.abs(n); }
-  function plural(n, w){ return n + " " + w + (n === 1 ? "" : "s"); }
+  function plural(n, w, many){ return n + " " + (n === 1 ? w : many || w + "s"); }
   function modOf(s){
     if(s >= 300) return 10; if(s >= 200) return 9; if(s >= 150) return 8; if(s >= 100) return 7; if(s >= 50) return 6;
     if(s >= 20) return 5; if(s >= 10) return 4; if(s >= 6) return 3; if(s >= 3) return 2; return 1;
@@ -248,9 +248,10 @@
     var c = crawler(), F = floor;
     STATS.forEach(function(k){
       var m = $("m-" + k); m.textContent = "+" + c.mod[k];
-      var gap = c.score[k] - c.base[k];
+      var gap = c.score[k] - c.base[k], gb = typeof D !== "undefined" && D ? gearTotals()[k] : 0, oth = gap - gb;
       m.setAttribute("data-eq", "Enhanced " + SFULL[k] + " " + c.score[k] + " falls in the " + modBand(c.score[k]) + " range\nso its Mod is +" + c.mod[k] +
-        "\nUnenhanced " + c.base[k] + (gap ? (gap > 0 ? " + " : " \u2212 ") + Math.abs(gap) + " from gear and buffs" : ", nothing from gear or buffs")); m.tabIndex = 0;
+        "\nUnenhanced " + c.base[k] + (gb ? (gb > 0 ? " + " : " \u2212 ") + Math.abs(gb) + " from gear" : "") + (oth ? (oth > 0 ? " + " : " \u2212 ") + Math.abs(oth) + (gb ? " from other buffs" : " from gear and buffs") : "") +
+        (!gap && !gb ? ", nothing from gear or buffs" : "")); m.tabIndex = 0;
     });
     var fame = c.score.cha >= 5 * F ? "+1 Popularity at floor’s end" : c.score.cha <= 2 * F ? "−1 Popularity at floor’s end" : "No Popularity change";
     var pts = 3 * (c.lvl - 1);
@@ -285,11 +286,15 @@
       span("AI Favor " + c.fav, "Spend 1 to reroll a d20 once per Check (not a natural 1),\nor for an extra non-Attack Action once per round", "si")
     ];
     if(hm.slots === 0) parts.push(span("Dying", "Countdown: Con Mod " + c.mod.con + " rounds. Heal 1 slot to stop it.", "si dying"));
+    if(typeof D !== "undefined" && D && hasPet() && barCount(D.pet)){
+      var pn = petHead().name || "Pet";
+      parts.push(", ", span(pn + " " + barLeft(D.pet) + " of " + barCount(D.pet), "Your pet’s Health Bar: " + barLeft(D.pet) + " of " + barCount(D.pet) + " slots left", "si"));
+    }
     fill($("strip-text"), parts);
   }
 
   /* ---------- tool tabs ---------- */
-  var TOOLS = ["check","damage","health","dice"];
+  var TOOLS = ["check","damage","health","dice","skills","gear","pet","notes"];
   function selectTool(t){
     if(TOOLS.indexOf(t) < 0) t = "check";
     TOOLS.forEach(function(k){
@@ -335,7 +340,8 @@
     if($("ck-sore").checked) pens.push(["Sore as Shit", 1]);
     var fat = Math.max(0, num("ck-fat", 0)); if(fat) pens.push(["Fatigued × " + fat, fat]);
     var pen = pens.reduce(function(s, p){ return s + p[1]; }, 0);
-    var bonus = rank + mod + evb + other - pen;
+    var gsb = ck.src && ck.src.type === "s" && typeof D !== "undefined" && D ? gearSkillBonus(ck.src.name) : null, gearB = gsb ? gsb.n : 0;
+    var bonus = rank + mod + evb + other + gearB - pen;
     var adv = $("ck-mode").value === "a", dis = $("ck-mode").value === "d" || untr;
     var net = adv && dis ? "n" : adv ? "a" : dis ? "d" : "n";
     var lines = [];
@@ -343,6 +349,7 @@
     lines.push(op(mod) + "  " + SN[sel.value] + " Mod (" + SFULL[sel.value] + " " + c.score[sel.value] + ")");
     if(evb) lines.push(op(evb) + "  Evade Buffs");
     if(other) lines.push(op(other) + "  Other bonus");
+    if(gearB) lines.push(op(gearB) + "  Gear (" + gsb.from + ")");
     pens.forEach(function(p){ lines.push(op(-p[1]) + "  " + p[0]); });
     var base = num("ck-tgt", NaN), shift = parseInt($("ck-mob").value, 10) || 0;
     var tl = [];
@@ -393,11 +400,13 @@
     fill(out, parts);
     fav.disabled = ck.fav || kept === 1 || c.fav < 1;
     fav.textContent = kept === 1 ? "Can’t reroll a natural 1" : ck.fav ? "AI Favor used" : c.fav < 1 ? "No AI Favor left" : "Reroll with AI Favor";
-    if(ck.src) tickSkill(ck.src.name);
+    if(ck.src && !ck.ticked){ ck.ticked = true; tickSkill(ck.src.name); }
   }
   document.querySelectorAll("#tp-check .seg button").forEach(function(b){
     b.addEventListener("click", function(){
-      ck.kind = b.getAttribute("data-kind");
+      /* Other bonus is for one roll, so a different kind of roll starts it at 0 */
+      var nk = b.getAttribute("data-kind"); if(nk !== ck.kind) $("ck-other").value = 0;
+      ck.kind = nk;
       document.querySelectorAll("#tp-check .seg button").forEach(function(x){ x.setAttribute("aria-pressed", String(x === b)); });
       ckRefresh();
     });
@@ -406,7 +415,7 @@
     $(id).addEventListener($(id).tagName === "SELECT" || $(id).type === "checkbox" ? "change" : "input", ckRefresh);
   });
   $("ck-tgt").addEventListener("input", function(){ ck.tgtSrc = "manual"; ckRefresh(); });
-  ["ck-d1","ck-d2"].forEach(function(id){ $(id).addEventListener("input", function(){ ck.fav = false; ckRefresh(); }); });
+  ["ck-d1","ck-d2"].forEach(function(id){ $(id).addEventListener("input", function(){ ck.fav = false; ck.ticked = false; ckRefresh(); }); });
   document.querySelectorAll("#tp-check [data-preset]").forEach(function(b){
     b.addEventListener("click", function(){
       var p = b.getAttribute("data-preset"); ck.tgtSrc = p;
@@ -415,7 +424,7 @@
     });
   });
   $("ck-roll").addEventListener("click", function(){
-    var s = ckState(); ck.fav = false;
+    var s = ckState(); ck.fav = false; ck.ticked = false;
     $("ck-d1").value = rnd(20); $("ck-d2").value = s.net === "n" ? "" : rnd(20);
     ckRefresh();
   });
@@ -427,15 +436,20 @@
     ck.fav = true; calcRefresh(); sheetChanged();
   });
   $("ck-src").addEventListener("change", function(){
-    var v = $("ck-src").value; ck.src = null;
-    if(!v || !SH.model) { ckRefresh(); return; }
-    var parts = v.split(":"), row = (parts[0] === "s" ? SH.cur.skills : SH.cur.attacks)[+parts[1]];
+    var v = $("ck-src").value; ck.src = null; $("ck-other").value = 0; ck.ticked = false; ck.fav = false; $("ck-d1").value = ""; $("ck-d2").value = "";
+    if(!v) { ckRefresh(); return; }
+    var parts = v.split(":"), row = (parts[0] === "s" ? D.skills : D.attacks)[+parts[1]];
     if(!row){ ckRefresh(); return; }
     ck.src = {type: parts[0], name: row.name};
-    var kind = parts[0] === "a" ? "attack" : "skill";
+    var rk = parseInt(row.rank, 10) || 0, sk = statKey(row.stat);
+    var kind = parts[0] === "a" || /evade/i.test(row.type || "") ? "attack" : "skill";
     document.querySelector('#tp-check .seg button[data-kind="' + kind + '"]').click();
-    $("ck-rank").value = row.rank || 0; $("ck-untr").checked = !row.rank;
-    if(row.stat) $("ck-stat").value = row.stat;
+    $("ck-rank").value = rk; $("ck-untr").checked = !rk;
+    if(sk) $("ck-stat").value = sk;
+    /* the sheet's "rolled against" column picks the target: Unopposed, or a foe's Evade or Mod */
+    var ty = String(row.type || "");
+    var pre = /unopposed/i.test(ty) ? "unopp" : /evade|opposed/i.test(ty) || kind === "attack" ? "foe" : "";
+    if(pre) document.querySelector('#tp-check [data-preset="' + pre + '"]').click();
     ckRefresh();
   });
 
@@ -489,12 +503,13 @@
     fill($("dm-out"), [span(tot + " damage", lines.join("\n") + "\n= " + tot), ": " + bits.join(" ") + ". The target’s DR comes off after."]);
   });
   $("dm-src").addEventListener("change", function(){
-    var v = $("dm-src").value; if(!v || !SH.cur) return;
-    var row = SH.cur.attacks[+v]; if(!row) return;
+    var v = $("dm-src").value; if(!v) return;
+    var row = D.attacks[+v]; if(!row) return;
+    $("dm-flat").value = 0;
     var d = parseDice(row.dice);
     if(d.ok && d.dice.length){ $("dm-n").value = d.dice[0].n; $("dm-x").value = String(d.dice[0].x); $("dm-extra").value = d.dice.slice(1).map(function(x){ return x.n + "d" + x.x; }).join("+"); }
-    $("dm-stat").value = row.dstat || "none";
-    $("dm-rank").value = row.rank || 1;
+    $("dm-stat").value = statKey(row.dstat) || "none";
+    $("dm-rank").value = parseInt(row.rank, 10) || 1;
     dmRefresh();
   });
 
@@ -600,37 +615,6 @@
   }
   $("dt-go").addEventListener("click", rollExpr);
   $("dt-expr").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); rollExpr(); } });
-  function runAdvancement(all){
-    if(!SH.cur) return;
-    var did = 0;
-    SH.cur.skills.forEach(function(s){
-      if(!s.mark) return;
-      if(!all && s.rank >= 5) return;
-      var a = rnd(20), r0 = s.rank || 0;
-      var up = a >= r0 && r0 < 15;
-      if(up) s.rank = r0 + 1;
-      s.mark = false; did++;
-      addHist(up ? s.name + " +1" : s.name + " no change", "advancement check", "1d20 rolled " + a + " against " + s.name + " Rank " + r0 + "\n" + (up ? "gain 1 Rank, now " + s.rank : r0 >= 15 ? "already at the Rank 15 cap" : "under " + r0 + ": no change") + "\nTick cleared");
-    });
-    if(!did) addHist("Nothing to roll", all ? "No Skills are ticked." : "No ticked Skills at Rank 4 or lower.");
-    renderAdv(); sheetChanged();
-  }
-  $("adv-2h").addEventListener("click", function(){ runAdvancement(false); });
-  $("adv-floor").addEventListener("click", function(){ runAdvancement(true); });
-  function renderAdv(){
-    var on = !!SH.cur;
-    $("adv-sheet").classList.toggle("hide", !on);
-    if(!on) return;
-    var t = SH.cur.skills.filter(function(s){ return s.mark; });
-    $("adv-list").textContent = t.length ? "Ticked on your sheet: " + t.map(function(s){ return s.name + " (Rank " + s.rank + ")"; }).join(", ") + "." : "No Skills are ticked yet. Rolling a Skill or attack from your sheet ticks it.";
-  }
-  function tickSkill(name){
-    if(!SH.cur) return;
-    var k = String(name).trim().toLowerCase(), hit = false;
-    SH.cur.skills.forEach(function(s){ if(s.name.trim().toLowerCase() === k && !s.mark){ s.mark = true; hit = true; } });
-    if(hit){ renderAdv(); sheetChanged(); }
-  }
-
   /* ===================== character sheet link ===================== */
   var FN = {
     name: "Name", race: "Race", cls: "class", crawler: "crawler number", level: "level", floor: "Floor",
@@ -648,21 +632,14 @@
     var m = {name: (fv(FN.name) || "").trim(), race: (fv(FN.race) || "").trim(), cls: (fv(FN.cls) || "").trim(), crawler: (fv(FN.crawler) || "").trim(),
       level: fnum(FN.level), floor: fnum(FN.floor), stats: {}, evb: fnum(tf(FN.evb)), arm: fnum(tf(FN.arm)), drb: fnum(tf(FN.drb)),
       fav: fnum(tf(FN.fav)), mana: fnum(tf(FN.mana)), debuffs: (fv(tf(FN.debuffs)) || "").trim(),
-      ext: FN.ext.map(function(n){ return (fv(tf(n)) || "").trim(); }).filter(Boolean), pop: (fv(tf(FN.pop)) || "").trim(), skills: [], attacks: []};
+      ext: FN.ext.map(function(n){ return (fv(tf(n)) || "").trim(); }).filter(Boolean), pop: (fv(tf(FN.pop)) || "").trim()};
     m.base = {};
     STATS.forEach(function(k){
       var e = fnum(tf(FN.stats[k][0])), u = fnum(tf(FN.stats[k][1]));
       m.stats[k] = e != null ? e : u; m.base[k] = u != null ? u : e;
     });
     m.slots = 10 - FN.slotBoxes.filter(function(b){ return !!fv(b); }).length;
-    for(var k = 0; k < 20; k++){
-      var nm = (fv(tf(103 + 6 * k)) || "").trim(); if(!nm) continue;
-      m.skills.push({row: k, name: nm, rank: fnum(tf(104 + 6 * k)) || 0, stat: statKey(fv(tf(105 + 6 * k))), mark: !!fv("Check Box " + (k + 1))});
-    }
-    FN.attacks.forEach(function(a, i){
-      var nm = (fv(tf(a[0])) || "").trim(); if(!nm) return;
-      m.attacks.push({row: i, name: nm, rank: fnum(tf(a[1])) || 0, stat: statKey(fv(tf(a[2]))), dice: (fv(tf(a[3])) || "").trim(), dstat: statKey(fv(tf(a[4])))});
-    });
+    m.tools = readTools();
     return m;
   }
   function looksLikeSheet(doc){ var f = doc.fieldMap; return !!(f[FN.name] && f[tf(21)] && f[FN.slotBoxes[0]]); }
@@ -681,8 +658,8 @@
     var d = m.debuffs.toLowerCase();
     $("ck-minor").checked = /minor injur/.test(d); $("ck-major").checked = /major injur/.test(d); $("ck-sore").checked = /sore as/.test(d);
     var fm = /fatigued?\D{0,4}(\d+)/.exec(d); $("ck-fat").value = /fatigue/.test(d) ? (fm ? fm[1] : 1) : 0;
-    SH.cur = {skills: m.skills.map(function(s){ return Object.assign({}, s); }), attacks: m.attacks.map(function(a){ return Object.assign({}, a); })};
     saveCrawler();
+    useSheetData(m.tools); skEdit = null; itEdit = null;
     calcRefresh();
     SH.base = curModel();
     fillSources(); renderSheetBox();
@@ -690,8 +667,7 @@
   function curModel(){
     var c = crawler();
     return {level: c.lvl, floor: floor, stats: Object.assign({}, c.score), base: Object.assign({}, c.base), evb: c.evb, arm: c.arm, drb: c.drb, fav: c.fav,
-      mana: hm.mana, slots: hm.slots,
-      skills: SH.cur ? SH.cur.skills.map(function(s){ return {row: s.row, name: s.name, rank: s.rank, mark: s.mark}; }) : []};
+      mana: hm.mana, slots: hm.slots, tools: toolFields()};
   }
   function diff(){
     var out = {list: [], writes: {}};
@@ -718,21 +694,14 @@
       L("Health Bar " + a.slots + " to " + b.slots + " slots");
       FN.slotBoxes.forEach(function(n, i){ w[n] = (i + 1) > b.slots; });
     }
-    b.skills.forEach(function(s, i){
-      var o = a.skills[i]; if(!o) return;
-      if(o.rank !== s.rank){
-        L(s.name + " Rank " + o.rank + " to " + s.rank); w[tf(104 + 6 * s.row)] = String(s.rank);
-        if(SH.cur) SH.cur.attacks.forEach(function(at){ if(at.name.trim().toLowerCase() === s.name.trim().toLowerCase()) w[tf(FN.attacks[at.row][1])] = String(s.rank); });
-      }
-      if(o.mark !== s.mark){ L(s.name + (s.mark ? " ticked for advancement" : " tick cleared")); w["Check Box " + (s.row + 1)] = s.mark; }
-    });
+    toolDiff(a.tools, b.tools, w, L);
     return out;
   }
   function renderSheetBox(){
     var on = !!SH.doc;
     $("sb-off").classList.toggle("hide", on); $("sb-on").classList.toggle("hide", !on);
     $("cr-note").textContent = on ? "Numbers come from your linked sheet. Changes save back to it." : "Saved in this browser only.";
-    if(!on){ renderAdv(); return; }
+    if(!on) return;
     var m = SH.model;
     $("sb-who").textContent = (m.name || "Your crawler") + (m.race ? ", " + m.race : "") + (m.cls ? " " + m.cls : "");
     $("sb-file-name").textContent = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
@@ -748,22 +717,22 @@
     $("sb-save").disabled = SH.mode !== "handle" || !d.list.length || SH.saving;
     $("sb-save").textContent = SH.mode === "handle" ? "Save to sheet" : "Saving needs Chrome or Edge";
     $("sb-auto-l").classList.toggle("hide", SH.mode !== "handle");
-    renderAdv();
   }
   function fillSources(){
-    var on = !!SH.cur, s1 = $("ck-src"), s2 = $("dm-src");
+    var on = D.skills.length + D.attacks.length > 0, s1 = $("ck-src"), s2 = $("dm-src"), keep1 = s1.value;
     $("ck-src-l").classList.toggle("hide", !on); $("dm-src-l").classList.toggle("hide", !on);
     s1.innerHTML = '<option value="">Pick a Skill or attack</option>'; s2.innerHTML = '<option value="">Pick an attack</option>';
     if(!on) return;
     function og(label, rows, pre){
       if(!rows.length) return null;
       var g = document.createElement("optgroup"); g.label = label;
-      rows.forEach(function(r, i){ var o = document.createElement("option"); o.value = pre + i; o.textContent = r.name + " (Rank " + r.rank + (r.stat ? ", " + SN[r.stat] : "") + ")"; g.appendChild(o); });
+      rows.forEach(function(r, i){ var o = document.createElement("option"), sk = statKey(r.stat); o.value = pre + i; o.textContent = r.name.trim() + " (Rank " + (parseInt(r.rank, 10) || 0) + (sk ? ", " + SN[sk] : "") + ")"; g.appendChild(o); });
       return g;
     }
-    var g1 = og("Skills", SH.cur.skills, "s:"), g2 = og("Attacks", SH.cur.attacks, "a:");
+    var g1 = og("Skills", D.skills, "s:"), g2 = og("Attacks", D.attacks, "a:");
     if(g1) s1.appendChild(g1); if(g2) s1.appendChild(g2);
-    SH.cur.attacks.forEach(function(r, i){ var o = document.createElement("option"); o.value = String(i); o.textContent = r.name + " (" + (r.dice || "?") + (r.dstat ? " + " + SN[r.dstat] : "") + ")"; s2.appendChild(o); });
+    if(Array.prototype.some.call(s1.options, function(o){ return o.value === keep1; })) s1.value = keep1;
+    D.attacks.forEach(function(r, i){ var o = document.createElement("option"), dk = statKey(r.dstat); o.value = String(i); o.textContent = r.name.trim() + " (" + (r.dice || "?") + (dk ? " + " + SN[dk] : "") + ")"; s2.appendChild(o); });
   }
   function status(t){ $("sb-status").textContent = t; }
   function stamp(){ var d = new Date(); return d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}); }
@@ -796,8 +765,8 @@
       SH.doc = await PDF.open(bytes);
       status("Saved to " + SH.fileName + " at " + stamp() + ".");
       var m = readSheet(); SH.model = m;
-      SH.cur = {skills: m.skills.map(function(s){ return Object.assign({}, s); }), attacks: m.attacks.map(function(a2){ return Object.assign({}, a2); })};
-      SH.base = curModel(); fillSources();
+      useSheetData(m.tools);
+      SH.base = curModel(); fillSources(); renderTools();
     }catch(e){
       status(/NotAllowed|permission/i.test(String(e)) ? "Couldn’t save: this page doesn’t have permission to write to the file. Choose Reload, then try again." :
         /NoModification|InvalidState|locked|busy/i.test(String(e && e.name) + e) ? "Couldn’t save: the PDF is open in another program that’s locking it. Close it there and try again." :
@@ -862,7 +831,7 @@
   });
   $("sb-unlink").addEventListener("click", function(){
     if(diff().list.length && !window.confirm("You have unsaved changes. Unlink anyway?")) return;
-    SH.doc = null; SH.handle = null; SH.cur = null; SH.model = null; SH.base = null; SH.mode = "";
+    SH.doc = null; SH.handle = null; SH.model = null; SH.base = null; SH.mode = ""; modAt = null;
     idbSet("sheet", null); fillSources(); renderSheetBox(); $("sb-relink").classList.add("hide");
   });
   async function watchFile(){
@@ -883,8 +852,10 @@
   setInterval(watchFile, 4000);
   document.addEventListener("visibilitychange", watchFile);
 
+/*__TOOLS__*/
+
   /* ---------- wiring ---------- */
-  function calcRefresh(){ renderCrawler(); ckRefresh(); dmRefresh(); hmRender(); renderSheetBox(); }
+  function calcRefresh(){ renderCrawler(); ckRefresh(); dmRefresh(); hmRender(); renderTools(); renderSheetBox(); }
   /* changing Unenhanced moves Enhanced by the same amount, so gear and buff bonuses stay put */
   function syncPrev(){ STATS.forEach(function(k){ var u = $("cu-" + k); u.setAttribute("data-prev", u.value); }); }
   STATS.forEach(function(k){
@@ -917,5 +888,6 @@
       else { $("sb-relink").textContent = "Reconnect to " + h.name; $("sb-relink").classList.remove("hide"); }
     }catch(e){}
   });
-  window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, SH: SH};
+  fillSources();
+  window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, SH: SH, data: function(){ return D; }, diff: diff, toolFields: toolFields};
 })();

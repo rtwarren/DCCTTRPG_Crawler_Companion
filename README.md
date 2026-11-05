@@ -1,20 +1,24 @@
 # Crawler Cheat Sheet
 
-Source for `Crawler_Cheat_Sheet_v<version>.html`, the player reference and calculator page for the Dungeon Crawler Carl Roleplaying Game. The finished page is one self-contained HTML file that works offline. The readable source is in `src/`, and the built page is in `dist/`.
+Source for `Crawler_Cheat_Sheet_v<version>.html`, the player reference, calculator and character sheet manager for the Dungeon Crawler Carl Roleplaying Game. The finished page is one self-contained HTML file that works offline. The readable source is in `src/`, and the built page is in `dist/`.
 
 ## Folder layout
 
 | Path | What it is |
 | --- | --- |
-| `src/index.html` | Page markup: hero, section tabs, every rules section and the Calculators panel. Has two placeholders, `/*__STYLES__*/` and `/*__SCRIPT__*/`. |
+| `src/index.html` | Page markup: hero, section tabs, every rules section and the Crawler panel. Has two placeholders, `/*__STYLES__*/` and `/*__SCRIPT__*/`. |
 | `src/styles.css` | All styling, including light and dark themes, phone layout and print layout. Headings use the system font Bahnschrift (built into Windows), with Arial Narrow as the fallback. |
-| `src/main.js` | Everything interactive: floor picker, tabs, search, hover equations, the calculators, and linking the character sheet. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes. |
+| `src/main.js` | Everything interactive: floor picker, tabs, search, hover equations, the calculators, and linking the character sheet. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes, and `/*__TOOLS__*/` is where `tools.js` goes. |
+| `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Cheat_Sheet_v1.2.0.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Cheat_Sheet_v1.3.0.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `tests/test-pdf-engine.js` | Round-trip test for the PDF engine (Node 18+, no packages). |
 | `tests/browser-test.js` | End-to-end test of the built page in Chromium (needs Playwright). |
+| `tests/tools-test.js` | End-to-end test of the Skills, Gear, Pet and Notes tabs (needs Playwright). |
+| `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
+| `tests/fixtures/` | A made-up CrawlerForge crawler file and pack for that test. |
 
 ## Building
 
@@ -31,8 +35,18 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 - **Floor-aware numbers.** In `index.html`, a yellow number is a `span.lv`. It has `data-f` (a formula using `F`, like `10+2*F`), `data-d` (dice plus floor, like `1d6`), or `data-lk` (a lookup, like `timer` or `gold`). `setFloor()` in `main.js` fills them in and writes their hover equations. Formulas must have the form `A+B*F` (either part optional); they are parsed, never run as code.
 - **Floor-only rules.** Any element with `data-floors="1-2"` or `data-floors="3-5"` is dimmed when the chosen floor is outside that range.
 - **Hover equations.** Any element with a `data-eq` attribute shows a tooltip with that text (new lines allowed). The `span(text, eq)` helper in `main.js` makes these.
-- **Tabs.** Each rules section is a `section.band`. The links in `nav.hbnav` act as tabs, and `showTab()` shows one band at a time. Print shows every band except Calculators.
-- **Calculators.** Your crawler, Check, Damage, Health & Mana and Dice each have a block in `main.js`. `calcRefresh()` redraws them all.
+- **Tabs.** Each rules section is a `section.band`. The links in `nav.hbnav` act as tabs, and `showTab()` shows one band at a time. Print shows every band except Crawler.
+- **Crawler tabs.** Your crawler, Check, Damage, Health & Mana and Dice each have a block in `main.js`. Skills, Gear, Pet and Notes are in `tools.js`, which keeps everything in one object, `D`. `calcRefresh()` redraws them all.
+- **Loot Boxes.** A box is an Inventory row whose notes start with `Loot Box`. `boxNotes()` writes the wording and `parseBoxNotes()` reads it back; `boxOf()` prefers the full box kept in this browser. Opening one (`bx-go`) tries it on a copy of the Inventory first, so a full Inventory changes nothing. Then it adds the items, rolls the Gold and Junk, drinks the potions (a Stat potion raises Unenhanced and Enhanced together; a Skill potion stops at Rank 15, or 20 with `Max 20`) and adds a Skill the box teaches.
+- **Gear and Stats.** Equipping or removing an item works out the gear bonus before and after, and moves Enhanced Stats, Armor and Evade Buffs by the difference (`applyGearDelta()`). Bonuses from Race, Class, potions or Spells that you typed in stay where they are.
+- **CrawlerForge files.** The CrawlerForge section of `tools.js` reads three kinds of JSON file. It never runs anything from them.
+  - A crawler file (`crawler-<name>-<date>.json`, `{kind: "crawler", events}`) is a log of events. `cfReplay()` plays the Inventory, Gold, Junk, shop, Loot Box and Hotlist events in order and skips any that were undone (`event.retracted`). Boxes come from `lootBox.received` and `achievement.awarded`; `lootBox.opened` removes the box, adds what came out and takes off a deity's tithe. Crafting, alchemy and enchanting aren't replayed; the preview says so when the file has them.
+  - An Export everything backup (`{kind: "everything", crawlers, forge}`) holds a crawler file for each crawler, plus your Forge. The preview lets you pick a crawler, starting with the one named like the sheet's crawler, or the Forge.
+  - A pack (`{items, lootBoxes}`) and the Forge hold item and Loot Box definitions. You tick the ones to add to your Inventory. A pack's box points at the pack's own items by id.
+  - `cfItem()` turns an item's effects into the page's bonuses: stats (All Stats too), Skill ranks, DR and Evade. Drawbacks count as minus. Potions with heal or Mana become a Use. Other effects, such as Move or damage, go into the notes as words.
+  - `cfPlan()` puts worn items in their Gear Slots and everything else in Inventory rows. Loading runs inside `gearChange()`, so Enhanced Stats, Armor and Evade Buffs move by the difference, like equipping by hand.
+  - `cfBox()` turns a Loot Box into the page's box: its tier, type and contents (items, Gold and Junk as a number or dice like `1d10x100`, Skill and Stat potions, a Skill at a Rank, and text). A random box (`rolled`) has no contents of its own: CrawlerForge rolls them when it hands the box out, so a box in a crawler file is never random. A random box from a pack keeps its tier's counts (Bronze 1 item and 2 consumables; Silver to Platinum add 1 potion; Legendary and Celestial 2 items), and opening it here rolls only its Gold.
+  - Gear Slots CrawlerForge leaves empty keep what's on the sheet unless you tick the option to empty them. An item CrawlerForge has no notes for keeps the sheet's notes for an item of the same name. A Hotlist entry keeps the sheet's wording when that starts with the same name, like `Soul Collector: 4 Mana, 50 ft`.
 
 ## How the character sheet link works
 
@@ -42,10 +56,26 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 - **Re-saved PDFs.** If a PDF program re-saves the sheet with compressed object streams, the engine decompresses them. It tolerates the bad checksums and stray bytes some programs leave behind, which strict browser decompression would otherwise reject with "Failed to fetch".
 - **Edits made elsewhere.** The page checks the file every few seconds. If you changed it in your PDF reader, it reloads those numbers. Before every save it re-reads the file, so edits made elsewhere are kept.
 - **Unsaved changes.** The list shows the difference between the numbers when you linked (or last saved) and now. Only fields that changed are written.
+- **Without a sheet.** Everything still works, and it's kept in this browser instead (`dcc-cheat-crawler`, `dcc-cheat-hb` and `dcc-cheat-data` in local storage). Linking a sheet replaces it with what the sheet holds.
+
+### Wording the page reads back
+
+The sheet has no boxes for some things the tabs track, so they're written into nearby boxes with a fixed wording. You can type the same wording in your PDF reader and the page will pick it up.
+
+| What | Where | Wording |
+| --- | --- | --- |
+| Bonuses of a worn item | Its Gear Slot box | `Enchanted Toque (+2 Int, DR 1, +2 Perception)`. A bonus every Stat gets is written once, like `+1 All Stats`. Accessories are separated by new lines. |
+| Where an item in Hands/Holding is held | Start of each entry, separated by `; ` | `Gloves: Leather Gloves; Main: Sword (+1 Str); Off: Buckler (Evade +1)`, or `Both: Greatsword (+2 Str)` for a two-handed item. Entries without a prefix fill gloves (if the name says glove or gauntlet), then the main hand, then the off hand. |
+| Gear Slot, bonuses and use of an item in your Inventory | Start of its notes | `Head: +2 Int, DR 1. Use: full Mana. Your own notes.` The slot word is Head, Torso, Arms, Gloves, One-handed, Two-handed, Legs, Feet or Accessory. Use can be `heal 3 slots`, `4 Mana`, `full Health` or `full Mana`. |
+| Grinding hours, end-of-floor advancement bonus, Rank 20 allowed | End of the Skill's notes | `Your own notes; Grind 2 h; Adv +1; Max 20` |
+| An unopened Loot Box | Its Inventory notes | `Loot Box: Silver, Adventurer. Holds: 400 Gold; Armguards [Arms, DR 2]; Mana Potion x3 [Use full Mana]; Skill Potion +1 (your pick). Description.` Entries are separated by `; `. Gold and Junk can be dice, like `1d10x100 Gold` or `1d6 Junk`. Potions name a Skill or Stat, or say `(your pick)`. `Skill Lockpicking at Rank 3` teaches a Skill. A random box says `random` after its type and lists its counts, like `Holds: 1 item; 2 consumables; 1 potion; 1d10x100 Gold.` |
+| Pet name, attitude and role | Start of the pet's Special box | `Jane, Bonded, Utility. Your own notes.` Attitude is Hostile, Calm, Friendly or Bonded; role is Tank, Aggressive or Utility. |
+
+A few things stay in the browser only: hours ground toward your next Level, a pet's Stat points not yet placed, your own notes on an item while you're wearing it (they go back into its Inventory notes when you take it off), the full contents of a Loot Box (the sheet wording is the fallback), and how many Stat and Skill potions you've drunk (a crawler only gets two of each, Core p. 226).
 
 ### Field map for `Carl_Character_Sheet_Fillable.pdf`
 
-These are the field names the page reads and writes. They're set in the `FN` object in `main.js`.
+These are the field names the page reads and writes. They're set in the `FN` object in `main.js` and at the top of `tools.js`.
 
 | Sheet item | Field name |
 | --- | --- |
@@ -63,8 +93,23 @@ These are the field names the page reads and writes. They're set in the `FN` obj
 | Health Bar slot values, 10% to 100% | `10`, `20`, … `100` |
 | Health Bar damage boxes, 10% to 100% | `Check Box6 2`, `Check Box6 1`, `Check Box6 1 1` … `Check Box6 1 8` |
 | Attacks, rows 1 to 5 (name, rank, to-hit stat, dice, damage stat) | `55, 551, 52, 53, 54` / `61, 57, 59, 58, 60` / `67, 63, 65, 64, 66` / `73, 69, 71, 70, 72` / `79, 75, 77, 76, 78` |
-| Skills, row k from 0 to 19 (name, rank, stat, advancement box) | `Text Field 103+6k`, `104+6k`, `105+6k`, `Check Box k+1` |
-| Popularity | `Text Field 98` |
+| Skills, row k from 0 to 19 (name, rank, stat, rolled against, notes, advancement box) | `Text Field 103+6k`, `104+6k`, `105+6k`, `106+6k`, `107+6k`, `Check Box k+1` |
+| Hotlist boxes 1 to 10 | `Text Field 81` to `90` |
+| Gear Slots: Head, Torso, Arms, Hands/Holding, Legs, Feet, Accessories | `Text Field 92`, `93`, `94`, `95`, `96`, `97`, `91` |
+| Popularity, Past Trauma, Loose Ends, Regrets, Notes | `Text Field 98`, `99`, `100`, `101`, `102` |
+| Inventory, row k from 0 to 19 (item, quantity, notes) | `Text Field 223+3k`, `224+3k`, `225+3k` |
+| Pet Health Bar slot values and damage boxes, 10% to 100% | `Text Field 3064` to `3073`, `Check Box 800` to `809` |
+| Pet Str, Int, Con, Dex, Cha | `Text Field 3074`, `3076`, `3078`, `3080`, `3082` |
+| Pet Level, DR, Evade, Move, Size | `Text Field 3075`, `3077`, `3079`, `3081`, `3083` |
+| Pet Attack, Attack, Special | `Text Field 3084`, `3085`, `3086` |
+| Mount Health Bar slot values and damage boxes | `Text Field 3087` to `3089`, `3091` to `3097`; `Check Box 900`, `902` to `910` |
+| Mount Size, Move, Occupants, DR, Accessories | `Text Field 3098`, `3099`, `30100`, `30101`, `30102` |
+| Important Things I've Killed, 13 rows | `Text Field 30103` to `30109`, then `301010` to `301015` |
+| Clubs, Societies, Guilds, 6 rows | `Text Field 301016` to `301021` |
+| Personal Space: Tier, Size, Amenities, then 10 rows | `Text Field 301022`, `301023`, `301024`, `301025` to `301034` |
+| Deity | `Text Field 301035` |
+| Racial Abilities, Class Abilities, 22 rows each | `Text Field 301036` to `301078` (even), `301037` to `301079` (odd) |
+| Sponsors 1 to 3 | `Text Field 301080`, `301081`, `301082` |
 
 This sheet stores every field twice: once on the page and once in the form's field list. The engine updates both. When they disagree, it reads the copy that's shown on the page.
 
@@ -83,6 +128,18 @@ node tests/browser-test.js "C:\path\to\a copy of Carl_Character_Sheet_Fillable.p
 ```
 
 This loads the built page, opens the sheet read-only and checks that saving is off, then links it through a stand-in file handle, rolls a check, takes some damage, saves through the handle to `tests/out/saved.pdf`, and reports any page errors or downloads.
+
+```
+node tests/tools-test.js "C:\path\to\a copy of Carl_Character_Sheet_Fillable.pdf"
+```
+
+This links the sheet, equips an item with bonuses and checks the Stats move and move back, adds a Skill and runs an advancement check, adds a pet, writes a note, saves to `tests/out/tools-saved.pdf`, reopens that file and checks the fields, then relinks it and expects no pending changes.
+
+```
+node tests/crawlerforge-test.js "C:\path\to\a copy of Carl_Character_Sheet_Fillable.pdf"
+```
+
+This links the sheet and loads `tests/fixtures/crawlerforge-crawler.json`, a made-up crawler. It checks the Gear Slots, Inventory, Gold (after a tithe), Junk, Hotlist and unopened Loot Boxes, and that Stats move by the gear bonus. It checks that undone items and opened boxes are left out, and that loading twice doesn't count bonuses twice. It opens the boxes and checks the items, rolled Gold, Junk, potions and the Skill a box teaches, and opens a box typed on the sheet by hand. Then it adds items and boxes from `tests/fixtures/crawlerforge-pack.json`, opens a random box, checks the potion limit warning, reads an Export everything backup with a Forge, saves to `tests/out/crawlerforge-saved.pdf` and checks the fields.
 
 ## Sources
 

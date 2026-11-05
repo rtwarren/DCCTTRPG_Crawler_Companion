@@ -298,16 +298,57 @@
       return map;
     };
 
-    function apStream(d, text){
+    /* the appearance text is drawn in Helvetica with WinAnsi bytes, so curly quotes and dashes survive */
+    var WIN = {0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2013:0x96,0x2014:0x97,0x2022:0x95,0x2026:0x85,0x20AC:0x80,0x2212:0x2D};
+    function winAnsi(t){
+      var o = "";
+      for(var i = 0; i < t.length; i++){
+        var c = t.charCodeAt(i);
+        o += c >= 0x20 && c < 0x7F ? t[i] : c >= 0xA0 && c <= 0xFF ? t[i] : WIN[c] ? String.fromCharCode(WIN[c]) : c === 9 ? " " : "?";
+      }
+      return o;
+    }
+    function pdfStr(s){ return "(" + s.replace(/([\\()])/g, "\\$1").replace(/[\x80-\xFF]/g, function(ch){ return "\\" + ("00" + ch.charCodeAt(0).toString(8)).slice(-3); }) + ")"; }
+    function charW(ch){ return /[il.,:;'!|\s]/.test(ch) ? 0.28 : /[mwMW@]/.test(ch) ? 0.85 : /[A-Z]/.test(ch) ? 0.68 : 0.556; }
+    function textW(s, sz){ var t = 0; for(var i = 0; i < s.length; i++) t += charW(s[i]); return t * sz; }
+    function wrap(line, maxW, sz){
+      var words = line.split(" "), out = [], cur = "";
+      words.forEach(function(wd){
+        var next = cur ? cur + " " + wd : wd;
+        if(!cur || textW(next, sz) <= maxW){ cur = next; return; }
+        out.push(cur); cur = wd;
+      });
+      out.push(cur);
+      return out;
+    }
+    function apStream(d, text, multi, daStr){
       var R = (get(d, "/Rect") || {a: []}).a.map(num), w = Math.abs(R[2] - R[0]) || 20, h = Math.abs(R[3] - R[1]) || 14;
-      var DA = get(d, "/DA"), da = DA ? strBytes(DA) : "", m = /([\d.]+)\s+Tf/.exec(da), sz = m ? parseFloat(m[1]) : 0;
-      if(!sz || sz > h - 2) sz = Math.max(6, Math.min(12, h - 4));
-      var q = num(get(d, "/Q")) || 0, safe = String(text).replace(/[^\x20-\x7E]/g, "?"), tw = safe.length * sz * 0.556;
-      var x = q === 1 ? (w - tw) / 2 : q === 2 ? w - 2 - tw : 2, y = (h - sz * 0.7) / 2;
-      var body = "/Tx BMC\nq\n1 1 " + (w - 2).toFixed(2) + " " + (h - 2).toFixed(2) + " re W n\nBT\n/Helv " + sz + " Tf 0 g\n" +
-        Math.max(1, x).toFixed(2) + " " + y.toFixed(2) + " Td\n(" + safe.replace(/([\\()])/g, "\\$1") + ") Tj\nET\nQ\nEMC\n";
+      var m = /([\d.]+)\s+Tf/.exec(daStr || ""), want = m ? parseFloat(m[1]) : 0;
+      var q = num(get(d, "/Q")) || 0, safe = winAnsi(String(text)), body;
+      if(multi){
+        var paras = safe.split(/\r\n|\r|\n/), sz = want || 10, lines;
+        for(;;){
+          lines = []; paras.forEach(function(p){ lines = lines.concat(wrap(p, w - 5, sz)); });
+          if(lines.length * sz * 1.15 <= h - 3 || sz <= 6) break;
+          sz = Math.max(6, sz - 0.5);
+        }
+        var lead = sz * 1.15, y0 = h - 2 - sz * 0.9;
+        body = "/Tx BMC\nq\n1 1 " + (w - 2).toFixed(2) + " " + (h - 2).toFixed(2) + " re W n\nBT\n/Helv " + sz + " Tf 0 g\n" + lead.toFixed(2) + " TL\n2.5 " + y0.toFixed(2) + " Td\n" +
+          lines.map(function(ln){ return pdfStr(ln) + " Tj T*"; }).join("\n") + "\nET\nQ\nEMC\n";
+      } else {
+        var s1 = want && want <= h - 2 ? want : Math.max(6, Math.min(12, h - 4));
+        while(s1 > 6 && textW(safe, s1) > w - 4) s1 = Math.max(6, s1 - 0.5);
+        var tw = textW(safe, s1), x = q === 1 ? (w - tw) / 2 : q === 2 ? w - 2 - tw : 2, y = (h - s1 * 0.7) / 2;
+        body = "/Tx BMC\nq\n1 1 " + (w - 2).toFixed(2) + " " + (h - 2).toFixed(2) + " re W n\nBT\n/Helv " + s1 + " Tf 0 g\n" +
+          Math.max(1, x).toFixed(2) + " " + y.toFixed(2) + " Td\n" + pdfStr(safe) + " Tj\nET\nQ\nEMC\n";
+      }
       return "<< /Type /XObject /Subtype /Form /BBox [ 0 0 " + w.toFixed(2) + " " + h.toFixed(2) + " ] /Resources << /Font << /Helv << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> >> >> /Length " + body.length + " >>\nstream\n" + body + "endstream";
     }
+    Doc.prototype.inherit = function(n, key){
+      var d = this.obj(n), guard = 0;
+      while(d && guard++ < 20){ var v = get(d, key); if(v) return v; var par = get(d, "/Parent"); d = par ? this.obj(par) : null; }
+      return null;
+    };
 
     Doc.prototype.save = function(changes){
       var self = this, s = this.s, out = s.charAt(s.length - 1) === "\n" ? "" : "\n", base = this.u8.length;
@@ -325,9 +366,13 @@
         } else {
           var enc = encodeText(val);
           f.carriers.forEach(function(c){ put(edit(c), "/V", enc); });
+          var ffv = self.inherit(f.widgets[0] != null ? f.widgets[0] : f.carriers[0], "/Ff"), multi = !!(num(ffv) & 4096);
+          var daV = self.inherit(f.widgets[0] != null ? f.widgets[0] : f.carriers[0], "/DA"), acroD = self.acroRef ? self.resolve(self.acroRef) : null;
+          if(!daV && acroD) daV = get(acroD, "/DA");
+          var daStr = daV ? strBytes(daV) : "";
           f.widgets.forEach(function(w){
             var d = edit(w), apn = next++;
-            emit(apn, 0, apStream(d, val));
+            emit(apn, 0, apStream(d, val, multi, daStr));
             put(d, "/AP", {t: "dict", m: [["/N", {t: "ref", n: apn, g: 0}]]});
           });
         }
