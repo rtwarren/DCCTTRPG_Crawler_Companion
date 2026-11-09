@@ -162,6 +162,11 @@ ol.seq{padding-left:1.3rem}
 
 footer{color:var(--soft);font-size:.82rem;padding:18px 0 40px}
 footer p{max-width:60rem}
+.upd{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:12px}
+.upd p{margin:6px 0}
+.upd .btn.small{margin-left:8px}
+.upd ul{margin:6px 0 6px 1.2rem;padding:0;max-width:60rem}
+.upd .btn.primary{display:inline-block;text-decoration:none}
 .print-floor{display:none}
 .hide{display:none!important}
 
@@ -376,7 +381,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   :root{--bg:#fff;--panel:#fff;--ink:#000;--soft:#444;--rule:#bbb;--well:#f1f1ee;color-scheme:light}
   body{font-size:7pt;line-height:1.27;background:#fff}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .hbnav,.toolbar,.tool,.stairs-wrap,.empty,.noprint,.band.calc,.tip,.bandnav{display:none!important}
+  .hbnav,.toolbar,.tool,.stairs-wrap,.empty,.noprint,.band.calc,.tip,.bandnav,.upd{display:none!important}
   .band.tab-off:not(.calc){display:block!important}
   .hero{padding:0 0 4pt}
   .hero .wrap{grid-template-columns:auto 1fr;align-items:end;gap:6pt 18pt;padding:0}

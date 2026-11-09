@@ -30,7 +30,7 @@ async function link(p, bytes){
   const sheet = process.argv[2];
   if (!sheet) { console.error("Give the path to a copy of the fillable sheet."); process.exit(1); }
   const dist = path.resolve(__dirname, "..", "dist");
-  const built = fs.readdirSync(dist).find(f => /^Crawler_Cheat_Sheet_v[\d.]+\.html$/.test(f));
+  const built = fs.readdirSync(dist).find(f => /^Crawler_Companion_v[\d.]+\.html$/.test(f));
   if (!built) { console.error("No built page in dist/. Run python build.py first."); process.exit(1); }
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });

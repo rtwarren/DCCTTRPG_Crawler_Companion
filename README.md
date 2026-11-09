@@ -1,24 +1,26 @@
-# Crawler Cheat Sheet
+# Crawler Companion
 
-Source for `Crawler_Cheat_Sheet_v<version>.html`, the player reference, calculator and character sheet manager for the Dungeon Crawler Carl Roleplaying Game. The finished page is one self-contained HTML file that works offline. The readable source is in `src/`, and the built page is in `dist/`.
+Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator and character manager for the Dungeon Crawler Carl Roleplaying Game. It was called Crawler Cheat Sheet before version 1.4.0. The finished page is one self-contained HTML file that works offline. The readable source is in `src/`, and the built page is in `dist/`.
 
 ## Folder layout
 
 | Path | What it is |
 | --- | --- |
-| `src/index.html` | Page markup: hero, section tabs, every rules section and the Crawler panel. Has two placeholders, `/*__STYLES__*/` and `/*__SCRIPT__*/`. |
+| `src/index.html` | Page markup: hero, section tabs, every rules section, the Crawler panel and the footer with Check for updates. Has the placeholders `/*__STYLES__*/`, `/*__SCRIPT__*/` and `__VERSION__`. |
 | `src/styles.css` | All styling, including light and dark themes, phone layout and print layout. Headings use the system font Bahnschrift (built into Windows), with Arial Narrow as the fallback. |
-| `src/main.js` | Everything interactive: floor picker, tabs, search, hover equations, the calculators, and linking the character sheet. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes, and `/*__TOOLS__*/` is where `tools.js` goes. |
+| `src/main.js` | Everything interactive: floor picker, tabs, search, hover equations, the calculators, linking the character sheet, and Check for updates. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes, and `/*__TOOLS__*/` is where `tools.js` goes. |
 | `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Cheat_Sheet_v1.3.0.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Companion_v1.4.0.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `tests/test-pdf-engine.js` | Round-trip test for the PDF engine (Node 18+, no packages). |
 | `tests/browser-test.js` | End-to-end test of the built page in Chromium (needs Playwright). |
 | `tests/tools-test.js` | End-to-end test of the Skills, Gear, Pet and Notes tabs (needs Playwright). |
 | `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
 | `tests/fixtures/` | A made-up CrawlerForge crawler file and pack for that test. |
+| `tests/update-test.js` | Test of Check for updates, with GitHub's answers made up (needs Playwright). |
+| `.github/workflows/release.yml` | Publishes a GitHub Release with the built page attached whenever a version tag is pushed. |
 
 ## Building
 
@@ -26,7 +28,7 @@ Source for `Crawler_Cheat_Sheet_v<version>.html`, the player reference, calculat
 python build.py
 ```
 
-This writes `dist/Crawler_Cheat_Sheet_v<version>.html`, taking the version from the first `## 1.2.3` heading in `CHANGELOG.md`, and removes the previous version's file from `dist/` (git keeps it in the history). Pass a path to write somewhere else: `python build.py test.html`. It needs Python 3.8 or newer and no extra packages.
+This writes `dist/Crawler_Companion_v<version>.html`, taking the version from the first `## 1.2.3` heading in `CHANGELOG.md` and stamping it wherever `index.html` says `__VERSION__`. It removes the previous version's file from `dist/` (git keeps it in the history). Pass a path to write somewhere else: `python build.py test.html`. It needs Python 3.8 or newer and no extra packages.
 
 Edit the files in `src/`, then run the build again. Don't edit the built HTML by hand; the next build overwrites it.
 
@@ -56,7 +58,7 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 - **Re-saved PDFs.** If a PDF program re-saves the sheet with compressed object streams, the engine decompresses them. It tolerates the bad checksums and stray bytes some programs leave behind, which strict browser decompression would otherwise reject with "Failed to fetch".
 - **Edits made elsewhere.** The page checks the file every few seconds. If you changed it in your PDF reader, it reloads those numbers. Before every save it re-reads the file, so edits made elsewhere are kept.
 - **Unsaved changes.** The list shows the difference between the numbers when you linked (or last saved) and now. Only fields that changed are written.
-- **Without a sheet.** Everything still works, and it's kept in this browser instead (`dcc-cheat-crawler`, `dcc-cheat-hb` and `dcc-cheat-data` in local storage). Linking a sheet replaces it with what the sheet holds.
+- **Without a sheet.** Everything still works, and it's kept in this browser instead (`dcc-cheat-crawler`, `dcc-cheat-hb` and `dcc-cheat-data` in local storage; the keys keep the old name so nothing is lost after the rename). Linking a sheet replaces it with what the sheet holds.
 
 ### Wording the page reads back
 
@@ -141,6 +143,12 @@ node tests/crawlerforge-test.js "C:\path\to\a copy of Carl_Character_Sheet_Filla
 
 This links the sheet and loads `tests/fixtures/crawlerforge-crawler.json`, a made-up crawler. It checks the Gear Slots, Inventory, Gold (after a tithe), Junk, Hotlist and unopened Loot Boxes, and that Stats move by the gear bonus. It checks that undone items and opened boxes are left out, and that loading twice doesn't count bonuses twice. It opens the boxes and checks the items, rolled Gold, Junk, potions and the Skill a box teaches, and opens a box typed on the sheet by hand. Then it adds items and boxes from `tests/fixtures/crawlerforge-pack.json`, opens a random box, checks the potion limit warning, reads an Export everything backup with a Forge, saves to `tests/out/crawlerforge-saved.pdf` and checks the fields.
 
+```
+node tests/update-test.js
+```
+
+This checks Check for updates without contacting GitHub: every request is answered with a made-up release. It checks a newer release with notes and a download link, the same and an older version, a release without the file, a download link outside github.com (never shown), no releases, a rate limit and no network. It also checks nothing is sent to GitHub until the button is pressed.
+
 ## Sources
 
 Rules are summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers & Customization. Page references are on the page itself.
@@ -150,16 +158,21 @@ Rules are summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Cour
 Some antivirus tools flag HTML files that build files in the browser and download them, or that run code from strings. That's how "HTML smuggling" malware works, so the page avoids both:
 
 - It never creates a download. It only writes into a sheet you linked yourself, through the browser's file permission prompt.
+- Check for updates only reads GitHub's list of releases. Its Download button is an ordinary link to the file on github.com, so the browser downloads it from GitHub like any other file.
 - Floor formulas are parsed by a small pattern match instead of being run as code.
 - No fonts or other files are embedded as encoded data.
 
 Keep it that way when you edit `main.js`: no `new Blob` plus `createObjectURL` downloads, no `eval` or `new Function`, and no large base64 strings.
 
-## Versions
+## Versions and updates
 
-Each release is tagged in git (`v1.0.0`, `v1.1.0` and so on). `CHANGELOG.md` lists what changed. To release a version:
+Each version is tagged in git (`v1.0.0`, `v1.1.0` and so on). `CHANGELOG.md` lists what changed. To release a version:
 
 1. Make the change in `src/`.
 2. Add the new version's section to the top of `CHANGELOG.md`. The build reads the version number from it.
 3. Run `python build.py`.
-4. `git add -A`, `git commit -m "Short description (1.2.1)"`, `git tag -a v1.2.1 -m "Version 1.2.1"`, then `git push --follow-tags`.
+4. `git add -A`, `git commit -m "Short description (1.4.1)"`, `git tag -a v1.4.1 -m "Version 1.4.1"`, then `git push --follow-tags`.
+
+Pushing the tag runs `.github/workflows/release.yml`. It checks that the tag matches the first version in `CHANGELOG.md`, builds the page, and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` attached and that version's CHANGELOG section as its notes. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it, delete the tag (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
+
+The page's footer shows its version. **Check for updates** asks `api.github.com/repos/rtwarren/DCCTTRPG_Crawler_Companion/releases/latest` for the newest release, and only when pressed. If it's newer, the page lists the release notes and a **Download** link to the attached file. In Chrome and Edge every local HTML file shares the same saved data, so the new file keeps the crawler, settings and the linked sheet (press Reconnect). If the repo is ever renamed or moved, change `REPO` in `main.js`.

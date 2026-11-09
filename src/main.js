@@ -889,5 +889,40 @@
     }catch(e){}
   });
   fillSources();
+  /* ---------- updates ---------- */
+  /* Check for updates asks GitHub for the newest Release, and only when pressed. The download is an
+     ordinary link to the file attached to that Release, so the browser downloads it from GitHub like
+     any other file; this page never writes a file itself. */
+  var REPO = "rtwarren/DCCTTRPG_Crawler_Companion", APPV = $("upd").getAttribute("data-version");
+  var RELEASES = "https://github.com/" + REPO + "/releases";
+  function vNum(v){ return String(v || "").replace(/^v/i, "").split(".").map(function(n){ return parseInt(n, 10) || 0; }); }
+  function isNewer(a, b){ var x = vNum(a), y = vNum(b); for(var i = 0; i < 3; i++){ if((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+  function relNotes(body){
+    return String(body || "").split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return /^[-*]\s+/.test(l); })
+      .slice(0, 8).map(function(l){ l = l.replace(/^[-*]\s+/, "").replace(/\*\*|__|`/g, ""); return l.length > 220 ? l.slice(0, 217).replace(/\s+\S*$/, "") + "…" : l; });
+  }
+  $("upd-check").addEventListener("click", async function(){
+    var out = $("upd-out"), btn = this, link = function(t){ return el("a", {href: RELEASES, target: "_blank", rel: "noopener", text: t}); };
+    btn.disabled = true; out.innerHTML = ""; out.textContent = "Checking GitHub…";
+    try{
+      var r = await fetch("https://api.github.com/repos/" + REPO + "/releases/latest", {headers: {Accept: "application/vnd.github+json"}, cache: "no-store"});
+      if(r.status === 404){ out.textContent = "There are no releases on GitHub yet."; return; }
+      if(r.status === 403 || r.status === 429){ out.textContent = "GitHub is limiting checks from your network right now. Try again in an hour."; return; }
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      var rel = await r.json(), v = String(rel.tag_name || "").replace(/^v/i, "");
+      out.innerHTML = "";
+      if(!isNewer(v, APPV)){ out.textContent = "You have the newest version (" + APPV + ")."; return; }
+      var asset = (Array.isArray(rel.assets) ? rel.assets : []).filter(function(a){ return a && /^Crawler_Companion_v[\d.]+\.html$/i.test(a.name || "") && /^https:\/\/github\.com\//.test(a.browser_download_url || ""); })[0];
+      var notes = relNotes(rel.body);
+      out.appendChild(el("p", {}, [el("b", {text: "Version " + v + " is out."}), " You have " + APPV + "."]));
+      if(notes.length) out.appendChild(el("ul", {}, notes.map(function(n){ return el("li", {text: n}); })));
+      if(asset){
+        out.appendChild(el("p", {}, [el("a", {cls: "btn primary", href: asset.browser_download_url, text: "Download " + v})]));
+        out.appendChild(el("p", {cls: "sub", text: "It goes to your Downloads folder. Open it in place of this file: in Chrome and Edge your settings come along, and Reconnect relinks your sheet."}));
+      } else out.appendChild(el("p", {}, ["The file isn’t attached yet. ", link("Open the releases page"), "."]));
+    }catch(e){
+      out.innerHTML = ""; out.appendChild(el("p", {}, ["Couldn’t reach GitHub. Check your connection and try again, or ", link("open the releases page"), "."]));
+    }finally{ btn.disabled = false; }
+  });
   window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, SH: SH, data: function(){ return D; }, diff: diff, toolFields: toolFields};
 })();

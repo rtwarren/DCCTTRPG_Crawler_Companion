@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Crawler Cheat Sheet</title>
-<meta name="description" content="Player quick reference for the Dungeon Crawler Carl Roleplaying Game, with floor-aware numbers.">
+<title>Crawler Companion</title>
+<meta name="description" content="Rules reference and character manager for the Dungeon Crawler Carl Roleplaying Game, with floor-aware numbers.">
 <style>
 :root{
   --bg:#E3E4DF; --panel:#F6F6F2; --ink:#1B1D21; --soft:#565B62; --rule:#CBCDC6; --well:#ECEDE8;
@@ -170,6 +170,11 @@ ol.seq{padding-left:1.3rem}
 
 footer{color:var(--soft);font-size:.82rem;padding:18px 0 40px}
 footer p{max-width:60rem}
+.upd{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:12px}
+.upd p{margin:6px 0}
+.upd .btn.small{margin-left:8px}
+.upd ul{margin:6px 0 6px 1.2rem;padding:0;max-width:60rem}
+.upd .btn.primary{display:inline-block;text-decoration:none}
 .print-floor{display:none}
 .hide{display:none!important}
 
@@ -384,7 +389,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   :root{--bg:#fff;--panel:#fff;--ink:#000;--soft:#444;--rule:#bbb;--well:#f1f1ee;color-scheme:light}
   body{font-size:7pt;line-height:1.27;background:#fff}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .hbnav,.toolbar,.tool,.stairs-wrap,.empty,.noprint,.band.calc,.tip,.bandnav{display:none!important}
+  .hbnav,.toolbar,.tool,.stairs-wrap,.empty,.noprint,.band.calc,.tip,.bandnav,.upd{display:none!important}
   .band.tab-off:not(.calc){display:block!important}
   .hero{padding:0 0 4pt}
   .hero .wrap{grid-template-columns:auto 1fr;align-items:end;gap:6pt 18pt;padding:0}
@@ -451,8 +456,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 <header class="hero">
   <div class="wrap">
     <div>
-      <h1><span>Crawler</span> <span>cheat sheet</span></h1>
-      <p class="lede">Player rules reference for the Dungeon Crawler Carl Roleplaying Game. Choose your floor and every number in yellow, like <span class="lv" data-f="10+2*F">12</span>, updates to match it.</p>
+      <h1><span>Crawler</span> <span>companion</span></h1>
+      <p class="lede">Rules reference and character manager for the Dungeon Crawler Carl Roleplaying Game. Choose your floor and every number in yellow, like <span class="lv" data-f="10+2*F">12</span>, updates to match it.</p>
     </div>
     <div class="floorbox">
       <div class="stairs-wrap">
@@ -1562,6 +1567,10 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 </main>
 
 <footer>
+  <div class="upd" id="upd" data-version="1.4.0">
+    <p>Crawler Companion 1.4.0 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+    <div id="upd-out" role="status"></div>
+  </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
 </footer>
 </div>
@@ -4498,6 +4507,41 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     }catch(e){}
   });
   fillSources();
+  /* ---------- updates ---------- */
+  /* Check for updates asks GitHub for the newest Release, and only when pressed. The download is an
+     ordinary link to the file attached to that Release, so the browser downloads it from GitHub like
+     any other file; this page never writes a file itself. */
+  var REPO = "rtwarren/DCCTTRPG_Crawler_Companion", APPV = $("upd").getAttribute("data-version");
+  var RELEASES = "https://github.com/" + REPO + "/releases";
+  function vNum(v){ return String(v || "").replace(/^v/i, "").split(".").map(function(n){ return parseInt(n, 10) || 0; }); }
+  function isNewer(a, b){ var x = vNum(a), y = vNum(b); for(var i = 0; i < 3; i++){ if((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+  function relNotes(body){
+    return String(body || "").split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return /^[-*]\s+/.test(l); })
+      .slice(0, 8).map(function(l){ l = l.replace(/^[-*]\s+/, "").replace(/\*\*|__|`/g, ""); return l.length > 220 ? l.slice(0, 217).replace(/\s+\S*$/, "") + "…" : l; });
+  }
+  $("upd-check").addEventListener("click", async function(){
+    var out = $("upd-out"), btn = this, link = function(t){ return el("a", {href: RELEASES, target: "_blank", rel: "noopener", text: t}); };
+    btn.disabled = true; out.innerHTML = ""; out.textContent = "Checking GitHub…";
+    try{
+      var r = await fetch("https://api.github.com/repos/" + REPO + "/releases/latest", {headers: {Accept: "application/vnd.github+json"}, cache: "no-store"});
+      if(r.status === 404){ out.textContent = "There are no releases on GitHub yet."; return; }
+      if(r.status === 403 || r.status === 429){ out.textContent = "GitHub is limiting checks from your network right now. Try again in an hour."; return; }
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      var rel = await r.json(), v = String(rel.tag_name || "").replace(/^v/i, "");
+      out.innerHTML = "";
+      if(!isNewer(v, APPV)){ out.textContent = "You have the newest version (" + APPV + ")."; return; }
+      var asset = (Array.isArray(rel.assets) ? rel.assets : []).filter(function(a){ return a && /^Crawler_Companion_v[\d.]+\.html$/i.test(a.name || "") && /^https:\/\/github\.com\//.test(a.browser_download_url || ""); })[0];
+      var notes = relNotes(rel.body);
+      out.appendChild(el("p", {}, [el("b", {text: "Version " + v + " is out."}), " You have " + APPV + "."]));
+      if(notes.length) out.appendChild(el("ul", {}, notes.map(function(n){ return el("li", {text: n}); })));
+      if(asset){
+        out.appendChild(el("p", {}, [el("a", {cls: "btn primary", href: asset.browser_download_url, text: "Download " + v})]));
+        out.appendChild(el("p", {cls: "sub", text: "It goes to your Downloads folder. Open it in place of this file: in Chrome and Edge your settings come along, and Reconnect relinks your sheet."}));
+      } else out.appendChild(el("p", {}, ["The file isn’t attached yet. ", link("Open the releases page"), "."]));
+    }catch(e){
+      out.innerHTML = ""; out.appendChild(el("p", {}, ["Couldn’t reach GitHub. Check your connection and try again, or ", link("open the releases page"), "."]));
+    }finally{ btn.disabled = false; }
+  });
   window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, SH: SH, data: function(){ return D; }, diff: diff, toolFields: toolFields};
 })();
 

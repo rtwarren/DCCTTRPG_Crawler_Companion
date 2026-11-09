@@ -1,6 +1,12 @@
 # Change log
 
-Versions of the cheat sheet, built as `dist/Crawler_Cheat_Sheet_v<version>.html`. Each one is tagged in git (for example `v1.2.0`). The build reads the version from the first heading below.
+Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
+
+## 1.4.0 (2026-11-09)
+
+- **New name: Crawler Companion.** It's a rules reference and a character manager now, so the file is `Crawler_Companion_v<version>.html` and the GitHub repo is `rtwarren/DCCTTRPG_Crawler_Companion`. Your saved settings and linked sheet carry over.
+- **Check for updates.** The footer shows your version. Press Check for updates to see whether GitHub has a newer one and what changed, then download it with one click. Nothing is sent to GitHub until you press it.
+- Pushing a version tag now publishes a GitHub Release with the built page attached, which is where the update button looks.
 
 ## 1.3.0 (2026-11-05)
 
