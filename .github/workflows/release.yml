@@ -1,19 +1,28 @@
 name: Release
 
 # Pushing a version tag (for example v1.4.0) publishes a GitHub Release with the built page
-# attached as Crawler_Companion_v<version>.html. The page's Check for updates button reads
-# the newest Release, so the tag must match the first version heading in CHANGELOG.md.
+# attached as Crawler_Companion_v<version>.html, plus the guides in guides/. The page's
+# Check for updates button reads the newest Release, so the tag must match the first
+# version heading in CHANGELOG.md.
+#
+# Pushing a change to guides/ on main replaces the guides on the newest Release, so an
+# updated guide doesn't need a new version.
 
 on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - main
+    paths:
+      - "guides/**"
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +54,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/Crawler_Companion_v$VERSION.html"
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/Crawler_Companion_v$VERSION.html" guides/*.pdf
+          --repo "$GITHUB_REPOSITORY"
           --title "Crawler Companion $VERSION"
           --notes-file "$RUNNER_TEMP/notes.md"
           --verify-tag
+
+  guides:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace the guides on the newest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)" || {
+            echo "No release yet; the guides go out with the first version tag."
+            exit 0
+          }
+          gh release upload "$tag" guides/*.pdf --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Replaced the guides on $tag."

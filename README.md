@@ -14,13 +14,15 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `build.py` | Combines the pieces into one HTML file. |
 | `dist/Crawler_Companion_v1.4.0.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
+| `guides/Crawler_Companion_Player_Guide.pdf` | The Player Guide: every Crawler tab, Load from CrawlerForge and Loot Boxes. Attached to every release. |
+| `guides/Crawler_Companion_GM_Loot_Box_Guide.pdf` | The GM Guide: making Loot Boxes in CrawlerForge and getting them to players. Attached to every release. |
 | `tests/test-pdf-engine.js` | Round-trip test for the PDF engine (Node 18+, no packages). |
 | `tests/browser-test.js` | End-to-end test of the built page in Chromium (needs Playwright). |
 | `tests/tools-test.js` | End-to-end test of the Skills, Gear, Pet and Notes tabs (needs Playwright). |
 | `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
 | `tests/fixtures/` | A made-up CrawlerForge crawler file and pack for that test. |
 | `tests/update-test.js` | Test of Check for updates, with GitHub's answers made up (needs Playwright). |
-| `.github/workflows/release.yml` | Publishes a GitHub Release with the built page attached whenever a version tag is pushed. |
+| `.github/workflows/release.yml` | Publishes a GitHub Release with the built page and the guides attached whenever a version tag is pushed, and replaces the guides on the newest release when they change. |
 
 ## Building
 
@@ -173,6 +175,8 @@ Each version is tagged in git (`v1.0.0`, `v1.1.0` and so on). `CHANGELOG.md` lis
 3. Run `python build.py`.
 4. `git add -A`, `git commit -m "Short description (1.4.1)"`, `git tag -a v1.4.1 -m "Version 1.4.1"`, then `git push --follow-tags`.
 
-Pushing the tag runs `.github/workflows/release.yml`. It checks that the tag matches the first version in `CHANGELOG.md`, builds the page, and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` attached and that version's CHANGELOG section as its notes. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it, delete the tag (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
+Pushing the tag runs `.github/workflows/release.yml`. It checks that the tag matches the first version in `CHANGELOG.md`, builds the page, and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` and the two guides in `guides/` attached, and that version's CHANGELOG section as its notes. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it, delete the tag (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
+
+To change a guide, edit it, export it as a letter-size PDF over the file in `guides/` (same name), commit and push to main. The workflow replaces that guide on the newest release, so it doesn't need a new version. The `.gitignore` keeps every other PDF out of the repo, since character sheets and rulebooks don't belong in it.
 
 The page's footer shows its version. **Check for updates** asks `api.github.com/repos/rtwarren/DCCTTRPG_Crawler_Companion/releases/latest` for the newest release, and only when pressed. If it's newer, the page lists the release notes and a **Download** link to the attached file. In Chrome and Edge every local HTML file shares the same saved data, so the new file keeps the crawler, settings and the linked sheet (press Reconnect). If the repo is ever renamed or moved, change `REPO` in `main.js`.
