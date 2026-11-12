@@ -2,6 +2,13 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.6.0 (2026-11-12)
+
+- **Open and save your sheet in Google Drive.** In the online copy, press Open from Google Drive, sign in with Google and pick your sheet, or upload it from your computer in the same window. Changes save back to Drive from any device, phones included, and Drive keeps each save as a version you can go back to. If the sheet is saved from another device while you have it open, its new numbers load in, or, when you have unsaved changes, both sets are kept when you save. Next visit, press Reconnect.
+- The page asks Google only for access to the files you pick or upload with it, nothing else in your Drive. Google's sign-in and picker load only when you press the button, so the page still works offline with a PDF on your computer.
+- Linking a PDF on your computer works as before. The page remembers one sheet at a time, from Drive or from your computer.
+- **Online copy.** The newest version is at https://rtwarren.github.io/DCCTTRPG_Crawler_Companion/, so there's nothing to download.
+
 ## 1.5.0 (2026-11-12)
 
 - **Load from CrawlerForge syncs the whole crawler.** A crawler file now brings across your Level, Floor, Unenhanced Stats, Health, Mana, AI Favor, Evade adjustment, Popularity and the Past Trauma, Loose Ends and Regrets boxes, as well as your gear, Inventory, Gold, Junk and Hotlist. It replays your Skills too: Ranks you set, Skills you added or removed, advancement ticks, the end-of-play-period checks and the Level they give, and Skills learned from untrained tries on Floors 1 and 2. A Skill finds its row by name, and a shorter name on your sheet counts ("Unarmed" for "Unarmed Combat"). Skills on your sheet that CrawlerForge doesn't list, like the Heal Spell, stay put.

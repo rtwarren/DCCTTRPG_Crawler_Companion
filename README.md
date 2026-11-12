@@ -12,7 +12,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Companion_v1.5.0.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Companion_v1.6.0.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `guides/Crawler_Companion_Player_Guide.pdf` | The Player Guide: every Crawler tab, Load from CrawlerForge and Loot Boxes. Attached to every release. |
 | `guides/Crawler_Companion_GM_Loot_Box_Guide.pdf` | The GM Guide: making Loot Boxes in CrawlerForge and getting them to players. Attached to every release. |
@@ -20,6 +20,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `tests/browser-test.js` | End-to-end test of the built page in Chromium (needs Playwright). |
 | `tests/tools-test.js` | End-to-end test of the Skills, Gear, Pet and Notes tabs (needs Playwright). |
 | `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
+| `tests/drive-test.js` | End-to-end test of Open from Google Drive, with Google faked (needs Playwright). |
 | `tests/fixtures/` | Made-up CrawlerForge crawler files and a pack for that test. |
 | `tests/update-test.js` | Test of Check for updates, with GitHub's answers made up (needs Playwright). |
 | `.github/workflows/release.yml` | Publishes a GitHub Release with the built page and the guides attached whenever a new version reaches `main` or a version tag is pushed, puts the page on GitHub Pages, and replaces the guides on the newest release when they change. |
@@ -56,7 +57,8 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 
 ## How the character sheet link works
 
-- **Linking.** In Chrome and Edge the page uses the File System Access API, so it can save straight into the PDF. The file handle is kept in IndexedDB so you can reconnect next visit. Other browsers open the file read-only: the change list shows what to update by hand, and saving needs Chrome or Edge.
+- **Linking.** In Chrome and Edge the page uses the File System Access API, so it can save straight into the PDF. The file handle is kept in IndexedDB so you can reconnect next visit. Other browsers open the file read-only: the change list shows what to update by hand, and saving it needs Chrome or Edge, or the sheet opened from Google Drive instead.
+- **Google Drive.** In the online copy, Open from Google Drive signs in with Google (Google Identity Services) and opens Google's file picker, which also has an Upload tab for a PDF on the computer. The page asks only for the `drive.file` permission, so it can read and change the files picked or uploaded with it and nothing else in Drive. It downloads the PDF through the Drive API, saves with a media upload to the same file, and keeps the file's id in localStorage (`dcc-cheat-drive`) for Reconnect. Before saving it checks the file's version: if the sheet was saved somewhere else, it reopens that copy and writes on top. While the tab is showing, it checks the version every 20 seconds, the way the local file is watched. A sign-in lasts about an hour, and a new one needs a click because Google's window can't open by itself, so automatic saving waits and says so. Google's scripts load only on the first press. Drive doesn't work from a copy opened as a file on the computer, because Google signs in only from a web address registered for the project; the button there points to the online copy. The page remembers one sheet at a time, from Drive or from the computer.
 - **Saving.** `pdf-engine.js` never rewrites the original bytes. Each save appends changed field objects, new appearance streams and a new cross-reference section to the end of the file, the same way Acrobat saves. Removing those appended bytes gets you the previous version.
 - **Stats.** Each stat has an Unenhanced and an Enhanced value, matching the sheet. Changing Unenhanced moves Enhanced by the same amount, so gear and buff bonuses stay put; changing Enhanced alone only changes Enhanced. Both are saved.
 - **Re-saved PDFs.** If a PDF program re-saves the sheet with compressed object streams, the engine decompresses them. It tolerates the bad checksums and stray bytes some programs leave behind, which strict browser decompression would otherwise reject with "Failed to fetch".
@@ -119,6 +121,19 @@ These are the field names the page reads and writes. They're set in the `FN` obj
 
 This sheet stores every field twice: once on the page and once in the form's field list. The engine updates both. When they disagree, it reads the copy that's shown on the page.
 
+## Setting up Google Drive
+
+Open from Google Drive needs a Google Cloud project for the page. Its three IDs go in `GDRIVE` at the top of the Google Drive section of `main.js`. They aren't secrets: they ship in the page, and the restrictions below keep them working only for the online copy. With them blank, the Drive buttons stay hidden. To set it up, once:
+
+1. In the Google Cloud console (<https://console.cloud.google.com/>), create a project, for example "Crawler Companion".
+2. In APIs & Services, Library, turn on the **Google Drive API** and the **Google Picker API**.
+3. In Google Auth Platform (the OAuth consent screen), fill in the app name and your email. Under Audience, choose External and publish the app, so anyone at the table can sign in. `drive.file` isn't a sensitive permission, so publishing doesn't need a review from Google. While the app is in Testing, only the test users you list can sign in.
+4. Under Data Access, add the scope `https://www.googleapis.com/auth/drive.file`.
+5. Under Clients, create an OAuth client of type Web application. Add `https://rtwarren.github.io` as an Authorized JavaScript origin. Copy its **Client ID**.
+6. In APIs & Services, Credentials, create an **API key**. Restrict it to websites `https://rtwarren.github.io/*` and to the Google Picker API.
+7. Copy the **project number** from the project's dashboard. It's the App ID.
+8. Put them in `GDRIVE` as `clientId`, `apiKey` and `appId`, build, and release.
+
 ## Testing
 
 ```
@@ -148,6 +163,12 @@ node tests/crawlerforge-test.js "C:\path\to\a copy of Carl_Character_Sheet_Filla
 This links the sheet and loads `tests/fixtures/crawlerforge-crawler.json`, a made-up crawler. It checks the Gear Slots, Inventory, Gold (after a tithe), Junk, Hotlist and unopened Loot Boxes, and that Stats move by the gear bonus. It checks that undone items and opened boxes are left out, and that loading twice doesn't count bonuses twice. It opens the boxes and checks the items, rolled Gold, Junk, potions and the Skill a box teaches, and opens a box typed on the sheet by hand. Then it adds items and boxes from `tests/fixtures/crawlerforge-pack.json`, opens a random box, checks the potion limit warning, reads an Export everything backup with a Forge, saves to `tests/out/crawlerforge-saved.pdf` and checks the fields. Last, it relinks a fresh copy, loads `tests/fixtures/crawlerforge-sync.json` and checks the whole-crawler sync: Level from play periods (an undone one doesn't count), Floor, a corrected Stat, Health, Mana, AI Favor, Evade Buffs, Popularity and story boxes, Skill Ranks and ticks, a short sheet name, new and removed Skills, an untrained try, and that loading again changes nothing. It saves that to `tests/out/crawlerforge-sync-saved.pdf` and checks the fields.
 
 ```
+node tests/drive-test.js "C:\path\to\a copy of Carl_Character_Sheet_Fillable.pdf"
+```
+
+This serves the built page from a made-up https address with test IDs in `GDRIVE`, and fakes Google's sign-in, picker and Drive, so nothing reaches Google. It checks the Drive button is hidden while `GDRIVE` is blank and nothing loads from Google before it's pressed. Then it opens the sheet from Drive, checks the picker gets the token, API key, App ID and Upload tab and that sign-in asks for `drive.file` only, saves a change to Drive, loads a save made on another device, keeps both when there are unsaved changes, renews a sign-in that ran out when Save is clicked, and checks automatic saving waits for a click instead. It reconnects on the next visit without the picker, reloads, unlinks, handles a file Drive can't find and a cancelled picker, and checks the button points to the online copy from a file on the computer.
+
+```
 node tests/update-test.js
 ```
 
@@ -162,6 +183,7 @@ Rules are summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Cour
 Some antivirus tools flag HTML files that build files in the browser and download them, or that run code from strings. That's how "HTML smuggling" malware works, so the page avoids both:
 
 - It never creates a download. It only writes into a sheet you linked yourself, through the browser's file permission prompt.
+- Open from Google Drive loads Google's sign-in and picker scripts from accounts.google.com and apis.google.com, and only when pressed. It saves to Drive with an upload request, never a download.
 - Check for updates only reads GitHub's list of releases. Its Download button is an ordinary link to the file on github.com, so the browser downloads it from GitHub like any other file.
 - Floor formulas are parsed by a small pattern match instead of being run as code.
 - No fonts or other files are embedded as encoded data.

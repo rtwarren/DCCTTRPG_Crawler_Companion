@@ -527,7 +527,9 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
           <p class="sub">Link your fillable PDF to load your numbers. Health, Mana, Skills, gear, Inventory, your pet and your notes save back into it.</p>
           <div class="btnrow">
             <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
+            <button type="button" class="btn hide" id="sb-drive">Open from Google Drive</button>
             <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
+            <button type="button" class="btn hide" id="sb-drelink">Reconnect</button>
           </div>
           <input type="file" id="sb-file" accept="application/pdf,.pdf" class="hide" tabindex="-1" aria-hidden="true">
           <p class="sub" id="sb-msg" aria-live="polite"></p>
@@ -1570,8 +1572,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 </main>
 
 <footer>
-  <div class="upd" id="upd" data-version="1.5.0">
-    <p>Crawler Companion 1.5.0 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+  <div class="upd" id="upd" data-version="1.6.0">
+    <p>Crawler Companion 1.6.0 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
@@ -2705,7 +2707,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     if(!on) return;
     var m = SH.model;
     $("sb-who").textContent = (m.name || "Your crawler") + (m.race ? ", " + m.race : "") + (m.cls ? " " + m.cls : "");
-    $("sb-file-name").textContent = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
+    $("sb-file-name").textContent = SH.fileName + (SH.mode === "handle" ? " (linked)" : SH.mode === "drive" ? " (Google Drive)" : " (read-only here)");
     var info = [];
     if(m.crawler) info.push("Crawler " + m.crawler);
     if(m.debuffs) info.push("Debuffs: " + m.debuffs);
@@ -2715,10 +2717,12 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     var d = diff(), ul = $("sb-changes"); ul.innerHTML = "";
     d.list.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
     $("sb-count").textContent = d.list.length ? plural(d.list.length, "unsaved change") : "No unsaved changes";
-    $("sb-save").disabled = SH.mode !== "handle" || !d.list.length || SH.saving;
-    $("sb-save").textContent = SH.mode === "handle" ? "Save to sheet" : "Saving needs Chrome or Edge";
-    $("sb-auto-l").classList.toggle("hide", SH.mode !== "handle");
+    $("sb-save").disabled = !writable() || !d.list.length || SH.saving;
+    $("sb-save").textContent = writable() ? "Save to sheet" : driveOn() && location.protocol !== "file:" ? "Read-only: open it from Google Drive to save" : "Saving needs Chrome or Edge";
+    $("sb-auto-l").classList.toggle("hide", !writable());
   }
+  /* the sheet can be saved: a file linked in Chrome or Edge, or a sheet opened from Google Drive */
+  function writable(){ return SH.mode === "handle" || SH.mode === "drive"; }
   function fillSources(){
     var on = D.skills.length + D.attacks.length > 0, s1 = $("ck-src"), s2 = $("dm-src"), keep1 = s1.value;
     $("ck-src-l").classList.toggle("hide", !on); $("dm-src-l").classList.toggle("hide", !on);
@@ -2740,36 +2744,48 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   function sheetChanged(){
     if(!SH.doc) return;
     renderSheetBox();
-    if(SH.mode === "handle" && $("sb-auto").checked){
+    if(writable() && $("sb-auto").checked){
       clearTimeout(SH.timer);
       SH.timer = setTimeout(function(){ if(diff().list.length) saveSheet(); }, 1200);
     }
   }
-  async function openBytes(u8, name, handle){
+  async function openBytes(u8, name, handle, mode){
     var doc = await PDF.open(u8);
     if(!looksLikeSheet(doc)) throw new Error("This PDF doesn’t look like the Dungeon Crawler Carl fillable character sheet.");
-    SH.doc = doc; SH.fileName = name; SH.handle = handle || null; SH.mode = handle ? "handle" : "copy";
+    SH.doc = doc; SH.fileName = name; SH.handle = handle || null; SH.mode = mode || (handle ? "handle" : "copy");
     applySheet(readSheet());
   }
-  async function saveSheet(){
+  /* fromClick: the Save button was pressed, so Google may show its sign-in window if the last one ran out */
+  async function saveSheet(fromClick){
     if(!SH.doc || SH.saving) return;
-    /* the page only ever writes through a file the user linked; it never builds a download */
-    if(SH.mode !== "handle"){ status("This browser can\u2019t write into the PDF. Open the page in Chrome or Edge to save, or copy the changes listed here into your PDF reader."); return; }
+    /* the page only ever writes through a file the user linked or opened from Drive; it never builds a download */
+    if(!writable()){ status(driveOn() && location.protocol !== "file:" ? "This copy is read-only. To save, open the sheet from Google Drive, or use Chrome or Edge to link the PDF on this computer." : "This browser can’t write into the PDF. Open the page in Chrome or Edge to save, or copy the changes listed here into your PDF reader."); return; }
     var d = diff(); if(!d.list.length) return;
+    if(SH.mode === "drive" && fromClick !== true && !driveFresh()){ status("Your Google sign-in has run out. Press Save to sheet to sign in again and save."); return; }
     SH.saving = true; renderSheetBox(); status("Saving…");
     try{
-      var file = await SH.handle.getFile();
-      if(file.lastModified !== SH.lastMod){ SH.doc = await PDF.open(new Uint8Array(await file.arrayBuffer())); }
-      var bytes = SH.doc.save(diff().writes);
-      var wr = await SH.handle.createWritable(); await wr.write(bytes); await wr.close();
-      SH.lastMod = (await SH.handle.getFile()).lastModified;
+      var bytes;
+      if(SH.mode === "drive"){
+        /* if the file changed in Drive since it was opened, those changes are kept and these go on top */
+        var meta = await driveMeta(GD.id, fromClick === true);
+        if(meta.version !== GD.version) SH.doc = await PDF.open(await driveBytes(GD.id, fromClick === true));
+        bytes = SH.doc.save(diff().writes);
+        GD.version = (await driveUpload(GD.id, bytes, fromClick === true)).version;
+      } else {
+        var file = await SH.handle.getFile();
+        if(file.lastModified !== SH.lastMod){ SH.doc = await PDF.open(new Uint8Array(await file.arrayBuffer())); }
+        bytes = SH.doc.save(diff().writes);
+        var wr = await SH.handle.createWritable(); await wr.write(bytes); await wr.close();
+        SH.lastMod = (await SH.handle.getFile()).lastModified;
+      }
       SH.doc = await PDF.open(bytes);
-      status("Saved to " + SH.fileName + " at " + stamp() + ".");
+      status("Saved to " + SH.fileName + (SH.mode === "drive" ? " in Google Drive" : "") + " at " + stamp() + ".");
       var m = readSheet(); SH.model = m;
       useSheetData(m.tools);
       SH.base = curModel(); fillSources(); renderTools();
     }catch(e){
-      status(/NotAllowed|permission/i.test(String(e)) ? "Couldn’t save: this page doesn’t have permission to write to the file. Choose Reload, then try again." :
+      status(SH.mode === "drive" ? "Couldn’t save to Google Drive: " + (e && e.message ? e.message : e) :
+        /NotAllowed|permission/i.test(String(e)) ? "Couldn’t save: this page doesn’t have permission to write to the file. Choose Reload, then try again." :
         /NoModification|InvalidState|locked|busy/i.test(String(e && e.name) + e) ? "Couldn’t save: the PDF is open in another program that’s locking it. Close it there and try again." :
         "Couldn’t save: " + (e && e.message ? e.message : e));
     }
@@ -2790,6 +2806,124 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   function idbSet(k, v){ return idb(function(s, res){ var q2 = v == null ? s.delete(k) : s.put(v, k); q2.onsuccess = function(){ res(true); }; q2.onerror = function(){ res(null); }; }); }
   function idbGet(k){ return idb(function(s, res){ var q2 = s.get(k); q2.onsuccess = function(){ res(q2.result || null); }; q2.onerror = function(){ res(null); }; }); }
 
+  /* ---------- Google Drive ----------
+     Open and save the sheet in Google Drive, from any device, as well as from a PDF on this computer.
+     Google's sign-in and file picker scripts load only when you press Open from Google Drive, and
+     the page asks only for the drive.file permission: it can see the files you pick or upload with
+     it and nothing else in your Drive. Drive keeps every save as a version you can go back to.
+     GDRIVE holds the Google Cloud project's public IDs (see README); with them blank, Drive is off. */
+  var GDRIVE = {clientId: "", apiKey: "", appId: ""};
+  var DRKEY = "dcc-cheat-drive", DRIVE_API = "https://www.googleapis.com/drive/v3/files/", DRIVE_UP = "https://www.googleapis.com/upload/drive/v3/files/";
+  var GD = {token: null, expires: 0, client: null, loaded: null, id: "", version: "", cb: null, eb: null};
+  function driveOn(){ return !!(GDRIVE.clientId && GDRIVE.apiKey && GDRIVE.appId); }
+  function driveFresh(){ return !!GD.token && Date.now() < GD.expires - 60000; }
+  function loadScript(src){
+    return new Promise(function(res, rej){
+      var sc = document.createElement("script"); sc.src = src; sc.async = true; sc.onload = res;
+      sc.onerror = function(){ rej(new Error("Couldn’t reach Google. Check your connection and try again.")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function driveLoad(){
+    if(!GD.loaded) GD.loaded = Promise.all([loadScript("https://accounts.google.com/gsi/client"), loadScript("https://apis.google.com/js/api.js")]).then(function(){
+      return new Promise(function(res, rej){ gapi.load("picker", {callback: res, onerror: function(){ rej(new Error("Couldn’t load Google’s file picker.")); }}); });
+    }).catch(function(e){ GD.loaded = null; throw e; });
+    return GD.loaded;
+  }
+  /* a sign-in token for Drive. Getting a new one can open Google's window, so only a click asks (ask = true) */
+  async function driveToken(ask){
+    if(driveFresh()) return GD.token;
+    if(!ask) throw new Error("Your Google sign-in has run out. Press the button again to sign in.");
+    await driveLoad();
+    if(!GD.client) GD.client = google.accounts.oauth2.initTokenClient({client_id: GDRIVE.clientId, scope: "https://www.googleapis.com/auth/drive.file",
+      callback: function(r){ if(GD.cb) GD.cb(r); }, error_callback: function(e){ if(GD.eb) GD.eb(e); }});
+    return new Promise(function(res, rej){
+      GD.cb = function(r){
+        if(r && r.access_token){ GD.token = r.access_token; GD.expires = Date.now() + (+r.expires_in || 3600) * 1000; res(GD.token); }
+        else rej(new Error(r && r.error === "access_denied" ? "Google sign-in was turned down, so Drive stays off." : "Google sign-in didn’t finish."));
+      };
+      GD.eb = function(e){
+        rej(new Error(e && e.type === "popup_failed_to_open" ? "Your browser blocked Google’s sign-in window. Allow pop-ups for this page and try again." :
+          e && e.type === "popup_closed" ? "Google’s sign-in window was closed before it finished." : "Google sign-in didn’t finish."));
+      };
+      GD.client.requestAccessToken({prompt: ""});
+    });
+  }
+  /* one Drive request; a sign-in that ran out is asked for again once, when a click allows it */
+  async function driveFetch(url, opts, ask){
+    for(var tries = 0; tries < 2; tries++){
+      var tok = await driveToken(ask), o = Object.assign({}, opts || {}); o.headers = Object.assign({Authorization: "Bearer " + tok}, o.headers || {});
+      var r = await fetch(url, o);
+      if(r.status === 401 && tries === 0){ GD.token = null; if(ask) continue; }
+      if(!r.ok){
+        var why = ""; try{ why = (await r.json()).error.message; }catch(e){}
+        throw new Error(r.status === 404 ? "Google Drive can’t find the sheet. It may have been deleted, or this page lost access to it; open it from Google Drive again." :
+          r.status === 401 ? "Your Google sign-in has run out. Press the button again to sign in." : (why || "Google Drive answered " + r.status) + ".");
+      }
+      return r;
+    }
+  }
+  async function driveMeta(id, ask){ return (await driveFetch(DRIVE_API + encodeURIComponent(id) + "?supportsAllDrives=true&fields=id,name,version,capabilities(canEdit)", null, ask)).json(); }
+  async function driveBytes(id, ask){ return new Uint8Array(await (await driveFetch(DRIVE_API + encodeURIComponent(id) + "?alt=media&supportsAllDrives=true", null, ask)).arrayBuffer()); }
+  async function driveUpload(id, bytes, ask){
+    return (await driveFetch(DRIVE_UP + encodeURIComponent(id) + "?uploadType=media&supportsAllDrives=true&fields=id,version", {method: "PATCH", headers: {"Content-Type": "application/pdf"}, body: bytes}, ask)).json();
+  }
+  /* Google's picker: your PDFs in Drive, plus an Upload tab for putting the PDF from this computer into Drive */
+  function drivePick(tok){
+    return new Promise(function(res){
+      var P = google.picker;
+      var view = new P.DocsView(P.ViewId.DOCS).setMimeTypes("application/pdf").setMode(P.DocsViewMode.LIST);
+      new P.PickerBuilder().addView(view).addView(new P.DocsUploadView()).setOAuthToken(tok).setDeveloperKey(GDRIVE.apiKey).setAppId(GDRIVE.appId)
+        .setTitle("Pick your character sheet PDF").setCallback(function(d){
+          if(d.action === P.Action.PICKED && d.docs && d.docs[0]) res({id: d.docs[0].id, name: d.docs[0].name});
+          else if(d.action === P.Action.CANCEL) res(null);
+        }).build().setVisible(true);
+    });
+  }
+  async function driveOpen(id, ask){
+    var meta = await driveMeta(id, ask), u8 = await driveBytes(id, ask);
+    var canEdit = !(meta.capabilities && meta.capabilities.canEdit === false);
+    await openBytes(u8, meta.name || "Character sheet.pdf", null, canEdit ? "drive" : "copy");
+    GD.id = id; GD.version = meta.version;
+    /* one sheet is remembered at a time: Drive or this computer */
+    store(DRKEY, JSON.stringify({id: id, name: meta.name || ""})); idbSet("sheet", null);
+    $("sb-msg").textContent = ""; $("sb-drelink").classList.add("hide"); $("sb-relink").classList.add("hide");
+    status(canEdit ? "Linked to Google Drive at " + stamp() + "." : "Opened read-only: your Google account can view this file but not change it.");
+    renderSheetBox();
+  }
+  function driveSaved(){ try{ var o = JSON.parse(store(DRKEY) || "null"); return o && o.id ? o : null; }catch(e){ return null; } }
+  function driveOffline(){ return "Google Drive works from the online copy at https://rtwarren.github.io/DCCTTRPG_Crawler_Companion/ (Google doesn’t sign in from a file on your computer). Here, link the PDF on this computer instead."; }
+  $("sb-drive").addEventListener("click", async function(){
+    $("sb-msg").textContent = "";
+    if(location.protocol === "file:"){ $("sb-msg").textContent = driveOffline(); return; }
+    try{
+      var tok = await driveToken(true), f = await drivePick(tok);
+      if(f) await driveOpen(f.id, true);
+    }catch(e){ $("sb-msg").textContent = e.message || String(e); }
+  });
+  $("sb-drelink").addEventListener("click", async function(){
+    var o = driveSaved(); if(!o) return;
+    $("sb-msg").textContent = "";
+    if(location.protocol === "file:"){ $("sb-msg").textContent = driveOffline(); return; }
+    try{ await driveOpen(o.id, true); }catch(e){ $("sb-msg").textContent = "Couldn’t reopen the sheet from Google Drive. " + (e.message || e); }
+  });
+  /* someone saved the sheet in Drive from another device: load it, or keep yours to add on top */
+  async function watchDrive(){
+    if(SH.mode !== "drive" || SH.saving || !driveFresh() || document.visibilityState !== "visible") return;
+    try{
+      var meta = await driveMeta(GD.id, false);
+      if(meta.version === GD.version) return;
+      if(!diff().list.length){
+        await openBytes(await driveBytes(GD.id, false), meta.name || SH.fileName, null, "drive"); GD.version = meta.version;
+        status("Your sheet changed in Google Drive. Loaded its new numbers at " + stamp() + ".");
+      } else {
+        status("Your sheet changed in Google Drive. When you save, its changes are kept and yours are added on top.");
+      }
+    }catch(e){}
+  }
+  setInterval(watchDrive, 20000);
+  document.addEventListener("visibilitychange", watchDrive);
+
   var canHandle = typeof window.showOpenFilePicker === "function";
   async function linkWithHandle(h){
     var perm = "prompt";
@@ -2798,7 +2932,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     var u8 = new Uint8Array(await file.arrayBuffer());
     await openBytes(u8, file.name, perm === "granted" ? h : null);
     SH.lastMod = file.lastModified;
-    if(perm === "granted") idbSet("sheet", h);
+    if(perm === "granted"){ idbSet("sheet", h); store(DRKEY, null); $("sb-drelink").classList.add("hide"); }
     $("sb-msg").textContent = "";
     status(perm === "granted" ? "Linked at " + stamp() + "." : "Opened read-only. To save, link the sheet again and choose Allow when your browser asks.");
   }
@@ -2821,19 +2955,20 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     var h = await idbGet("sheet"); if(!h) return;
     try{ await linkWithHandle(h); $("sb-relink").classList.add("hide"); }catch(e){ $("sb-msg").textContent = "Couldn’t reopen the sheet. Link it again. (" + (e.message || e) + ")"; }
   });
-  $("sb-save").addEventListener("click", saveSheet);
+  $("sb-save").addEventListener("click", function(){ saveSheet(true); });
   $("sb-auto").addEventListener("change", function(){ store("dcc-cheat-autosave", this.checked ? "1" : "0"); if(this.checked) sheetChanged(); });
   if(store("dcc-cheat-autosave") === "0") $("sb-auto").checked = false;
   $("sb-reload").addEventListener("click", async function(){
     try{
       if(SH.mode === "handle"){ var file = await SH.handle.getFile(); await openBytes(new Uint8Array(await file.arrayBuffer()), file.name, SH.handle); SH.lastMod = file.lastModified; status("Reloaded from the sheet at " + stamp() + "."); }
+      else if(SH.mode === "drive"){ await driveOpen(GD.id, true); status("Reloaded from Google Drive at " + stamp() + "."); }
       else { $("sb-file").click(); }
     }catch(e){ status("Couldn’t reload: " + (e.message || e)); }
   });
   $("sb-unlink").addEventListener("click", function(){
     if(diff().list.length && !window.confirm("You have unsaved changes. Unlink anyway?")) return;
-    SH.doc = null; SH.handle = null; SH.model = null; SH.base = null; SH.mode = ""; modAt = null;
-    idbSet("sheet", null); fillSources(); renderSheetBox(); $("sb-relink").classList.add("hide");
+    SH.doc = null; SH.handle = null; SH.model = null; SH.base = null; SH.mode = ""; modAt = null; GD.id = ""; GD.version = "";
+    idbSet("sheet", null); store(DRKEY, null); fillSources(); renderSheetBox(); $("sb-relink").classList.add("hide"); $("sb-drelink").classList.add("hide");
   });
   async function watchFile(){
     if(SH.mode !== "handle" || SH.saving || document.visibilityState !== "visible") return;
@@ -4750,6 +4885,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     showTab(band ? band.id : (store(TABKEY) || "calc"), {scroll: false, noHash: !band});
     if(el && el.classList.contains("toolpanel")) selectTool(el.id.slice(3));
   })();
+  $("sb-drive").classList.toggle("hide", !driveOn());
+  (function(){ var o = driveOn() && driveSaved(); if(o){ $("sb-drelink").textContent = "Reconnect to " + (o.name || "your sheet") + " in Google Drive"; $("sb-drelink").classList.remove("hide"); } })();
   if(canHandle) idbGet("sheet").then(async function(h){
     if(!h) return;
     try{
@@ -4794,7 +4931,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       out.innerHTML = ""; out.appendChild(el("p", {}, ["Couldn’t reach GitHub. Check your connection and try again, or ", link("open the releases page"), "."]));
     }finally{ btn.disabled = false; }
   });
-  window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, SH: SH, data: function(){ return D; }, diff: diff, toolFields: toolFields};
+  window.__cheat = {linkWithHandle: linkWithHandle, watchFile: watchFile, watchDrive: watchDrive, GD: GD, SH: SH, data: function(){ return D; }, diff: diff, toolFields: toolFields};
 })();
 
 </script>
