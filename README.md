@@ -22,7 +22,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
 | `tests/fixtures/` | Made-up CrawlerForge crawler files and a pack for that test. |
 | `tests/update-test.js` | Test of Check for updates, with GitHub's answers made up (needs Playwright). |
-| `.github/workflows/release.yml` | Publishes a GitHub Release with the built page and the guides attached whenever a version tag is pushed, and replaces the guides on the newest release when they change. |
+| `.github/workflows/release.yml` | Publishes a GitHub Release with the built page and the guides attached whenever a new version reaches `main` or a version tag is pushed, puts the page on GitHub Pages, and replaces the guides on the newest release when they change. |
 
 ## Building
 
@@ -175,9 +175,11 @@ Each version is tagged in git (`v1.0.0`, `v1.1.0` and so on). `CHANGELOG.md` lis
 1. Make the change in `src/`.
 2. Add the new version's section to the top of `CHANGELOG.md`. The build reads the version number from it.
 3. Run `python build.py`.
-4. `git add -A`, `git commit -m "Short description (1.4.1)"`, `git tag -a v1.4.1 -m "Version 1.4.1"`, then `git push --follow-tags`.
+4. Either merge it into `main` (a pull request is fine), or `git add -A`, `git commit -m "Short description (1.4.1)"`, `git tag -a v1.4.1 -m "Version 1.4.1"`, then `git push --follow-tags`.
 
-Pushing the tag runs `.github/workflows/release.yml`. It checks that the tag matches the first version in `CHANGELOG.md`, builds the page, and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` and the two guides in `guides/` attached, and that version's CHANGELOG section as its notes. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it, delete the tag (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
+Either way runs `.github/workflows/release.yml`. It reads the first version in `CHANGELOG.md`; a pushed tag has to match it. If that version has no release yet, it builds the page and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` and the two guides in `guides/` attached, and that version's CHANGELOG section as its notes. Coming from `main`, the release makes the `v1.4.1` tag itself. A version that's already released is skipped, so a merge and a tag for the same version don't clash. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it and run the workflow again from the Actions tab, or delete a tag you pushed (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
+
+Each new release is also published to GitHub Pages at <https://rtwarren.github.io/DCCTTRPG_Crawler_Companion/>, so the newest version opens from any device without a download. Pages has to be turned on once: on GitHub, open the repo's Settings, then Pages, and set Source to GitHub Actions. To publish the newest version to Pages again, open Actions, then Release, and press Run workflow.
 
 To change a guide, edit it, export it as a letter-size PDF over the file in `guides/` (same name), commit and push to main. The workflow replaces that guide on the newest release, so it doesn't need a new version. The `.gitignore` keeps every other PDF out of the repo, since character sheets and rulebooks don't belong in it.
 
