@@ -164,6 +164,32 @@ async function link(p, bytes){
   await p.click("#tt-pet");
   check("pet name comes back from the sheet", (await p.inputValue("#pt-name")) === "Testpet", await p.inputValue("#pt-name"));
 
+  // Rank upgrades in the Damage tab: "Rank 5: +1d4" in the Skill's notes adds 1d4 at Rank 5; Rank 10 waits for Floor 3
+  await p.evaluate(() => {
+    const D = window.__cheat.data();
+    D.attacks = [{row: 0, name: "Test Spell", rank: "4", stat: "Int +3", dice: "1d4", dstat: "Int +3"}];
+    D.skills = D.skills.filter(s => s.name !== "Test Spell").concat([{row: 19, name: "Test Spell", rank: "4", stat: "Int +3", type: "Evade", notes: "1d4+Int Necrotic. Rank 5: +1d4. Rank 10: +1d6", mark: false}]);
+  });
+  await p.click('.stairs button[data-floor="1"]');
+  await p.click("#tt-damage");
+  await p.evaluate(() => { document.getElementById("dm-stat").value = "int"; });
+  await p.selectOption("#dm-src", "0");
+  const formula = async () => (await p.textContent("#dm-formula")).replace(/\s+/g, " ").trim();
+  check("below Rank 5 the attack rolls its sheet dice", (await formula()).startsWith("1d4") && !/upgrade/.test(await p.textContent("#dm-why")), await formula());
+  await p.evaluate(() => { const D = window.__cheat.data(); D.attacks[0].rank = "5"; D.skills.find(s => s.name === "Test Spell").rank = "5"; });
+  await p.selectOption("#dm-src", "");
+  await p.selectOption("#dm-src", "0");
+  check("at Rank 5 the upgrade die joins the base dice", (await formula()).startsWith("2d4") && /Test Spell’s Rank 5 \+1d4 upgrade included/.test(await p.textContent("#dm-why")), [await formula(), await p.textContent("#dm-why")]);
+  await p.selectOption("#dm-res", "crit");
+  check("a Critical Hit doubles the upgrade die with the base dice", (await formula()).startsWith("4d4"), await formula());
+  await p.selectOption("#dm-res", "hit");
+  await p.evaluate(() => { const D = window.__cheat.data(); D.attacks[0].rank = "10"; D.skills.find(s => s.name === "Test Spell").rank = "10"; });
+  await p.selectOption("#dm-src", ""); await p.selectOption("#dm-src", "0");
+  check("on Floors 1 and 2 a Rank 10 upgrade doesn't count yet", (await formula()).startsWith("2d4") && !/1d6/.test(await formula()), await formula());
+  await p.click('.stairs button[data-floor="3"]');
+  check("from Floor 3 the Rank 10 upgrade counts too", /^2d4 \+ 1d6/.test(await formula()) && /Rank 5 \+1d4 and Rank 10 \+1d6 upgrades included/.test(await p.textContent("#dm-why")), [await formula(), await p.textContent("#dm-why")]);
+  await p.click('.stairs button[data-floor="1"]');
+
   check("no page errors", !errors.length, errors);
   check("no downloads", !downloads, downloads);
   await browser.close();

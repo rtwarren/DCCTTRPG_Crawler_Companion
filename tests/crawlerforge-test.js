@@ -57,6 +57,8 @@ async function link(p, bytes){
 
   await p.click("#tt-gear");
   const s0 = {}; for (const k of ["str", "int", "con", "dex", "cha", "arm", "evb"]) s0[k] = await num("#cr-" + k);
+  const s0u = {}; for (const k of ["str", "int", "con", "dex", "cha"]) s0u[k] = await num("#cu-" + k);
+  const lvl0 = await num("#cr-lvl");
   // the feet slot on the sheet, which CrawlerForge leaves empty; give it something if the sheet has nothing there
   if (!(await data()).gear.feet) await p.evaluate(() => { window.__cheat.data().gear.feet = "Sheet Boots"; });
   const feet0 = (await data()).gear.feet;
@@ -76,6 +78,10 @@ async function link(p, bytes){
   const warn = await p.textContent("#cf-warn");
   check("the warning mentions crafting", /crafting/.test(warn), warn);
   check("the warning says which slots keep the sheet's gear", /nothing worn in [^.]*Feet[^.]*keep what/.test(warn) && !/nothing worn in [^.]*Head/.test(warn), warn);
+  check("Stats and Skills are offered for a crawler file", await p.isVisible("#cf-core") && await p.isVisible("#cf-skills") && await p.isChecked("#cf-core") && await p.isChecked("#cf-skills"), "");
+  // this part checks the gear on its own; the whole-crawler sync is checked at the end
+  await p.uncheck("#cf-core"); await p.uncheck("#cf-skills");
+  check("with Stats and Skills off, the preview lists no crawler changes", !(await p.isVisible("#cf-chg")), await p.$$eval("#cf-chg li", l => l.map(x => x.innerText)));
 
   await p.click("#cf-go");
   const d = await data();
@@ -99,6 +105,7 @@ async function link(p, bytes){
   check("Armor moved by the hood", await num("#cr-arm") === s0.arm + 1, await num("#cr-arm"));
   check("Evade Buffs moved by the ring", await num("#cr-evb") === s0.evb + 1, await num("#cr-evb"));
   check("the gear message says what moved", /Loaded gear and Inventory, Gold and Junk, Hotlist from Testcrawler/.test(await p.textContent("#gear-log")), await p.textContent("#gear-log"));
+  check("with Stats and Skills off, the Level and Unenhanced Stats stay", await num("#cu-int") === s0u.int && await num("#cr-lvl") === lvl0, [await num("#cu-int"), await num("#cr-lvl")]);
 
   // loading the same file again changes nothing more, and can empty the slots CrawlerForge leaves empty
   await pickFile(path.join(FIX, "crawlerforge-crawler.json"));
@@ -216,6 +223,73 @@ async function link(p, bytes){
   check("relinking the saved sheet shows no pending changes", (await p.textContent("#sb-count")) === "No unsaved changes", await p.textContent("#sb-count"));
   await p.click("#tt-gear");
   check("the saved box can still be opened", await p.isVisible('#inv-rows tr:has-text("Fixture Pack Box") button:has-text("Open")'), "");
+
+  // ---------- the whole crawler: Level, Floor, Stats, Health, Mana, AI Favor, Evade, Popularity, story and Skills ----------
+  await link(p, fs.readFileSync(sheet));
+  await p.click("#tt-gear");
+  // the sheet's Skills: a short name for a CrawlerForge Skill, one CrawlerForge removed, the Heal Spell it doesn't list,
+  // and an untrained try CrawlerForge doesn't have
+  await p.evaluate(() => {
+    const D = window.__cheat.data();
+    D.skills = [
+      {row: 0, name: "Unarmed", rank: "3", stat: "Str +2", type: "Evade", notes: "My own note.", mark: false},
+      {row: 1, name: "Perception", rank: "1", stat: "Int +3", type: "Unopposed", notes: "", mark: false},
+      {row: 2, name: "Lockpicking", rank: "2", stat: "Dex +2", type: "Unopposed", notes: "", mark: false},
+      {row: 3, name: "Heal", rank: "1", stat: "None", type: "Passive", notes: "Everyone has it.", mark: false},
+      {row: 4, name: "Juggling", rank: "0", stat: "Dex +2", type: "Unopposed", notes: "", mark: true}
+    ];
+  });
+  const u0 = {}, e0 = {};
+  for (const k of ["str", "int", "con", "dex", "cha"]) { u0[k] = await num("#cu-" + k); e0[k] = await num("#cr-" + k); }
+  await pickFile(path.join(FIX, "crawlerforge-sync.json"));
+  await p.check("#cf-core"); await p.check("#cf-skills");
+  const lines = await p.$$eval("#cf-chg li", l => l.map(x => x.innerText));
+  const has = re => lines.some(t => re.test(t));
+  check("the preview lists the Level from play periods and levels gained, not the undone play period", has(/^Level \d+ to 3$/), lines);
+  check("the preview lists the Floor", has(/^Floor \d to 2$/), lines);
+  check("the preview lists a corrected Unenhanced Stat", has(/^Dexterity \(Unenhanced\) \d+ to 4/), lines);
+  check("the preview lists Health, Mana, AI Favor, Evade Buffs and Popularity", has(/^Health Bar \d+ to 9 slots$/) && has(/^Mana \d+ to 3$/) && has(/^AI Favor \d+ to 2$/) && has(/^Evade Buffs \d+ to 2$/) && has(/^Popularity .* to 2$/), lines);
+  check("a shorter sheet name matches its CrawlerForge Skill", has(/^Unarmed \(Unarmed Combat in CrawlerForge\) Rank 3 to 4$/) && has(/^Unarmed \(Unarmed Combat in CrawlerForge\) ticked for advancement$/), lines);
+  check("advancement from the play period", has(/^Perception Rank 1 to 2$/), lines);
+  check("new Skills, with the one learned untrained and the untrained try still pending", has(/^Adds Detect Trap \(Rank 2\), Climbing \(Rank 1\), Catcher \(Rank 1\), Swimming \(Rank 0, ticked\)$/), lines);
+  check("a Skill removed in CrawlerForge is removed", has(/^Removes Lockpicking/), lines);
+  check("an untrained tick CrawlerForge doesn't have is cleared, and Heal is kept", has(/^Clears the untrained tick on Juggling$/) && has(/^Keeps Heal,/), lines);
+  check("the warning names what isn't brought across", /Buffs/.test(await p.textContent("#cf-warn")), await p.textContent("#cf-warn"));
+  await p.uncheck("#cf-skills");
+  check("leaving out Skills drops them from the preview", !(await p.$$eval("#cf-chg li", l => l.map(x => x.innerText))).some(t => /Rank|Adds|Removes/.test(t)), "");
+  await p.check("#cf-skills");
+  await p.click("#cf-go");
+  check("the message says Stats and Skills came across", /Level and Stats, Skills from Synccrawler/.test(await p.textContent("#gear-log")), await p.textContent("#gear-log"));
+  check("Unenhanced Dex follows CrawlerForge and Enhanced moves by the same", await num("#cu-dex") === 4 && await num("#cr-dex") === e0.dex + 4 - u0.dex, [await num("#cu-dex"), await num("#cr-dex")]);
+  check("Unenhanced Int follows CrawlerForge", await num("#cu-int") === 5 && await num("#cr-int") === e0.int + 5 - u0.int, [await num("#cu-int"), await num("#cr-int")]);
+  check("Level, AI Favor and Evade Buffs", await num("#cr-lvl") === 3 && await num("#cr-fav") === 2 && await num("#cr-evb") === 2, [await num("#cr-lvl"), await num("#cr-fav"), await num("#cr-evb")]);
+  const sk = (await data()).skills, sr = n => sk.find(s => s.name === n) || {};
+  check("Skill Ranks and ticks", sr("Unarmed").rank === "4" && sr("Unarmed").mark && sr("Unarmed").notes === "My own note." && sr("Perception").rank === "2" && sr("Perception").mark, [sr("Unarmed"), sr("Perception")]);
+  check("a new Skill gets its Stat, what it rolls against and a short note", sr("Detect Trap").rank === "2" && !sr("Detect Trap").mark && /^Int [+-]\d+$/.test(sr("Detect Trap").stat) && sr("Detect Trap").type === "Unopposed" && sr("Detect Trap").notes === "When you suspect a trap, this is the Skill you want. Make an Unopposed Skill Check.", sr("Detect Trap"));
+  check("a Passive Interrupt Skill", sr("Catcher").type === "Passive, Interrupt" && sr("Catcher").stat === "None", sr("Catcher"));
+  check("the untrained try waits at Rank 0, ticked", sr("Swimming").rank === "0" && sr("Swimming").mark, sr("Swimming"));
+  check("Lockpicking is gone, Heal stays, Juggling's tick is cleared", !sk.some(s => s.name === "Lockpicking") && sr("Heal").rank === "1" && sr("Juggling").mark === false, sk.map(s => s.name));
+  check("the freed row is reused", sr("Detect Trap").row === 2, sr("Detect Trap").row);
+  // loading the same file again has nothing left to change
+  await pickFile(path.join(FIX, "crawlerforge-sync.json"));
+  const again = await p.$$eval("#cf-chg li", l => l.map(x => x.innerText));
+  check("loading again changes nothing", !again.some(t => /Rank|Adds|Removes|Level|Floor|Mana|Health|Evade|AI Favor|Popularity|Unenhanced|ticked|tick/.test(t)), again);
+  await p.click("#cf-cancel");
+  await p.evaluate(() => { window.__saved = null; });
+  await p.click("#sb-save");
+  await p.waitForFunction(() => window.__saved !== null);
+  const saved2 = Buffer.from(await p.evaluate(() => { let s = ""; window.__saved.forEach(b => s += String.fromCharCode(b)); return btoa(s); }), "base64");
+  fs.writeFileSync(path.join(__dirname, "out", "crawlerforge-sync-saved.pdf"), saved2);
+  const d2 = await PDF.open(new Uint8Array(saved2)), f2 = d2.fieldMap, v2 = n => f2[n] ? f2[n].value : "(missing)";
+  check("Level and Floor saved", v2("level") === "3" && v2("Floor") === "2", [v2("level"), v2("Floor")]);
+  check("Dex saved", v2("Text Field 47") === "4" && +v2("Text Field 46") === e0.dex + 4 - u0.dex, [v2("Text Field 47"), v2("Text Field 46")]);
+  check("AI Favor, Evade Buffs and Current Mana saved", v2("Text Field 32") === "2" && v2("Text Field 25") === "2" && v2("Text Field 37") === "3", [v2("Text Field 32"), v2("Text Field 25"), v2("Text Field 37")]);
+  check("one Health slot lost", v2("Check Box6 1 8") === true && v2("Check Box6 1 7") !== true, [v2("Check Box6 1 8"), v2("Check Box6 1 7")]);
+  check("Popularity, Past Trauma and Regrets saved", v2("Text Field 98") === "2" && v2("Text Field 99") === "Fixture trauma" && v2("Text Field 101") === "Fixture regret", [v2("Text Field 98"), v2("Text Field 99"), v2("Text Field 101")]);
+  const rowOf = n => { for (let k = 0; k < 20; k++) if (v2("Text Field " + (103 + 6 * k)) === n) return k; return -1; };
+  const kU = rowOf("Unarmed"), kD = rowOf("Detect Trap"), kS = rowOf("Swimming");
+  check("Skill rows saved", kU === 0 && v2("Text Field 104") === "4" && v2("Check Box 1") === true && kD === 2 && v2("Text Field " + (104 + 6 * kD)) === "2" && kS >= 0 && v2("Check Box " + (kS + 1)) === true && rowOf("Lockpicking") < 0, [kU, kD, kS]);
+  check("Fixture Elixir came across with one left", (await data()).inv.some(r => r.name === "Fixture Elixir" && r.qty === "1"), (await data()).inv.filter(r => r.name));
 
   check("no page errors", !errors.length, errors);
   check("no downloads", !downloads, downloads);

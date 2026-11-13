@@ -291,7 +291,7 @@
   function invCount(){ return D.inv.filter(function(r){ return r.name.trim(); }).length; }
 
   /* ---------- the change hub ---------- */
-  function changed(){ saveData(); fillSources(); renderTools(); sheetChanged(); }
+  function changed(){ saveData(); fillSources(); renderTools(); dmRefresh(); sheetChanged(); }
 
   /* ---------- small DOM helper ---------- */
   function el(tag, attrs, kids){
@@ -1058,6 +1058,9 @@
      as "event.retracted". Replaying the Inventory events gives what it's wearing and carrying. An Export everything
      backup holds several such logs plus your Forge; a pack holds item definitions. Nothing here is run as code. */
   var CF_SLOT = {head: "head", torso: "torso", arms: "arms", gloves: "gloves", hand: "hand", twoHanded: "twohand", legs: "legs", feet: "feet", accessory: "acc"};
+  /* events that change things on the sheet but aren't replayed here; the preview names them */
+  var CF_LATER = {"race.selected": "your Race", "class.selected": "your Class", "grinding.logged": "grinding", "patron.trained": "patron training",
+    "buff.added": "Buffs", "debuff.added": "Debuffs", "companion.added": "pets and mounts", "deity.chosen": "your deity", "sponsor.signed": "sponsors"};
   function cfSlot(it){ var sl = it.slot; if(sl === "hands") return /glove|gauntlet|mitt/i.test(it.name || "") ? "gloves" : "hand"; return CF_SLOT[sl] || ""; }
   function cfSkill(ref){ return ref && typeof ref === "object" ? String(ref.name || ref.label || "").trim() : typeof ref === "string" ? ref.trim() : ""; }
   function sg(n){ return sgn(n).replace("−", "-"); }   /* sheet text keeps a plain minus */
@@ -1134,6 +1137,45 @@
   }
   function cfReplay(events){
     var gone = {}, st = {name: "", items: [], boxes: [], gold: 0, junk: 0, hot: null}, skipped = {};
+    /* the crawler itself, kept the way CrawlerForge keeps it: Level, Floor, Unenhanced Stats, AI Favor, the Evade
+       adjustment, current Mana, Health slots lost, Skills with their advancement ticks, untrained tries on Floors 1
+       and 2, Popularity and the story boxes. "later" counts events this page doesn't replay that touch the sheet. */
+    var cr = {made: false, level: 1, floor: 1, un: {str: 0, int: 0, con: 0, dex: 0, cha: 0}, fav: 0, evAdj: 0, mana: 0, lost: 0,
+      sk: {}, untrained: [], removed: {}, pop: null, story: {}, cams: {}, later: {}};
+    function low(n){ return String(n || "").trim().toLowerCase(); }
+    function skGet(n){ return cr.sk[low(n)] || null; }
+    function skPut(n, r, def){ var k = low(n); cr.sk[k] = {name: String(n).trim(), rank: rk(r), marked: false, def: def && typeof def === "object" ? def : null}; delete cr.removed[k]; return cr.sk[k]; }
+    function rk(r){ return Math.max(0, Math.min(20, Math.trunc(+r || 0))); }
+    /* a Skill takes an advancement tick from use when it has a Rank and its definition advances by use (Core p. 169) */
+    function canMark(s){ if(!s || s.rank < 1) return false; if(!s.def) return true; var a = s.def.advancement || {}; return !!a.byUse && !(a.untilRank !== undefined && s.rank >= a.untilRank); }
+    function maxMana(){ var n = cr.un.int; st.items.forEach(function(it){ if(it.equipped && !it.broken) n += cfItem(it).fx.int; }); return Math.max(0, n); }
+    function setMana(v){ cr.mana = Math.max(0, Math.min(Math.trunc(+v || 0), maxMana())); }
+    function setFloorTo(f){ cr.floor = Math.max(1, Math.min(18, Math.trunc(+f || 1))); cr.untrained = []; if(cr.pop === null && cr.floor >= 2) cr.pop = 0; }
+    function addPop(n){ cr.pop = (cr.pop || 0) + (+n || 0); }
+    /* advancement checks: a d20 that meets the Rank adds 1, up to Rank 15; every eligible tick is cleared after */
+    function advance(rolls, ok){
+      var due = Object.keys(cr.sk).map(function(k){ return cr.sk[k]; }).filter(ok), done = {};
+      (Array.isArray(rolls) ? rolls : []).forEach(function(r){
+        var s = r && skGet(r.skill); if(!s || done[s.name] || due.indexOf(s) < 0) return;
+        done[s.name] = 1;
+        var v = Math.trunc(+r.roll); if(!(v >= 1 && v <= 20)) return;
+        if(typeof r.secondRoll === "number" && r.secondRoll >= 1 && r.secondRoll <= 20) v = Math.max(v, r.secondRoll);
+        if(s.rank < 15 && v >= s.rank) s.rank += 1;
+      });
+      due.forEach(function(s){ s.marked = false; });
+    }
+    /* a roll can bring Popularity or AI Favor from the cameras; a reroll that replaces it takes that back */
+    function camera(id, rec){
+      if(!rec || typeof rec !== "object") return;
+      var old = rec.supersedes !== undefined ? cr.cams[rec.supersedes] : null;
+      if(old){ if(old.pop) addPop(-old.pop); cr.fav = Math.max(0, cr.fav - old.fav); delete cr.cams[rec.supersedes]; }
+      var o = rec.cameras && rec.cameras.outcome; if(!o) return;
+      var got = {pop: 0, fav: 0};
+      if(o.kind === "popularity" && +o.amount){ addPop(o.amount); got.pop = +o.amount; }
+      if(o.kind === "aiFavor"){ var b = cr.fav; cr.fav = Math.max(0, b + (+o.amount || 0)); got.fav = cr.fav - b; }
+      cr.cams[id] = got;
+    }
+    function reroll(d20){ if(d20 && d20.rerolled && cr.fav > 0) cr.fav -= 1; }
     function getBox(id, b){ if(b && id && !st.boxes.some(function(y){ return y.id === id; })) st.boxes.push({id: id, box: clone(b)}); }
     events.forEach(function(e){ if(e && e.type === "event.retracted" && e.payload) gone[e.payload.eventId] = 1; });
     function find(id){ for(var i = 0; i < st.items.length; i++) if(st.items[i].id === id) return st.items[i]; return null; }
@@ -1155,13 +1197,98 @@
       if(!e || typeof e.type !== "string" || gone[e.id] || e.type === "event.retracted") return;
       var p = e.payload && typeof e.payload === "object" ? e.payload : {}, x;
       switch(e.type){
-        case "crawler.created": st.name = String(p.name || st.name || ""); break;
+        case "crawler.created":
+          st.name = String(p.name || st.name || "");
+          cr.made = true; cr.level = Math.max(1, Math.min(250, Math.trunc(+p.level || 1))); cr.floor = Math.max(1, Math.min(18, Math.trunc(+p.floor || 1)));
+          STATS.forEach(function(k){ cr.un[k] = Math.trunc(+(p.unenhanced || {})[k] || 0); });
+          cr.fav = Math.max(0, Math.trunc(+p.aiFavor || 0));
+          cr.pop = p.popularity !== undefined ? +p.popularity || 0 : cr.floor >= 2 ? 0 : null;
+          ["pastTrauma", "looseEnds", "regrets"].forEach(function(f){ if(typeof p[f] === "string") cr.story[f] = p[f]; });
+          (Array.isArray(p.skills) ? p.skills : []).forEach(function(s){ if(s && s.name) skPut(s.name, s.rank, s.definition); });
+          cr.mana = maxMana();
+          break;
+        case "skill.added": if(p.name && !skGet(p.name)) skPut(p.name, p.rank, p.definition); break;
+        case "skill.rankSet": x = skGet(p.skill); if(x) x.rank = rk(p.rank); break;
+        case "skill.removed": x = skGet(p.skill); if(x){ delete cr.sk[low(x.name)]; cr.removed[low(x.name)] = x.name; } break;
+        case "skill.definitionReplaced": x = skGet(p.skill); if(x && p.definition && typeof p.definition === "object") x.def = p.definition; break;
+        case "skill.checkAttempted":
+          var rl = p.roll && typeof p.roll === "object" ? p.roll : null;
+          if(rl){ reroll(rl.d20); camera(e.id, rl); }
+          if(typeof p.manaSpent === "number" && p.manaSpent > 0) cr.mana = Math.max(0, cr.mana - p.manaSpent);
+          if(p.cast && +p.cast.health > 0) cr.lost = Math.max(0, cr.lost - p.cast.health);
+          if(p.fromItemId !== undefined || p.fromGrant !== undefined) break;
+          x = skGet(p.skill);
+          if(!x && rl && rl.attack) break;
+          if(!x || x.rank === 0){
+            /* tried untrained: on Floors 1 and 2 it can be learned at the end of the play period */
+            var tn = x ? x.name : String(p.skill || "").trim();
+            if(cr.floor <= 2 && tn && !(x && x.def && x.def.passive) && !cr.untrained.some(function(u){ return low(u) === low(tn); })) cr.untrained.push(tn);
+            break;
+          }
+          if(p.damageEffect && p.damageEffect.mark){ if(p.damageEffect.mark !== "none"){ var de = p.damageEffect.mark === "attack" ? x : skGet(p.damageEffect.name); if(canMark(de)) de.marked = true; } break; }
+          if(canMark(x)) x.marked = true;
+          break;
+        case "skill.damageEffectMarked": x = skGet(p.mark === "attack" ? p.attackSkill : p.damageEffect); if(canMark(x)) x.marked = true; break;
+        case "playPeriod.ended":
+          advance(p.advancementRolls, function(s){ return s.marked && s.rank <= 4; });
+          cr.level = Math.min(250, cr.level + 1);
+          if(p.tutorialSkillGained && p.tutorialSkillGained.name){
+            var tg = String(p.tutorialSkillGained.name).trim();
+            if(cr.floor <= 2 && cr.untrained.some(function(u){ return low(u) === low(tg); })){
+              x = skGet(tg);
+              if(x){ x.rank = Math.max(x.rank, 1); if(!x.def && p.tutorialSkillGained.definition) x.def = p.tutorialSkillGained.definition; }
+              else skPut(tg, 1, p.tutorialSkillGained.definition);
+            }
+          }
+          (Array.isArray(p.popularity) ? p.popularity : []).forEach(function(q){ if(q) addPop(q.amount); });
+          cr.untrained = [];
+          break;
+        case "floor.ended":
+          advance(p.advancementRolls, function(s){ return s.marked; });
+          setFloorTo(p.newFloor);
+          (Array.isArray(p.popularity) ? p.popularity : []).forEach(function(q){ if(q) addPop(q.amount); });
+          break;
+        case "floor.set": setFloorTo(p.floor); break;
+        case "levels.gained": if(+p.count > 0) cr.level = Math.min(250, cr.level + Math.trunc(+p.count)); break;
+        case "level.corrected": if(Math.trunc(+p.to) >= 1) cr.level = Math.min(250, Math.trunc(+p.to)); break;
+        case "statPoints.assigned": STATS.forEach(function(k){ if(+p[k] > 0) cr.un[k] += Math.trunc(+p[k]); }); break;
+        case "stats.corrected": STATS.forEach(function(k){ var to = p[k] && Math.trunc(+p[k].to); if(to >= 1) cr.un[k] = to; }); break;
+        case "health.changed": cr.lost = Math.max(0, Math.min(10, Math.trunc(+p.slotsLost || 0))); break;
+        case "mana.changed": setMana(p.current); break;
+        case "rest.taken":
+          var mx = maxMana(), cm = Math.min(cr.mana, mx);
+          if(p.kind === "short"){ cr.lost -= Math.min(cr.lost, 5); cr.mana = Math.min(mx, cm + Math.floor(mx / 2)); }
+          else if(p.kind === "long" || p.kind === "fullDay"){ cr.lost = 0; cr.mana = mx; }
+          else if(p.kind === "hours"){ var hr = Math.max(0, Math.trunc(+p.hours || 0)); cr.lost -= Math.min(cr.lost, hr); cr.mana = Math.min(mx, cm + 5 * hr); }
+          break;
+        case "aiFavor.changed": cr.fav = Math.max(0, Math.trunc(+p.value || 0)); break;
+        case "aiFavor.gained": cr.fav = Math.max(0, cr.fav + Math.trunc(+p.amount || 0)); break;
+        case "evade.adjusted": cr.evAdj = Math.trunc(+p.amount || 0); break;
+        case "roll.made":
+          if(p.kind === "evade" || p.kind === "statCheck"){ reroll(p.d20); if(!(p.kind === "evade" && p.companion)) camera(e.id, p); }
+          if(p.kind === "damage" && !p.noDamage && +p.healthSpent > 0) cr.lost = Math.min(10, cr.lost + Math.trunc(+p.healthSpent));
+          break;
+        case "biography.changed": ["pastTrauma", "looseEnds", "regrets"].forEach(function(f){ if(typeof p[f] === "string") cr.story[f] = p[f]; }); break;
+        case "popularity.gained": addPop(p.amount); break;
+        case "popularity.changed": cr.pop = +p.value || 0; break;
         case "item.added": if(find(p.id)) break; x = clone(p); if(x.broken) x.equipped = false; st.items.push(x); if(x.equipped) clearFor(x); break;
         case "item.updated": x = find(p.id); if(!x) break; var was = x.equipped; Object.assign(x, clone(p.patch || {})); if(x.broken) x.equipped = false; if(x.equipped && !was) clearFor(x); break;
         case "item.removed": st.items = st.items.filter(function(y){ return y.id !== p.id; }); break;
         case "item.equipped": x = find(p.id); if(!x || x.broken) break; if(p.replaces){ var r = find(p.replaces); if(r) r.equipped = false; } x.equipped = true; clearFor(x); break;
         case "item.unequipped": x = find(p.id); if(x) x.equipped = false; break;
-        case "item.used": x = find(p.itemId); if(x && x.quantity > 0) x.quantity -= 1; break;
+        case "item.used":
+          x = find(p.itemId); if(!x || !(x.quantity > 0)) break;
+          x.quantity -= 1;
+          if(p.throw){ var th = skGet(p.throw.skill); if(canMark(th)) th.marked = true; break; }
+          if(p.cast){ if(+p.cast.health > 0) cr.lost = Math.max(0, cr.lost - p.cast.health); break; }
+          /* what drinking it does, worked out the way CrawlerForge does: heal and Mana stop at full */
+          var ce = (Array.isArray(x.effects) ? x.effects : []).filter(function(f){ return f && f.type === "consume"; })[0];
+          if(!ce || ce.pet) break;
+          if(ce.heal !== undefined) cr.lost -= ce.heal === "full" ? cr.lost : Math.min(cr.lost, Math.max(0, +ce.heal || 0));
+          if(ce.mana !== undefined){ var mm = maxMana(), cur = Math.min(cr.mana, mm); cr.mana = ce.mana === "full" ? mm : Math.min(mm, cur + Math.max(0, +ce.mana || 0)); }
+          if(ce.stat && STATS.indexOf(ce.stat.stat) >= 0) cr.un[ce.stat.stat] += Math.trunc(+ce.stat.bonus || 0);
+          if(ce.skill && ce.skill.name){ var ps = skGet(ce.skill.name), pr = Math.trunc(+ce.skill.ranks || +ce.skill.rank || 1); if(ps) ps.rank = rk(ps.rank + pr); else skPut(ce.skill.name, pr, null); }
+          break;
         case "item.given": x = find(p.id); if(!x) break; if((p.quantity || 1) >= x.quantity) st.items.splice(st.items.indexOf(x), 1); else { x.quantity -= p.quantity; x.equipped = false; } break;
         case "item.received": if(!p.item) break; x = merge(p.item); if(x) x.quantity += p.item.quantity || 1; else { x = clone(p.item); x.id = p.offerRowId || x.id; x.equipped = false; st.items.push(x); } break;
         case "item.repaired": x = find(p.itemId); if(x) delete x.broken; break;
@@ -1181,17 +1308,22 @@
             if(o.kind === "item" && o.definition){ x = clone(o.definition); x.id = e.id + ":" + i; x.quantity = o.quantity || 1; x.equipped = false; st.items.push(x); }
             else if(o.kind === "gold") st.gold += +o.amount || 0;
             else if(o.kind === "junk") st.junk += +o.amount || 0;
+            else if(o.kind === "statPotion" && STATS.indexOf(o.stat) >= 0) cr.un[o.stat] += Math.trunc(+o.amount || 0);
+            else if(o.kind === "skillPotion" && o.skill){ x = skGet(o.skill); if(x) x.rank = rk(x.rank + (+o.ranks || 0)); else skPut(o.skill, o.ranks, null); }
+            else if(o.kind === "skill" && o.name){ x = skGet(o.name); if(!x) skPut((o.definition && o.definition.name) || o.name, o.rank, o.definition); else if(x.rank < +o.rank){ x.rank = rk(o.rank); if(o.definition && !x.def) x.def = o.definition; } }
           });
           if(p.tithe && p.tithe.amount) st.gold = Math.max(0, st.gold - (+p.tithe.amount || 0));
           break;
         case "gold.changed": st.gold = Math.max(0, Math.trunc(+p.gold || 0)); break;
         case "junk.changed": st.junk = Math.max(0, Math.trunc(+p.junk || 0)); if(p.gold !== undefined) st.gold = Math.max(0, Math.trunc(+p.gold || 0)); break;
         case "hotlist.set": st.hot = (Array.isArray(p.entries) ? p.entries : []).slice(0, 10).map(String); break;
-        default: if(/^(craft|alchemy|weapon)\./.test(e.type) || e.type === "item.enchantmentRemoved") skipped[e.type] = (skipped[e.type] || 0) + 1;
+        default:
+          if(/^(craft|alchemy|weapon)\./.test(e.type) || e.type === "item.enchantmentRemoved") skipped[e.type] = (skipped[e.type] || 0) + 1;
+          else if(CF_LATER[e.type]) cr.later[e.type] = (cr.later[e.type] || 0) + 1;
       }
     });
     st.items = st.items.filter(function(y){ return y && (y.quantity == null || y.quantity > 0); });
-    return {st: st, skipped: skipped};
+    return {st: st, skipped: skipped, cr: cr};
   }
   /* what kind of file it is */
   function arr(a){ return Array.isArray(a) ? a : []; }
@@ -1238,7 +1370,7 @@
     renderCF();
   });
   $("cf-who").addEventListener("change", renderCF);
-  ["cf-gear", "cf-money", "cf-hot", "cf-clear"].forEach(function(id){ $(id).addEventListener("change", renderCF); });
+  ["cf-gear", "cf-money", "cf-hot", "cf-clear", "cf-core", "cf-skills"].forEach(function(id){ $(id).addEventListener("change", renderCF); });
   $("cf-cancel").addEventListener("click", function(){ CF = null; renderCF(); });
   function cfRow(ci, pick){
     var label = [ci.qty !== 1 ? "Qty " + ci.qty : "", ci.equipped && ci.slot ? "worn" : ""].filter(Boolean).join(", ");
@@ -1256,6 +1388,7 @@
     if(!CF){ box.classList.add("hide"); return; }
     box.classList.remove("hide");
     var list = $("cf-list"); list.innerHTML = "";
+    $("cf-chg").innerHTML = ""; $("cf-chg").classList.add("hide");
     var pk = cfPack();
     $("cf-opts").classList.toggle("hide", !!pk);
     if(pk){
@@ -1283,9 +1416,119 @@
     if($("cf-gear").checked && plan.over.length) warn.push("Only " + INV_ROWS + " Inventory rows fit on your sheet, so these won’t come across: " + plan.over.map(function(c){ return c.name; }).join(", ") + ".");
     var sk = Object.keys(rp.skipped);
     if(sk.length) warn.push("This page doesn’t replay crafting (" + sk.map(cfWord).join(", ") + "), so check items you crafted or enchanted.");
+    var doCore = $("cf-core").checked, doSkills = $("cf-skills").checked, chg = $("cf-chg"), cr = rp.cr;
+    if(cr.made && (doCore || doSkills)){
+      var lines = cfSyncLines(rp, plan, doCore, doSkills);
+      (lines.length ? lines : ["Level, Stats" + (doSkills ? " and Skills" : "") + " already match your sheet."]).forEach(function(t){ chg.appendChild(el("li", {text: t})); });
+      var later = Object.keys(cr.later).map(function(k){ return CF_LATER[k]; }).filter(function(v, i, a){ return a.indexOf(v) === i; });
+      if(later.length) warn.push("This page doesn’t bring across " + listWords(later) + " yet, so check " + (later.length > 1 ? "them" : "it") + " on your sheet.");
+      if(doCore && cr.floor > 5) warn.push("CrawlerForge has you on Floor " + cr.floor + ", and this page stops at Floor 5, so change the Floor on your sheet by hand.");
+      var spo = doSkills ? cfSkillPlan(cr) : null;
+      if(spo && spo.over.length) warn.push("Only " + SK_ROWS + " Skill rows fit on your sheet, so these won’t come across: " + spo.over.map(function(c){ return c.name; }).join(", ") + ".");
+    }
+    chg.classList.toggle("hide", !chg.children.length);
+    $("cf-core-l").classList.toggle("hide", !cr.made); $("cf-skills-l").classList.toggle("hide", !cr.made);
     $("cf-warn").textContent = warn.join(" ");
     $("cf-go").textContent = "Load it";
-    $("cf-go").disabled = !$("cf-gear").checked && !$("cf-money").checked && !$("cf-hot").checked;
+    $("cf-go").disabled = !$("cf-gear").checked && !$("cf-money").checked && !$("cf-hot").checked && !(cr.made && (doCore || doSkills));
+  }
+  function listWords(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
+
+  /* ---------- the rest of the crawler: Level, Floor, Stats, Health, Mana, AI Favor, Evade, Popularity and Skills ---------- */
+  var CF_STORY = [["pastTrauma", "trauma", "Past Trauma"], ["looseEnds", "loose", "Loose Ends"], ["regrets", "regrets", "Regrets"]];
+  /* a CrawlerForge Skill finds its sheet row by name; a sheet name that starts it counts too ("Unarmed" for "Unarmed Combat") */
+  function cfMatch(name, pool){
+    var lo = String(name || "").trim().toLowerCase(), hit = pool.filter(function(s){ return s.name.trim().toLowerCase() === lo; });
+    if(hit.length) return hit[0];
+    hit = pool.filter(function(s){ var a = s.name.trim().toLowerCase(); return a && (lo.indexOf(a + " ") === 0 || a.indexOf(lo + " ") === 0); });
+    return hit.length === 1 ? hit[0] : null;
+  }
+  /* which sheet rows change: re-ranked and re-ticked (set), new (add), removed in CrawlerForge (drop), and rows
+     CrawlerForge doesn't list, like the Heal Spell every crawler has (keep) */
+  function cfSkillPlan(cr){
+    var pool = D.skills.slice(), set = [], add = [], drop = [];
+    var list = Object.keys(cr.sk).map(function(k){ return cr.sk[k]; });
+    if(cr.floor <= 2) cr.untrained.forEach(function(n){ if(!cr.sk[n.trim().toLowerCase()]) list.push({name: n, rank: 0, marked: true, def: null}); });
+    list.forEach(function(c){ var s = cfMatch(c.name, pool); if(s){ pool.splice(pool.indexOf(s), 1); set.push({s: s, c: c}); } else add.push(c); });
+    Object.keys(cr.removed).forEach(function(k){ var s = cfMatch(cr.removed[k], pool); if(s){ pool.splice(pool.indexOf(s), 1); drop.push(s); } });
+    var room = Math.max(0, SK_ROWS - (D.skills.length - drop.length));
+    return {set: set, add: add.slice(0, room), over: add.slice(room), drop: drop, keep: pool};
+  }
+  /* a new row's Stat, "rolled against" and notes, from the CrawlerForge Skill */
+  function cfSkillFields(c){
+    var d = c.def || {}, k = STATS.indexOf(d.stat) >= 0 ? d.stat : d.category === "spell" ? "int" : "";
+    var type = d.passive ? "Passive" + (d.interrupt ? ", Interrupt" : "") : d.attack || d.category === "attack" ? "Evade" : d.checkType === "opposed" ? "Opposed" : d.checkType === "unopposed" ? "Unopposed" : "";
+    var t = d.description ? cfNotes(d.description) : "";
+    if(t.length > 90){ var m = /^(.{20,120}?[.!?])\s/.exec(t + " "); t = m ? m[1] : t.slice(0, 87).replace(/\s+\S*$/, "") + "…"; }
+    return {stat: k ? modText(k, crawler()) : c.def ? "None" : "", type: type, notes: t};
+  }
+  /* Evade Buffs after loading: the gear's Evade plus CrawlerForge's Evade adjustment */
+  function cfGearAfter(plan, key){
+    if(!$("cf-gear").checked) return gearTotals()[key];
+    var n = 0; SLOTS.forEach(function(sl){ plan.slots[sl[0]].forEach(function(e){ n += e.ci.fx[key] || 0; }); }); return n;
+  }
+  /* what loading changes, for the preview */
+  function cfSyncLines(rp, plan, doCore, doSkills){
+    var cr = rp.cr, c = crawler(), L = [];
+    if(doCore){
+      if(cr.level !== c.lvl) L.push("Level " + c.lvl + " to " + cr.level);
+      if(cr.floor !== floor && cr.floor <= 5) L.push("Floor " + floor + " to " + cr.floor);
+      STATS.forEach(function(k){ if(cr.un[k] !== c.base[k]) L.push(SFULL[k] + " (Unenhanced) " + c.base[k] + " to " + cr.un[k] + ", and Enhanced by the same"); });
+      if(cr.fav !== c.fav) L.push("AI Favor " + c.fav + " to " + cr.fav);
+      var ev = cfGearAfter(plan, "evade") + cr.evAdj, evNow = c.evb + (cfGearAfter(plan, "evade") - gearTotals().evade);
+      if(ev !== evNow) L.push("Evade Buffs " + evNow + " to " + ev);
+      if(10 - cr.lost !== hm.slots) L.push("Health Bar " + hm.slots + " to " + (10 - cr.lost) + " slots");
+      var intAfter = c.score.int + (cr.un.int - c.base.int) + (cfGearAfter(plan, "int") - gearTotals().int), m0 = hm.mana == null ? c.mana : hm.mana, m1 = Math.max(0, Math.min(intAfter, cr.mana));
+      if(m0 !== m1) L.push("Mana " + m0 + " to " + m1);
+      if(cr.pop !== null && String(cr.pop) !== String(D.text.pop || "").trim()) L.push("Popularity " + (String(D.text.pop || "").trim() || "blank") + " to " + cr.pop);
+      CF_STORY.forEach(function(f){ var v = cr.story[f[0]]; if(typeof v === "string" && v.trim() && v.trim() !== String(D.text[f[1]] || "").trim()) L.push(f[2] + " changed"); });
+    }
+    if(doSkills){
+      var sp = cfSkillPlan(cr);
+      sp.set.forEach(function(o){
+        var nm = o.s.name.trim() + (o.s.name.trim().toLowerCase() !== o.c.name.toLowerCase() ? " (" + o.c.name + " in CrawlerForge)" : ""), r0 = skRank(o.s);
+        if(r0 !== o.c.rank) L.push(nm + " Rank " + r0 + " to " + o.c.rank);
+        if(!!o.s.mark !== !!o.c.marked) L.push(nm + (o.c.marked ? " ticked for advancement" : " tick cleared"));
+      });
+      if(sp.add.length) L.push("Adds " + sp.add.map(function(c){ return c.name + " (Rank " + c.rank + (c.marked ? ", ticked" : "") + ")"; }).join(", "));
+      if(sp.drop.length) L.push("Removes " + sp.drop.map(function(s){ return s.name.trim(); }).join(", ") + ", which you removed in CrawlerForge");
+      var untick = sp.keep.filter(function(s){ return !skRank(s) && s.mark; });
+      if(untick.length) L.push("Clears the untrained tick on " + untick.map(function(s){ return s.name.trim(); }).join(", "));
+      var kept = sp.keep.filter(function(s){ return untick.indexOf(s) < 0; });
+      if(kept.length) L.push("Keeps " + kept.map(function(s){ return s.name.trim(); }).join(", ") + ", which CrawlerForge doesn’t list");
+    }
+    return L;
+  }
+  /* load the crawler's numbers and Skills into the page; Save to sheet writes them to the PDF */
+  function cfApply(rp, doCore, doSkills){
+    var cr = rp.cr;
+    if(!cr.made) return;
+    if(doCore){
+      if(cr.floor <= 5 && cr.floor !== floor) setFloor(cr.floor, false);
+      $("cr-lvl").value = cr.level;
+      STATS.forEach(function(k){
+        var u = $("cu-" + k), e = $("cr-" + k), was = parseInt(u.value, 10);
+        if(was === cr.un[k]) return;
+        e.value = Math.max(1, (isNaN(was) ? cr.un[k] : (parseInt(e.value, 10) || was) + cr.un[k] - was));
+        u.value = cr.un[k];
+      });
+      syncPrev();
+      $("cr-fav").value = cr.fav;
+      $("cr-evb").value = gearTotals().evade + cr.evAdj;
+      hm.slots = Math.max(0, Math.min(10, 10 - cr.lost));
+      saveCrawler();
+      hm.mana = Math.max(0, Math.min(crawler().mana, cr.mana));
+      if(cr.pop !== null) D.text.pop = String(cr.pop);
+      CF_STORY.forEach(function(f){ var v = cr.story[f[0]]; if(typeof v === "string" && v.trim()) D.text[f[1]] = v.trim(); });
+    }
+    if(doSkills){
+      var sp = cfSkillPlan(cr);
+      sp.drop.forEach(function(s){ D.skills.splice(D.skills.indexOf(s), 1); });
+      sp.set.forEach(function(o){ if(skRank(o.s) !== o.c.rank) setRank(o.s, o.c.rank); o.s.mark = !!o.c.marked; });
+      sp.keep.forEach(function(s){ if(!skRank(s) && s.mark) s.mark = false; });
+      sp.add.forEach(function(c){ var s = newSkill(c.name, c.rank), f = cfSkillFields(c); s.stat = f.stat; s.type = f.type; s.notes = f.notes; s.mark = !!c.marked; });
+    }
+    saveCrawler(); calcRefresh(); changed();
   }
   /* where each item goes: worn items into their Gear Slots, the rest into Inventory rows */
   function cfPlan(items, boxes){
@@ -1336,7 +1579,11 @@
       CF = null; renderCF(); changed(); return;
     }
     var rp = CF.runs[+$("cf-who").value || 0], plan = cfPlan(rp.items, rp.boxes), doGear = $("cf-gear").checked, doMoney = $("cf-money").checked, doHot = $("cf-hot").checked, doClear = $("cf-clear").checked;
+    var doCore = rp.cr.made && $("cf-core").checked, doSkills = rp.cr.made && $("cf-skills").checked;
     var who = rp.st.name || "your crawler";
+    var what = [doGear ? "gear and Inventory" : "", doMoney ? "Gold and Junk" : "", doHot && rp.st.hot ? "Hotlist" : "", doCore ? "Level and Stats" : "", doSkills ? "Skills" : ""].filter(Boolean);
+    var msg = "Loaded " + what.join(", ") + " from " + who + "’s CrawlerForge file.";
+    if(!doGear && !doMoney && !doHot){ cfApply(rp, doCore, doSkills); gearLog(msg); CF = null; renderCF(); return; }
     gearChange(function(){
       var gk = findRow(/^gold$/i), jk = findRow(/^misc\.?\s*junk$/i), keep = {};
       if(gk >= 0) keep.gold = D.inv[gk]; if(jk >= 0) keep.junk = D.inv[jk];
@@ -1356,8 +1603,10 @@
           D.hot[h] = nm ? old.filter(function(o){ var t = o.trim().toLowerCase(); return t === lo || t.indexOf(lo + ":") === 0 || t.indexOf(lo + " (") === 0; })[0] || nm : "";
         }
       }
-      return "Loaded " + [doGear ? "gear and Inventory" : "", doMoney ? "Gold and Junk" : "", doHot && rp.st.hot ? "Hotlist" : ""].filter(Boolean).join(", ") + " from " + who + "’s CrawlerForge file.";
+      return msg;
     });
+    /* after the gear, so Evade Buffs and Max Mana count what CrawlerForge has you wearing */
+    if(doCore || doSkills) cfApply(rp, doCore, doSkills);
     CF = null; renderCF(); renderHot();
   });
   function setCountQuiet(re, name, n){

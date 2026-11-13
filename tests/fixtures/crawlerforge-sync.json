@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "crawler",
+  "exportedAt": "2026-11-12T00:00:00.000Z",
+  "crawlerId": "sync-crawler",
+  "events": [
+    {"id": "s1", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:00:00.000Z", "type": "crawler.created", "payload": {
+      "name": "Synccrawler", "floor": 1, "level": 1, "unenhanced": {"str": 4, "int": 5, "con": 3, "dex": 3, "cha": 3}, "aiFavor": 2,
+      "size": {"name": "Medium", "value": 4}, "species": "human", "pastTrauma": "Fixture trauma",
+      "skills": [
+        {"name": "Unarmed Combat", "rank": 3, "definition": {"name": "Unarmed Combat", "category": "attack", "passive": false, "stat": "str", "checkType": "opposed", "attack": {"type": "melee"}, "advancement": {"byUse": true}, "description": "Every crawler starts with this."}},
+        {"name": "Perception", "rank": 1, "definition": {"name": "Perception", "category": "utility", "passive": false, "stat": "int", "checkType": "unopposed", "advancement": {"byUse": true}, "description": "You notice things."}},
+        {"name": "Lockpicking", "rank": 2, "definition": {"name": "Lockpicking", "category": "utility", "passive": false, "stat": "dex", "checkType": "unopposed", "advancement": {"byUse": true}, "description": "Open locks."}}
+      ]}},
+    {"id": "s2", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:01:00.000Z", "type": "skill.added", "payload": {"name": "Detect Trap", "rank": 1, "source": "manual",
+      "definition": {"name": "Detect Trap", "category": "utility", "passive": false, "stat": "int", "checkType": "unopposed", "advancement": {"byUse": true}, "description": "When you suspect a trap, this is the Skill you want. Make an Unopposed Skill Check."}}},
+    {"id": "s3", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:02:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Perception", "roll": {"d20": {"mode": "normal", "dice": [12]}, "rank": 1, "mod": 3, "total": 16}}},
+    {"id": "s4", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:03:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Climbing"}},
+    {"id": "s5", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:04:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Detect Trap"}},
+    {"id": "s6", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:05:00.000Z", "type": "playPeriod.ended", "payload": {"advancementRolls": [{"skill": "Perception", "roll": 3}], "tutorialSkillGained": {"name": "Climbing"}}},
+    {"id": "s7", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:06:00.000Z", "type": "event.retracted", "payload": {"eventId": "s6"}},
+    {"id": "s8", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:07:00.000Z", "type": "playPeriod.ended", "payload": {"advancementRolls": [{"skill": "Perception", "roll": 19}, {"skill": "Detect Trap", "roll": 1}], "tutorialSkillGained": {"name": "Climbing",
+      "definition": {"name": "Climbing", "category": "utility", "passive": false, "stat": "str", "checkType": "unopposed", "advancement": {"byUse": true}, "description": "Go up things."}}}},
+    {"id": "s9", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:08:00.000Z", "type": "skill.rankSet", "payload": {"skill": "Unarmed Combat", "rank": 4}},
+    {"id": "s10", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:09:00.000Z", "type": "skill.removed", "payload": {"skill": "Lockpicking"}},
+    {"id": "s11", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:10:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Unarmed Combat", "roll": {"d20": {"mode": "normal", "dice": [20]}, "attack": true, "rank": 4, "mod": 2, "total": 26, "cameras": {"outcome": {"kind": "aiFavor", "amount": 1}}}}},
+    {"id": "s12", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:11:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Perception", "roll": {"d20": {"mode": "normal", "dice": [4, 15], "rerolled": true}, "rank": 2, "mod": 3, "total": 20}}},
+    {"id": "s13", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:12:00.000Z", "type": "levels.gained", "payload": {"count": 1, "reason": "manual", "level": 3}},
+    {"id": "s14", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:13:00.000Z", "type": "stats.corrected", "payload": {"dex": {"from": 3, "to": 4}}},
+    {"id": "s15", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:14:00.000Z", "type": "evade.adjusted", "payload": {"amount": 2}},
+    {"id": "s16", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:15:00.000Z", "type": "health.changed", "payload": {"slotsLost": 3}},
+    {"id": "s17", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:16:00.000Z", "type": "mana.changed", "payload": {"current": 1}},
+    {"id": "s18", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:17:00.000Z", "type": "rest.taken", "payload": {"kind": "hours", "hours": 1}},
+    {"id": "s19", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:18:00.000Z", "type": "mana.changed", "payload": {"current": 1}},
+    {"id": "s20", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:19:00.000Z", "type": "item.added", "payload": {"id": "e1", "name": "Fixture Elixir", "quantity": 2, "notes": "", "slot": null, "equipped": false, "effects": [{"type": "consume", "heal": 1, "mana": 2}]}},
+    {"id": "s21", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:20:00.000Z", "type": "item.used", "payload": {"itemId": "e1", "label": "Fixture Elixir"}},
+    {"id": "s22", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:21:00.000Z", "type": "skill.added", "payload": {"name": "Catcher", "rank": 1, "source": "tutorial",
+      "definition": {"name": "Catcher", "category": "utility", "passive": true, "interrupt": true, "stat": "none", "checkType": "passive", "advancement": {"byUse": false}, "description": "You take the hit meant for an ally next to you."}}},
+    {"id": "s23", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:22:00.000Z", "type": "floor.set", "payload": {"floor": 2}},
+    {"id": "s24", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:23:00.000Z", "type": "popularity.gained", "payload": {"amount": 2, "reason": "courageous"}},
+    {"id": "s25", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:24:00.000Z", "type": "skill.checkAttempted", "payload": {"skill": "Swimming"}},
+    {"id": "s26", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:25:00.000Z", "type": "biography.changed", "payload": {"regrets": "Fixture regret"}},
+    {"id": "s27", "crawlerId": "sync-crawler", "occurredAt": "2026-11-01T00:26:00.000Z", "type": "buff.added", "payload": {"id": "b1", "name": "Fixture Buff", "effects": []}}
+  ]
+}
