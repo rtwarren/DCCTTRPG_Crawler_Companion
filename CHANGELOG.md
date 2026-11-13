@@ -8,6 +8,7 @@ Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), bui
 - The preview lists what loading changes before you press Load it, and two new options let you leave out the Stats or the Skills.
 - The preview names what isn't brought across yet (Race, Class, grinding, Buffs, Debuffs, pets, deity, sponsors) when the file has any.
 - Changing Unenhanced Stats this way moves Enhanced by the same amount, so bonuses from gear and Buffs stay put.
+- **Rank upgrades in the Damage tab.** Picking an attack from your sheet now adds the extra base damage dice its Skill's notes give for the Rank it has reached, written like "Rank 5: +1d4". Rank 5 upgrades count on every Floor, and Rank 10 and 15 upgrades from Floor 3, as the book says. A Critical Hit doubles them with the rest of the base dice, and the note under the formula says which upgrade is included.
 
 ## 1.4.0 (2026-11-09)
 

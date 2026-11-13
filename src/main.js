@@ -454,6 +454,26 @@
   });
 
   /* ---------- damage roll ---------- */
+  /* Rank upgrades that add base damage dice, read from the Skill's notes on the sheet ("Rank 5: +1d4").
+     Rank 5 upgrades work on every Floor; Rank 10 and 15 upgrades from Floor 3 on. */
+  function rankUps(name, rank){
+    var sk = findSkill(name), out = {dice: [], parts: []}, re = /\bRank\s*(5|10|15)\s*:\s*\+\s*(\d+d\d+(?:\s*\+\s*\d+d\d+)*)/gi, m;
+    if(!sk) return out;
+    while((m = re.exec(sk.notes || ""))){
+      var r = +m[1], pd = parseDice(m[2]);
+      if(rank < r || (r > 5 && floor < 3) || !pd.ok) continue;
+      pd.dice.forEach(function(d){ out.dice.push(d); });
+      out.parts.push("Rank " + r + " +" + diceText(pd.dice));
+    }
+    return out;
+  }
+  /* the upgrades for the attack picked from the sheet, at its Rank now */
+  function dmUps(){
+    var v = $("dm-src").value, row = v !== "" && typeof D !== "undefined" && D ? D.attacks[+v] : null;
+    if(!row) return {dice: [], parts: [], name: ""};
+    var up = rankUps(row.name, parseInt(row.rank, 10) || 0); up.name = row.name.trim();
+    return up;
+  }
   function dmPlan(){
     var c = crawler(), F = floor, res = $("dm-res").value, crit = res === "crit";
     var n = Math.max(0, num("dm-n", 1)), x = +$("dm-x").value, extra = parseDice($("dm-extra").value);
@@ -461,17 +481,21 @@
     function add(d){ var k = (d.neg ? "-" : "") + d.x; if(!groups[k]){ groups[k] = {n: 0, x: d.x, neg: d.neg}; order.push(k); } groups[k].n += d.n; }
     if(n) add({n: n * (crit ? 2 : 1), x: x, neg: false});
     if(extra.ok) extra.dice.forEach(function(d){ add({n: d.n * (crit ? 2 : 1), x: d.x, neg: d.neg}); });
+    var up = dmUps();
+    up.dice.forEach(function(d){ add({n: d.n * (crit ? 2 : 1), x: d.x, neg: false}); });
     var baseList = order.map(function(k){ return groups[k]; });
     var rkOn = $("dm-rank-on").checked, rr = Math.max(1, num("dm-rank", 1)), rk = rkOn ? rankDie(rr) : {dice: [], flat: 0};
     var statKey2 = $("dm-stat").value, statMod = statKey2 === "none" ? 0 : c.mod[statKey2], flatB = num("dm-flat", 0);
     var flat = statMod + flatB + rk.flat + (extra.ok ? extra.flat : 0) + (res === "amazing" ? F : 0);
     var why = [], eq = [];
-    eq.push("Base dice: " + (n ? n + "d" + x : "none") + (extra.ok && extra.dice.length ? " + " + diceText(extra.dice) + " extra base" : "") + (crit ? "\nCritical Hit doubles them: " + diceText(baseList) : ""));
+    eq.push("Base dice: " + (n ? n + "d" + x : "none") + (extra.ok && extra.dice.length ? " + " + diceText(extra.dice) + " extra base" : "") +
+      (up.dice.length ? " + " + diceText(up.dice) + " from " + up.name + "’s " + up.parts.join(" and ") + " upgrade" : "") + (crit ? "\nCritical Hit doubles them: " + diceText(baseList) : ""));
     if(rk.dice.length || rk.flat) eq.push("Rank die for Rank " + rr + ": " + (rk.dice.length ? diceText(rk.dice) : "+1") + (crit ? " (not doubled)" : ""));
     if(statKey2 !== "none") eq.push(op(statMod) + "  " + SN[statKey2] + " Mod");
     if(flatB) eq.push(op(flatB) + "  flat bonus");
     if(extra.ok && extra.flat) eq.push(op(extra.flat) + "  from extra dice box");
     if(res === "amazing") eq.push("+ " + F + "  Amazing Success (Floor " + F + ")");
+    if(up.dice.length) why.push(up.name + "’s " + up.parts.join(" and ") + " upgrade" + (up.parts.length > 1 ? "s" : "") + " included");
     if(crit) why.push("base dice doubled for the Critical Hit");
     if(rk.dice.length || rk.flat) why.push("Rank die " + (rk.dice.length ? diceText(rk.dice) : "+1") + (crit ? ", not doubled" : ""));
     if(statKey2 !== "none") why.push(SN[statKey2] + " " + sgn(statMod));
