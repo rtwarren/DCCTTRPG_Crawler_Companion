@@ -7,7 +7,9 @@ name: Release
 #
 # A release attaches the built page as Crawler_Companion_v<version>.html, plus the guides in
 # guides/, and publishes the page to GitHub Pages as index.html. The page's Check for updates
-# button reads the newest Release, so the version always comes from CHANGELOG.md.
+# button reads the newest Release, so the version always comes from CHANGELOG.md. Its Update
+# this file button reads dist/Crawler_Companion_v<version>.html at the release's tag, so the
+# release stops if that committed page doesn't match the build.
 #
 # Pushing a change to guides/ on main replaces the guides on the newest Release, so an
 # updated guide doesn't need a new version. Run the workflow by hand (Actions, Release, Run
@@ -63,6 +65,16 @@ jobs:
       - name: Build the page
         if: steps.version.outputs.new == 'true'
         run: python3 build.py "$RUNNER_TEMP/Crawler_Companion_v$VERSION.html"
+
+      # Update this file in the page reads dist/ from the repo at the release's tag, so it has to be
+      # the same page the release attaches
+      - name: Check the committed page matches the build
+        if: steps.version.outputs.new == 'true'
+        run: |
+          if ! cmp -s "$RUNNER_TEMP/Crawler_Companion_v$VERSION.html" "dist/Crawler_Companion_v$VERSION.html"; then
+            echo "::error::dist/Crawler_Companion_v$VERSION.html is missing or out of date. Run python build.py and commit dist/."
+            exit 1
+          fi
 
       - name: Take the release notes from CHANGELOG.md
         if: steps.version.outputs.new == 'true'

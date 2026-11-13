@@ -2,6 +2,11 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.5.2 (2026-11-12)
+
+- **Check for updates updates the file you have open.** Opened as a file in Chrome or Edge, the page now offers Update this file, which writes the new version over this file and reloads it, instead of downloading a second copy. The first time, pick this file when asked and allow the change; the page remembers it after that. Nothing is written unless the file you pick is the one you have open and the new page is the version GitHub announced. With unsaved sheet changes it doesn't reload, so you can save them first. Firefox, Safari and copies not opened as a file still get the Download button.
+- The release workflow checks that the page committed in `dist/` matches the build, since Update this file reads it from the repo.
+
 ## 1.5.1 (2026-11-12)
 
 - **Rank upgrades in the Damage tab.** Picking an attack from your sheet now adds the extra base damage dice its Skill's notes give for the Rank it has reached, written like "Rank 5: +1d4". Rank 5 upgrades count on every Floor, and Rank 10 and 15 upgrades from Floor 3, as the book says. A Critical Hit doubles them with the rest of the base dice, and the note under the formula says which upgrade is included.
