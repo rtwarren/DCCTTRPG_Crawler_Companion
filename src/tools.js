@@ -291,7 +291,7 @@
   function invCount(){ return D.inv.filter(function(r){ return r.name.trim(); }).length; }
 
   /* ---------- the change hub ---------- */
-  function changed(){ saveData(); fillSources(); renderTools(); sheetChanged(); }
+  function changed(){ saveData(); fillSources(); renderTools(); dmRefresh(); sheetChanged(); }
 
   /* ---------- small DOM helper ---------- */
   function el(tag, attrs, kids){
