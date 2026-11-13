@@ -12,7 +12,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Companion_v1.5.1.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Companion_v1.5.2.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `guides/Crawler_Companion_Player_Guide.pdf` | The Player Guide: every Crawler tab, Load from CrawlerForge and Loot Boxes. Attached to every release. |
 | `guides/Crawler_Companion_GM_Loot_Box_Guide.pdf` | The GM Guide: making Loot Boxes in CrawlerForge and getting them to players. Attached to every release. |
@@ -152,7 +152,7 @@ This links the sheet and loads `tests/fixtures/crawlerforge-crawler.json`, a mad
 node tests/update-test.js
 ```
 
-This checks Check for updates without contacting GitHub: every request is answered with a made-up release. It checks a newer release with notes and a download link, the same and an older version, a release without the file, a download link outside github.com (never shown), no releases, a rate limit and no network. It also checks nothing is sent to GitHub until the button is pressed.
+This checks Check for updates without contacting GitHub: every request is answered with a made-up release, and the file picker is replaced by a stand-in file. It checks Update this file: the new page is read from the release's tag, written over the open file, and the page reloads; a file with another name, a file that isn't this version, a cancelled pick, a refused permission and a new page without the new version are handled without a wrong write. In a browser that can't write files it checks the Download link, plus the same and an older version, a release without the file, a download link outside github.com (never shown), no releases, a rate limit and no network. It also checks nothing is sent to GitHub until the button is pressed.
 
 ## Sources
 
@@ -162,8 +162,8 @@ Rules are summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Cour
 
 Some antivirus tools flag HTML files that build files in the browser and download them, or that run code from strings. That's how "HTML smuggling" malware works, so the page avoids both:
 
-- It never creates a download. It only writes into a sheet you linked yourself, through the browser's file permission prompt.
-- Check for updates only reads GitHub's list of releases. Its Download button is an ordinary link to the file on github.com, so the browser downloads it from GitHub like any other file.
+- It never creates a download. It only writes into files you picked yourself, through the browser's file permission prompt: a sheet you linked, and the page's own file when you press Update this file.
+- Check for updates only reads from GitHub: the list of releases and, for Update this file, the new page as text. Its Download button, for browsers that can't write files, is an ordinary link to the file on github.com, so the browser downloads it from GitHub like any other file.
 - Floor formulas are parsed by a small pattern match instead of being run as code.
 - No fonts or other files are embedded as encoded data.
 
@@ -175,7 +175,7 @@ Each version is tagged in git (`v1.0.0`, `v1.1.0` and so on). `CHANGELOG.md` lis
 
 1. Make the change in `src/`.
 2. Add the new version's section to the top of `CHANGELOG.md`. The build reads the version number from it.
-3. Run `python build.py`.
+3. Run `python build.py` and commit `dist/` with the change. The release checks the committed page matches its own build, because Update this file reads it from the repo.
 4. Either merge it into `main` (a pull request is fine), or `git add -A`, `git commit -m "Short description (1.4.1)"`, `git tag -a v1.4.1 -m "Version 1.4.1"`, then `git push --follow-tags`.
 
 Either way runs `.github/workflows/release.yml`. It reads the first version in `CHANGELOG.md`; a pushed tag has to match it. If that version has no release yet, it builds the page and publishes a GitHub Release named `Crawler Companion 1.4.1` with `Crawler_Companion_v1.4.1.html` and the two guides in `guides/` attached, and that version's CHANGELOG section as its notes. Coming from `main`, the release makes the `v1.4.1` tag itself. A version that's already released is skipped, so a merge and a tag for the same version don't clash. Tags must be annotated (`git tag -a`), or `--follow-tags` won't push them. If the workflow fails, its run on the repo's Actions tab says why; fix it and run the workflow again from the Actions tab, or delete a tag you pushed (`git tag -d v1.4.1`, `git push origin :refs/tags/v1.4.1`) and tag again.
@@ -184,4 +184,4 @@ Each new release is also published to GitHub Pages at <https://rtwarren.github.i
 
 To change a guide, edit it, export it as a letter-size PDF over the file in `guides/` (same name), commit and push to main. The workflow replaces that guide on the newest release, so it doesn't need a new version. The `.gitignore` keeps every other PDF out of the repo, since character sheets and rulebooks don't belong in it.
 
-The page's footer shows its version. **Check for updates** asks `api.github.com/repos/rtwarren/DCCTTRPG_Crawler_Companion/releases/latest` for the newest release, and only when pressed. If it's newer, the page lists the release notes and a **Download** link to the attached file. In Chrome and Edge every local HTML file shares the same saved data, so the new file keeps the crawler, settings and the linked sheet (press Reconnect). If the repo is ever renamed or moved, change `REPO` in `main.js`.
+The page's footer shows its version. **Check for updates** asks `api.github.com/repos/rtwarren/DCCTTRPG_Crawler_Companion/releases/latest` for the newest release, and only when pressed. If it's newer, the page lists the release notes. Opened as a file in Chrome or Edge, it also reads the new page as text from `dist/Crawler_Companion_v<version>.html` at the release's tag (through the same GitHub API, which allows it) and shows **Update this file**. That writes the new page over the file you have open and reloads it, so the file keeps its name and place, and the crawler, settings and linked sheet stay. A page can only write to a file you picked, so the first update asks you to pick the file you have open and allow the change; the page remembers it after that (in IndexedDB, next to the linked sheet). It refuses a file with another name or one that isn't the version you have open, and writes nothing unless the new page carries the version GitHub announced. With unsaved sheet changes it writes the file but doesn't reload, so you can save them first. Firefox, Safari and copies not opened as a file get a **Download** link to the file attached to the Release instead; in Chrome and Edge every local HTML file shares the same saved data, so a downloaded copy keeps the crawler and settings too (press Reconnect for the sheet). Versions before 1.5.2 can only download, so moving to 1.5.2 means replacing the file by hand once. If the repo is ever renamed or moved, change `REPO` in `main.js`.

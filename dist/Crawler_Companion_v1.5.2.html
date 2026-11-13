@@ -1570,8 +1570,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 </main>
 
 <footer>
-  <div class="upd" id="upd" data-version="1.5.1">
-    <p>Crawler Companion 1.5.1 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+  <div class="upd" id="upd" data-version="1.5.2">
+    <p>Crawler Companion 1.5.2 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
@@ -4784,16 +4784,71 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   });
   fillSources();
   /* ---------- updates ---------- */
-  /* Check for updates asks GitHub for the newest Release, and only when pressed. The download is an
-     ordinary link to the file attached to that Release, so the browser downloads it from GitHub like
-     any other file; this page never writes a file itself. */
+  /* Check for updates asks GitHub for the newest Release, and only when pressed. When this page is a file
+     opened in Chrome or Edge, it then reads the new page from the repo at that release's tag (the same
+     file the Release attaches; the release workflow checks they match) and offers Update this file, which
+     writes it over the file you have open and reloads. A page can only write to a file you picked, so the
+     first update asks you to pick this file, and the page remembers it after that. Nothing is written
+     unless the picked file is this page and the new page carries the new version. Other browsers, and
+     copies not opened as a file, get the download link to the Release instead. */
   var REPO = "rtwarren/DCCTTRPG_Crawler_Companion", APPV = $("upd").getAttribute("data-version");
   var RELEASES = "https://github.com/" + REPO + "/releases";
+  var SELF = (function(){ try{ return decodeURIComponent(location.pathname.split("/").pop() || ""); }catch(e){ return ""; } })();
+  var canSelf = canHandle && location.protocol === "file:" && /\.html?$/i.test(SELF);
   function vNum(v){ return String(v || "").replace(/^v/i, "").split(".").map(function(n){ return parseInt(n, 10) || 0; }); }
   function isNewer(a, b){ var x = vNum(a), y = vNum(b); for(var i = 0; i < 3; i++){ if((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
   function relNotes(body){
     return String(body || "").split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return /^[-*]\s+/.test(l); })
       .slice(0, 8).map(function(l){ l = l.replace(/^[-*]\s+/, "").replace(/\*\*|__|`/g, ""); return l.length > 220 ? l.slice(0, 217).replace(/\s+\S*$/, "") + "…" : l; });
+  }
+  /* true when text is a Crawler Companion page of version v */
+  function isPage(text, v){ return /^\s*<!doctype html/i.test(text) && text.indexOf('id="upd" data-version="' + v + '"') !== -1; }
+  async function newPage(v){
+    if(!/^\d+\.\d+\.\d+$/.test(v)) return null;
+    try{
+      var r = await fetch("https://api.github.com/repos/" + REPO + "/contents/dist/Crawler_Companion_v" + v + ".html?ref=v" + v, {headers: {Accept: "application/vnd.github.raw"}, cache: "no-store"});
+      if(!r.ok) return null;
+      var t = await r.text();
+      return isPage(t, v) ? t : null;
+    }catch(e){ return null; }
+  }
+  async function allowWrite(h){
+    try{ var p = await h.queryPermission({mode: "readwrite"}); if(p !== "granted") p = await h.requestPermission({mode: "readwrite"}); return p === "granted"; }catch(e){ return false; }
+  }
+  async function isSelf(h){ try{ return h.name === SELF && isPage(await (await h.getFile()).text(), APPV); }catch(e){ return false; } }
+  /* the file this page was opened from, allowed to write; null when the pick is cancelled */
+  async function selfHandle(){
+    var h = await idbGet("self");
+    if(h && h.name === SELF){
+      if(!(await allowWrite(h))) throw new Error("perm");
+      if(await isSelf(h)) return h;
+    }
+    if(h) idbSet("self", null);
+    try{ h = (await window.showOpenFilePicker({id: "companion", types: [{description: "Crawler Companion page", accept: {"text/html": [".html", ".htm"]}}], multiple: false}))[0]; }
+    catch(e){ if(e && e.name === "AbortError") return null; throw e; }
+    if(h.name !== SELF) throw new Error("name:" + h.name);
+    if(!(await allowWrite(h))) throw new Error("perm");
+    if(!(await isSelf(h))) throw new Error("other");
+    idbSet("self", h);
+    return h;
+  }
+  async function updateSelf(btn, v, page, msg){
+    btn.disabled = true; msg.textContent = "Updating " + SELF + "…";
+    try{
+      var h = await selfHandle();
+      if(!h){ msg.textContent = "Nothing changed. Press Update this file again and pick " + SELF + "."; return; }
+      var w = await h.createWritable(); await w.write(page); await w.close();
+      var n = diff().list.length;
+      if(n){ msg.textContent = SELF + " is now version " + v + ". Save your " + plural(n, "unsaved change") + " to the sheet, then reload this page to start using it."; return; }
+      msg.textContent = SELF + " is now version " + v + ". Reloading…";
+      location.reload();
+    }catch(e){
+      var m = String(e && e.message || e);
+      msg.textContent = /^name:/.test(m) ? "That’s " + m.slice(5) + ". Pick " + SELF + ", the file you have open. Nothing changed."
+        : m === "perm" ? "The browser didn’t allow changes to " + SELF + ", so nothing changed. Press Update this file again and allow it when asked."
+        : m === "other" ? "That " + SELF + " isn’t the one you have open (it isn’t version " + APPV + "). Pick the file this page came from. Nothing changed."
+        : "Couldn’t update " + SELF + " (" + m + "). The file is unchanged.";
+    }finally{ btn.disabled = false; }
   }
   $("upd-check").addEventListener("click", async function(){
     var out = $("upd-out"), btn = this, link = function(t){ return el("a", {href: RELEASES, target: "_blank", rel: "noopener", text: t}); };
@@ -4804,13 +4859,18 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       if(r.status === 403 || r.status === 429){ out.textContent = "GitHub is limiting checks from your network right now. Try again in an hour."; return; }
       if(!r.ok) throw new Error("HTTP " + r.status);
       var rel = await r.json(), v = String(rel.tag_name || "").replace(/^v/i, "");
-      out.innerHTML = "";
       if(!isNewer(v, APPV)){ out.textContent = "You have the newest version (" + APPV + ")."; return; }
       var asset = (Array.isArray(rel.assets) ? rel.assets : []).filter(function(a){ return a && /^Crawler_Companion_v[\d.]+\.html$/i.test(a.name || "") && /^https:\/\/github\.com\//.test(a.browser_download_url || ""); })[0];
-      var notes = relNotes(rel.body);
+      var page = canSelf ? await newPage(v) : null, notes = relNotes(rel.body);
+      out.innerHTML = "";
       out.appendChild(el("p", {}, [el("b", {text: "Version " + v + " is out."}), " You have " + APPV + "."]));
       if(notes.length) out.appendChild(el("ul", {}, notes.map(function(n){ return el("li", {text: n}); })));
-      if(asset){
+      if(page){
+        var msg = el("p", {cls: "sub", text: "Writes version " + v + " over " + SELF + ", the file you have open, and reloads it. The first time, pick " + SELF + " when asked and allow the change. Your settings and linked sheet stay."});
+        out.appendChild(el("p", {}, [el("button", {type: "button", cls: "btn primary", id: "upd-self", text: "Update this file", onclick: function(){ updateSelf(this, v, page, msg); }})]));
+        out.appendChild(msg);
+      } else if(asset){
+        if(canSelf) out.appendChild(el("p", {cls: "sub", text: "The new page couldn’t be fetched to update this file, so here’s the download."}));
         out.appendChild(el("p", {}, [el("a", {cls: "btn primary", href: asset.browser_download_url, text: "Download " + v})]));
         out.appendChild(el("p", {cls: "sub", text: "It goes to your Downloads folder. Open it in place of this file: in Chrome and Edge your settings come along, and Reconnect relinks your sheet."}));
       } else out.appendChild(el("p", {}, ["The file isn’t attached yet. ", link("Open the releases page"), "."]));
