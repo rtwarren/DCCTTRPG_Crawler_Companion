@@ -12,7 +12,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Companion_v1.5.0.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Companion_v1.5.1.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `guides/Crawler_Companion_Player_Guide.pdf` | The Player Guide: every Crawler tab, Load from CrawlerForge and Loot Boxes. Attached to every release. |
 | `guides/Crawler_Companion_GM_Loot_Box_Guide.pdf` | The GM Guide: making Loot Boxes in CrawlerForge and getting them to players. Attached to every release. |
@@ -41,6 +41,7 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 - **Hover equations.** Any element with a `data-eq` attribute shows a tooltip with that text (new lines allowed). The `span(text, eq)` helper in `main.js` makes these.
 - **Tabs.** Each rules section is a `section.band`. The links in `nav.hbnav` act as tabs, and `showTab()` shows one band at a time. Print shows every band except Crawler.
 - **Crawler tabs.** Your crawler, Check, Damage, Health & Mana and Dice each have a block in `main.js`. Skills, Gear, Pet and Notes are in `tools.js`, which keeps everything in one object, `D`. `calcRefresh()` redraws them all.
+- **Rank upgrades.** Picking an attack in the Damage tab reads its Skill's notes for upgrades written like `Rank 5: +1d4` (`rankUps()` in `main.js`) and adds those dice to the base damage once the attack's Rank reaches them: Rank 5 on any Floor, Ranks 10 and 15 from Floor 3. The sheet's base damage box stays at the Rank 1 dice, so nothing is counted twice.
 - **Loot Boxes.** A box is an Inventory row whose notes start with `Loot Box`. `boxNotes()` writes the wording and `parseBoxNotes()` reads it back; `boxOf()` prefers the full box kept in this browser. Opening one (`bx-go`) tries it on a copy of the Inventory first, so a full Inventory changes nothing. Then it adds the items, rolls the Gold and Junk, drinks the potions (a Stat potion raises Unenhanced and Enhanced together; a Skill potion stops at Rank 15, or 20 with `Max 20`) and adds a Skill the box teaches.
 - **Gear and Stats.** Equipping or removing an item works out the gear bonus before and after, and moves Enhanced Stats, Armor and Evade Buffs by the difference (`applyGearDelta()`). Bonuses from Race, Class, potions or Spells that you typed in stay where they are.
 - **CrawlerForge files.** The CrawlerForge section of `tools.js` reads three kinds of JSON file. It never runs anything from them.

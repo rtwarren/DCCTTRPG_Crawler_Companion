@@ -2,6 +2,10 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.5.1 (2026-11-12)
+
+- **Rank upgrades in the Damage tab.** Picking an attack from your sheet now adds the extra base damage dice its Skill's notes give for the Rank it has reached, written like "Rank 5: +1d4". Rank 5 upgrades count on every Floor, and Rank 10 and 15 upgrades from Floor 3, as the book says. A Critical Hit doubles them with the rest of the base dice, and the note under the formula says which upgrade is included.
+
 ## 1.5.0 (2026-11-12)
 
 - **Load from CrawlerForge syncs the whole crawler.** A crawler file now brings across your Level, Floor, Unenhanced Stats, Health, Mana, AI Favor, Evade adjustment, Popularity and the Past Trauma, Loose Ends and Regrets boxes, as well as your gear, Inventory, Gold, Junk and Hotlist. It replays your Skills too: Ranks you set, Skills you added or removed, advancement ticks, the end-of-play-period checks and the Level they give, and Skills learned from untrained tries on Floors 1 and 2. A Skill finds its row by name, and a shorter name on your sheet counts ("Unarmed" for "Unarmed Combat"). Skills on your sheet that CrawlerForge doesn't list, like the Heal Spell, stay put.
