@@ -11,104 +11,144 @@
 </head>
 <body>
 
-<header class="hero">
-  <div class="wrap">
-    <div>
-      <h1><span>Crawler</span> <span>companion</span></h1>
-      <p class="lede">Rules reference and character manager for the Dungeon Crawler Carl Roleplaying Game. Choose your floor and every number in yellow, like <span class="lv" data-f="10+2*F">12</span>, updates to match it.</p>
+<header class="topbar noprint" id="topbar">
+  <div class="tb-in">
+    <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i class="o"></i></span><span>Crawler Companion</span></div>
+    <div class="who"><b id="tb-name">Your crawler</b><span id="tb-sub">Level 1</span></div>
+    <div class="floorpick" role="group" aria-labelledby="floor-label">
+      <span id="floor-label">Floor</span>
+      <div class="stairs">
+        <button type="button" data-floor="1" aria-pressed="true" aria-label="Floor 1"><span class="n">1</span></button>
+        <button type="button" data-floor="2" aria-pressed="false" aria-label="Floor 2"><span class="n">2</span></button>
+        <button type="button" data-floor="3" aria-pressed="false" aria-label="Floor 3"><span class="n">3</span></button>
+        <button type="button" data-floor="4" aria-pressed="false" aria-label="Floor 4"><span class="n">4</span></button>
+        <button type="button" data-floor="5" aria-pressed="false" aria-label="Floor 5"><span class="n">5</span></button>
+      </div>
     </div>
-    <div class="floorbox">
-      <div class="stairs-wrap">
-        <h2 id="floor-label">Your floor</h2>
-        <div class="stairs" role="group" aria-labelledby="floor-label">
-          <button type="button" data-floor="1" aria-pressed="true" aria-label="Floor 1"><span class="n">1</span></button>
-          <button type="button" data-floor="2" aria-pressed="false" aria-label="Floor 2"><span class="n">2</span></button>
-          <button type="button" data-floor="3" aria-pressed="false" aria-label="Floor 3"><span class="n">3</span></button>
-          <button type="button" data-floor="4" aria-pressed="false" aria-label="Floor 4"><span class="n">4</span></button>
-          <button type="button" data-floor="5" aria-pressed="false" aria-label="Floor 5"><span class="n">5</span></button>
+    <div class="sheetbox" id="sheetbox">
+      <div class="sb-row" id="sb-off">
+        <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
+        <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
+        <span class="sb-txt"><span class="sb-sub">Without a sheet, numbers stay in this browser.</span><span class="sb-sub sb-err" id="sb-msg" aria-live="polite"></span></span>
+        <input type="file" id="sb-file" accept="application/pdf,.pdf" class="hide" tabindex="-1" aria-hidden="true">
+      </div>
+      <div class="sb-row hide" id="sb-on">
+        <svg class="sb-ico" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+        <span class="sb-txt"><b id="sb-file-name"></b><span class="sb-sub" id="sb-status" aria-live="polite"></span></span>
+        <button type="button" class="btn" id="sb-save">Save</button>
+        <details class="pop" id="sb-pop">
+          <summary class="btn" id="sb-count">No unsaved changes</summary>
+          <div class="pop-panel">
+            <h3 id="sb-who">Linked</h3>
+            <p class="sub" id="sb-info"></p>
+            <ul class="changes" id="sb-changes"></ul>
+            <label class="chk" id="sb-auto-l"><input type="checkbox" id="sb-auto" checked> Save changes automatically</label>
+            <div class="btnrow"><button type="button" class="btn" id="sb-reload">Reload</button><button type="button" class="btn" id="sb-unlink">Unlink</button></div>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="tb-end">
+      <button type="button" class="btn rules-btn" id="rules-open" aria-haspopup="dialog" aria-controls="rules">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6"/></svg>
+        Rules
+      </button>
+      <details class="pop menu" id="more">
+        <summary class="btn icon" aria-label="More: Load from CrawlerForge, dark mode, print, check for updates"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></summary>
+        <div class="pop-panel menu-panel">
+          <button type="button" class="mi" id="menu-cf">Load from CrawlerForge</button>
+          <button type="button" class="mi" id="theme">Dark mode</button>
+          <button type="button" class="mi" id="print">Print the cheat sheet</button>
+          <button type="button" class="mi" id="menu-upd">Check for updates</button>
         </div>
-        <p class="stairs-note">F in any formula means your current floor number.</p>
-      </div>
-      <div>
-        <p class="print-floor">Numbers set for Floor <span data-lk="num">1</span></p>
-        <dl class="targets" aria-live="polite">
-          <dt>Unopposed check</dt><dd><span class="lv" data-f="10+2*F">12</span></dd>
-          <dt>Stat check</dt><dd><span class="lv" data-f="10+F">11</span></dd>
-          <dt>Opposed check</dt><dd><span class="lv" data-f="10+F">11</span> + foe’s Mod</dd>
-          <dt>Hit a Mob</dt><dd><span class="lv" data-f="10+F">11</span> + its Dex Mod</dd>
-          <dt>Floor collapses in</dt><dd><span class="lv" data-lk="timer">5 days</span></dd>
-        </dl>
-      </div>
+      </details>
     </div>
   </div>
 </header>
 
-<nav class="hbnav" aria-label="Sections">
-  <ol>
-    <li class="calc-link"><a href="#calc" style="--c:var(--ink)"><span class="full">Crawler</span><span class="short">Crawler</span></a></li>
-    <li><a href="#checks" style="--c:var(--hb1)">Checks</a></li>
-    <li><a href="#results" style="--c:var(--hb2)">Results</a></li>
-    <li><a href="#round" style="--c:var(--hb3)">Round</a></li>
-    <li><a href="#actions" style="--c:var(--hb4)">Actions</a></li>
-    <li><a href="#attacks" style="--c:var(--hb5)">Attacks</a></li>
-    <li><a href="#exploring" style="--c:var(--hb6)"><span class="full">Exploring</span><span class="short">Explore</span></a></li>
-    <li><a href="#health" style="--c:var(--hb7)">Health</a></li>
-    <li><a href="#gear" style="--c:var(--hb8)">Gear</a></li>
-    <li><a href="#debuffs" style="--c:var(--hb9)">Debuffs</a></li>
-    <li><a href="#growth" style="--c:var(--hb10)">Growth</a></li>
-  </ol>
-</nav>
-
-<div class="wrap">
-  <div class="toolbar noprint">
-    <label class="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <span class="hide">Search rules</span>
-      <input id="q" type="search" placeholder="Search rules, e.g. evade, prone, mana" autocomplete="off">
-    </label>
-    <button class="btn" id="theme" type="button">Dark mode</button>
-    <button class="btn" id="print" type="button">Print</button>
+<div class="targetbar">
+  <div class="tb-in">
+    <span class="tg-h">Floor <span data-lk="num">1</span> targets</span>
+    <dl class="targets" aria-live="polite">
+      <div><dt>Unopposed check</dt><dd><span class="lv" data-f="10+2*F">12</span></dd></div>
+      <div><dt>Stat check</dt><dd><span class="lv" data-f="10+F">11</span></dd></div>
+      <div><dt>Opposed check</dt><dd><span class="lv" data-f="10+F">11</span> + foe’s Mod</dd></div>
+      <div><dt>Hit a Mob</dt><dd><span class="lv" data-f="10+F">11</span> + its Dex Mod</dd></div>
+      <div><dt>Floor collapses in</dt><dd><span class="lv" data-lk="timer">5 days</span></dd></div>
+    </dl>
   </div>
-  <p class="empty" id="empty" role="status"></p>
+</div>
 
-<main>
+<div class="app noprint" id="app">
 
-<!-- 0 CALCULATORS -->
-<section class="band calc" id="calc" style="--slot:var(--ink)">
-  <div class="band-head"><div class="in"><h2>Crawler</h2><p>Your Skills, gear, pet and notes, plus the math your VTT can’t do. Link your character sheet or type your numbers in. Hover over or tap any underlined number to see how it was worked out.</p></div></div>
-  <div class="calc-wrap">
-
-    <aside class="crawler-panel" id="calc-crawler" aria-label="Your crawler">
-      <div class="sheetbox" id="sheetbox">
-        <div id="sb-off">
-          <h3>Character sheet</h3>
-          <p class="sub">Link your fillable PDF to load your numbers. Health, Mana, Skills, gear, Inventory, your pet and your notes save back into it.</p>
-          <div class="btnrow">
-            <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
-            <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
-          </div>
-          <input type="file" id="sb-file" accept="application/pdf,.pdf" class="hide" tabindex="-1" aria-hidden="true">
-          <p class="sub" id="sb-msg" aria-live="polite"></p>
-        </div>
-        <div id="sb-on" class="hide">
-          <h3 id="sb-who">Linked</h3>
-          <p class="sub" id="sb-file-name"></p>
-          <p class="sub" id="sb-info"></p>
-          <div class="pending">
-            <p class="pend-head" id="sb-count">No unsaved changes</p>
-            <ul class="changes" id="sb-changes"></ul>
-          </div>
-          <div class="btnrow">
-            <button type="button" class="btn primary" id="sb-save">Save to sheet</button>
-            <button type="button" class="btn" id="sb-reload">Reload</button>
-            <button type="button" class="btn" id="sb-unlink">Unlink</button>
-          </div>
-          <label class="chk" id="sb-auto-l"><input type="checkbox" id="sb-auto" checked> Save changes automatically</label>
-          <p class="sub" id="sb-status" aria-live="polite"></p>
-        </div>
+  <aside class="col vitals" aria-label="Health, Mana and stats">
+    <section class="card" aria-labelledby="h-health">
+      <div class="card-h"><h2 id="h-health">Health</h2><b class="card-n" id="vt-hbtxt"></b></div>
+      <div class="hb" id="hm-bar" aria-hidden="true"></div>
+      <p class="sub" id="hm-status"></p>
+      <div class="fields two">
+        <label>Damage<input type="number" id="hm-dmg" min="0" inputmode="numeric"></label>
+        <button type="button" class="btn primary" id="hm-hit">Take the hit</button>
       </div>
+      <details class="more" id="hm-more">
+        <summary>Damage type and area</summary>
+        <div class="fields">
+          <label>Damage type is<select id="hm-type"><option value="n">Normal for me</option><option value="r">Resisted</option><option value="v">Vulnerable</option><option value="i">Immune</option></select></label>
+          <label>Area attack<select id="hm-area"><option value="1">No, or full area</option><option value="0.5">Evaded, or in the Splash (half)</option><option value="0.25">Evaded in the Splash (quarter)</option></select></label>
+          <label class="chk"><input type="checkbox" id="hm-deb"> From a Debuff (skips DR)</label>
+        </div>
+      </details>
+      <p class="sub" id="hm-preview"></p>
+      <div class="fields two">
+        <label>Heal slots<input type="number" id="hm-heal" min="1" max="10" value="2" inputmode="numeric"></label>
+        <button type="button" class="btn" id="hm-heal-b">Heal</button>
+      </div>
+      <div class="card-h sep"><h2>Mana</h2><b class="card-n" id="vt-manatxt"></b></div>
+      <div class="manabar" aria-hidden="true"><div id="vt-manafill"></div></div>
+      <div class="fields two">
+        <label>Mana<input type="number" id="hm-mana" min="1" value="2" inputmode="numeric"></label>
+        <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
+      </div>
+      <div class="btnrow"><button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button></div>
+      <p class="sub" id="hm-log" aria-live="polite"></p>
+      <div class="tiles">
+        <div><small>Evade</small><b id="vt-evade"></b></div>
+        <div><small>DR</small><b id="vt-dr"></b></div>
+        <div><small>AI Favor</small><b id="vt-fav"></b></div>
+      </div>
+      <p class="sub" id="vt-pet"></p>
+      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a></p>
+    </section>
 
-      <h3>Your crawler</h3>
+    <section class="card" aria-labelledby="h-status">
+      <div class="card-h"><h2 id="h-status">Buffs and Debuffs</h2></div>
+      <div class="tags" id="db-tags"></div>
+      <div class="fields">
+        <label class="wide">Add a Debuff<select id="db-add">
+          <option value="">Pick one</option>
+          <option value="minor">Minor Injury (−2 to Checks)</option>
+          <option value="major">Major Injury (−5 to Checks)</option>
+          <option value="sore">Sore as Shit (−1 to Checks)</option>
+          <option value="fat">Fatigued, one more stack (−1 each)</option>
+        </select></label>
+      </div>
+      <div class="hide" aria-hidden="true">
+        <input type="checkbox" id="ck-minor" tabindex="-1">
+        <input type="checkbox" id="ck-major" tabindex="-1">
+        <input type="checkbox" id="ck-sore" tabindex="-1">
+        <input type="number" id="ck-fat" min="0" value="0" tabindex="-1">
+      </div>
+      <h3 class="mini-h">Rest</h3>
+      <div class="rest">
+        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 5 Mana</small></button>
+        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, half Mana</small></button>
+        <button type="button" class="btn" data-rest="long">Long rest<small>8 h: full, clears Fatigued</small></button>
+      </div>
+      <p class="rules-l"><a class="rule" href="#debuffs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Debuffs</a><a class="rule" href="#r-healing"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Rest</a></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-stats">
+      <div class="card-h"><h2 id="h-stats">Stats</h2></div>
       <table class="statin">
         <thead><tr><th>Stat</th><th>Unenhanced</th><th>Enhanced</th><th>Mod</th></tr></thead>
         <tbody>
@@ -132,136 +172,24 @@
         <dl class="derived" id="cr-out"></dl>
       </details>
       <p class="note" id="cr-note">Saved in this browser only.</p>
-    </aside>
+      <p class="rules-l"><a class="rule" href="#r-mods"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Stat Mods</a></p>
+    </section>
+  </aside>
 
-    <div class="tools">
-      <div class="strip" id="strip" aria-live="polite">
-        <div class="hb mini" id="strip-bar" aria-hidden="true"></div>
-        <p id="strip-text"></p>
+  <main class="col mid" id="main">
+    <div class="tabbar">
+      <div class="tabs" role="tablist" aria-label="Your crawler">
+        <button type="button" role="tab" id="tt-skills" aria-controls="tp-skills" aria-selected="true">Skills</button><button type="button" role="tab" id="tt-gear" aria-controls="tp-gear" aria-selected="false">Gear &amp; Inventory</button><button type="button" role="tab" id="tt-pet" aria-controls="tp-pet" aria-selected="false">Pet</button><button type="button" role="tab" id="tt-notes" aria-controls="tp-notes" aria-selected="false">Notes</button>
       </div>
-      <div class="seg tooltabs" role="tablist" aria-label="Crawler tools">
-        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-health" aria-controls="tp-health" aria-selected="false">Health &amp; Mana</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button><button type="button" role="tab" id="tt-skills" aria-controls="tp-skills" aria-selected="false">Skills</button><button type="button" role="tab" id="tt-gear" aria-controls="tp-gear" aria-selected="false">Gear</button><button type="button" role="tab" id="tt-pet" aria-controls="tp-pet" aria-selected="false">Pet</button><button type="button" role="tab" id="tt-notes" aria-controls="tp-notes" aria-selected="false">Notes</button>
-      </div>
-
-      <div class="toolpanel" id="tp-check" role="tabpanel" aria-labelledby="tt-check">
-        <div class="fields" id="ck-src-l-wrap">
-          <label id="ck-src-l" class="hide wide-l">From your sheet<select id="ck-src"><option value="">Pick a Skill or attack</option></select></label>
+      <button type="button" class="btn" id="tb-cf">Load from CrawlerForge</button>
+    </div>
+      <div class="toolpanel" id="tp-skills" role="tabpanel" aria-labelledby="tt-skills">
+        <div class="tbar"><h2 class="ph">Skills</h2><p class="sub" id="sk-sum"></p></div>
+        <div class="tbar tools-row">
+          <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="hide">Find a Skill</span><input type="search" id="sk-q" placeholder="Find a Skill" autocomplete="off"></label>
+          <div class="seg" role="group" aria-label="Show"><button type="button" id="sk-f-all" aria-pressed="true">All</button><button type="button" id="sk-f-tick" aria-pressed="false">Ticked</button></div>
+          <button type="button" class="btn primary" id="sk-add">Add a Skill</button>
         </div>
-        <div class="seg" role="group" aria-label="Kind of roll">
-          <button type="button" data-kind="skill" aria-pressed="true">Skill Check</button><button type="button" data-kind="attack" aria-pressed="false">Attack</button><button type="button" data-kind="evade" aria-pressed="false">Evade</button><button type="button" data-kind="stat" aria-pressed="false">Stat Check</button>
-        </div>
-        <div class="fields">
-          <label>Stat<select id="ck-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option></select></label>
-          <label id="ck-rank-l">Skill Rank<input type="number" id="ck-rank" min="0" max="20" value="1" inputmode="numeric"></label>
-          <label>Other bonus<input type="number" id="ck-other" value="0" inputmode="numeric"></label>
-          <label>Roll with<select id="ck-mode"><option value="n">Normal</option><option value="a">Advantage</option><option value="d">Disadvantage</option></select></label>
-          <label class="chk" id="ck-untr-l"><input type="checkbox" id="ck-untr"> No Ranks</label>
-        </div>
-        <div class="fields">
-          <span class="lab">Penalties to all Checks</span>
-          <label class="chk"><input type="checkbox" id="ck-minor"> Minor Injury −2</label>
-          <label class="chk"><input type="checkbox" id="ck-major"> Major Injury −5</label>
-          <label class="chk"><input type="checkbox" id="ck-sore"> Sore as Shit −1</label>
-          <label class="narrow">Fatigued stacks<input type="number" id="ck-fat" min="0" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="fields">
-          <label><span id="ck-tgt-lab">Target</span><input type="number" id="ck-tgt" value="12" inputmode="numeric"></label>
-          <label>Foe’s Mod<input type="number" id="ck-foe" value="0" inputmode="numeric"></label>
-          <div class="presets" aria-label="Target presets">
-            <button type="button" data-preset="unopp">Unopposed</button>
-            <button type="button" data-preset="stat">Stat check</button>
-            <button type="button" data-preset="foe">Foe or Mob</button>
-          </div>
-          <label>The Mob has<select id="ck-mob"><option value="0">No edge</option><option value="5">Advantage (+5)</option><option value="-5">Disadvantage (−5)</option></select></label>
-        </div>
-        <p class="sub" id="ck-odds"></p>
-        <div class="fields">
-          <label class="narrow">d20<input type="number" id="ck-d1" min="1" max="20" inputmode="numeric"></label>
-          <label class="narrow" id="ck-d2-l">Second d20<input type="number" id="ck-d2" min="1" max="20" inputmode="numeric"></label>
-          <button type="button" class="btn primary" id="ck-roll">Roll for me</button>
-          <button type="button" class="btn" id="ck-fav">Reroll with AI Favor</button>
-        </div>
-        <p class="out" id="ck-out" aria-live="polite"></p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-damage" role="tabpanel" aria-labelledby="tt-damage">
-        <div class="fields">
-          <label id="dm-src-l" class="hide wide-l">Attack from your sheet<select id="dm-src"><option value="">Pick an attack</option></select></label>
-        </div>
-        <div class="fields">
-          <label>Base dice<span class="pair"><input type="number" id="dm-n" min="0" max="99" value="1" inputmode="numeric" aria-label="Number of base dice">d<select id="dm-x" aria-label="Base die size"><option>2</option><option selected>4</option><option>6</option><option>8</option><option>10</option><option>12</option></select></span></label>
-          <label>Extra base dice<input type="text" id="dm-extra" placeholder="e.g. 1d2" autocomplete="off"></label>
-          <label>Add Stat Mod<select id="dm-stat"><option value="none">None</option><option value="str" selected>Str</option><option value="dex">Dex</option><option value="int">Int</option><option value="con">Con</option><option value="cha">Cha</option></select></label>
-          <label>Flat bonus<input type="number" id="dm-flat" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="fields">
-          <label class="chk"><input type="checkbox" id="dm-rank-on"> Add Rank damage die</label>
-          <label class="narrow" id="dm-rank-l">Skill Rank<input type="number" id="dm-rank" min="1" max="20" value="1" inputmode="numeric"></label>
-          <label>Result<select id="dm-res"><option value="hit">Hit</option><option value="amazing">Amazing Success</option><option value="crit">Critical Hit</option></select></label>
-        </div>
-        <p class="sub">Roll this</p>
-        <p class="formula-out"><span id="dm-formula">1d4 + 2</span></p>
-        <p class="sub" id="dm-why"></p>
-        <div class="btnrow"><button type="button" class="btn primary" id="dm-roll">Roll for me</button></div>
-        <p class="out" id="dm-out" aria-live="polite"></p>
-        <p class="note">Extra base dice are upgrades or Damage Effects that add “base damage”, like Iron Punch’s 1d2. They double on a Critical Hit; the Rank die doesn’t.</p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-health" role="tabpanel" aria-labelledby="tt-health">
-        <div class="hb" id="hm-bar" aria-hidden="true"></div>
-        <div class="hb-cap" aria-hidden="true"><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
-        <p class="out" id="hm-status"></p>
-        <div class="fields">
-          <label class="narrow">Damage<input type="number" id="hm-dmg" min="0" inputmode="numeric"></label>
-          <label>Damage type is<select id="hm-type"><option value="n">Normal for me</option><option value="r">Resisted</option><option value="v">Vulnerable</option><option value="i">Immune</option></select></label>
-          <label>Area attack<select id="hm-area"><option value="1">No, or full area</option><option value="0.5">Evaded, or in the Splash (half)</option><option value="0.25">Evaded in the Splash (quarter)</option></select></label>
-          <label class="chk"><input type="checkbox" id="hm-deb"> From a Debuff (skips DR)</label>
-          <button type="button" class="btn primary" id="hm-hit">Take the hit</button>
-        </div>
-        <p class="sub" id="hm-preview"></p>
-        <div class="fields">
-          <label class="narrow">Heal slots<input type="number" id="hm-heal" min="1" max="10" value="2" inputmode="numeric"></label>
-          <button type="button" class="btn" id="hm-heal-b">Heal</button>
-          <button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button>
-          <label class="narrow">Mana<input type="number" id="hm-mana" min="1" value="2" inputmode="numeric"></label>
-          <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
-        </div>
-        <div class="btnrow">
-          <span class="lab">Rest</span>
-          <button type="button" class="btn" data-rest="hour">1 calm hour</button>
-          <button type="button" class="btn" data-rest="short">Short rest (2 h)</button>
-          <button type="button" class="btn" data-rest="long">Long rest (8 h)</button>
-        </div>
-        <p class="sub" id="hm-log" aria-live="polite"></p>
-        <p class="note">Uses the Con Mod, DR and Intelligence from Your crawler. Area halving is applied before DR.</p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-dice" role="tabpanel" aria-labelledby="tt-dice">
-        <div class="btnrow">
-          <button type="button" class="btn" data-roll="d20">d20</button>
-          <button type="button" class="btn" data-roll="adv">d20 with Advantage</button>
-          <button type="button" class="btn" data-roll="dis">d20 with Disadvantage</button>
-          <button type="button" class="btn" data-roll="help">Help 1d2</button>
-          <button type="button" class="btn" data-roll="d6">Help or Intervene 1d6</button>
-          <button type="button" class="btn" data-roll="play">Call a Play 2d6</button>
-        </div>
-        <div class="fields">
-          <label>Any dice<input type="text" id="dt-expr" placeholder="e.g. 3d6+2" autocomplete="off"></label>
-          <button type="button" class="btn primary" id="dt-go">Roll</button>
-        </div>
-        <div class="adv-box">
-          <h4>Skill advancement</h4>
-          <p class="sub">For the Skills on your sheet, use the <a href="#tp-skills">Skills tab</a>. This one is for any Rank you type in.</p>
-          <div class="fields" id="adv-manual">
-            <label class="narrow">Skill Rank<input type="number" id="dt-rank" min="1" max="20" value="1" inputmode="numeric"></label>
-            <button type="button" class="btn" data-roll="advance">Roll an advancement check</button>
-          </div>
-        </div>
-        <ol class="hist" id="dt-hist" aria-live="polite"></ol>
-      </div>
-
-      <div class="toolpanel hide" id="tp-skills" role="tabpanel" aria-labelledby="tt-skills">
-        <div class="tbar"><p class="sub" id="sk-sum"></p><button type="button" class="btn" id="sk-add">Add a Skill</button></div>
         <div class="edit hide" id="sk-edit">
           <h4 id="se-title">Add a Skill</h4>
           <div class="fields">
@@ -288,6 +216,7 @@
             <tbody id="sk-rows"></tbody>
           </table>
         </div>
+        <p class="sub hide" id="sk-none" role="status"></p>
         <p class="note">Rolling a Skill or attack in the Check tab ticks it. Passive Skills don’t tick; they rise through training, magic, your Race or Class.</p>
         <div class="fields try">
           <label class="wide">Try a Skill you don’t have<input type="text" id="st-name" autocomplete="off" maxlength="40" placeholder="e.g. Climbing"></label>
@@ -297,15 +226,16 @@
         <p class="note" data-floors="1-2">Untrained rolls take Disadvantage and add no Rank. On Floors 1 and 2 the Skill is added at Rank 0 and ticked, and at the end of each 2-hour session you learn one of the Skills you tried at Rank 1.</p>
         <p class="note" data-floors="3-5">Untrained rolls take Disadvantage and add no Rank. From Floor 3, trying a Skill no longer teaches it: get Rank 1 from a guild, gear, a potion, your Race or Class.</p>
         <p class="sub" id="st-msg" role="status"></p>
+        <div class="duo">
         <div class="adv-box">
-          <h4>Advancement checks</h4>
+          <div class="h4row"><h4>Advancement checks</h4><a class="rule" href="#r-skills"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Raising Skills</a></div>
           <p class="sub">Each ticked Skill rolls a d20. Equal to or over its Rank gives +1 Rank (cap 15). Rank 4 or lower rolls every 2 hours of play; Rank 5 and up roll at the end of each floor. Ticks clear after.</p>
           <div class="fields"><label class="wide-l">End of floor, roll one with Advantage (Human, Rank 9 or less)<select id="sk-advsel"></select></label></div>
           <div class="fields hide" id="sk-learn-l"><label class="wide-l">Learn one untrained Skill you tried (Floors 1 and 2)<select id="sk-learn"></select></label></div>
           <div class="btnrow"><button type="button" class="btn" id="sk-2h">Every 2 hours (Rank 4 or lower)</button><button type="button" class="btn" id="sk-floor">End of floor (every ticked Skill)</button></div>
         </div>
         <div class="adv-box">
-          <h4>Grinding</h4>
+          <div class="h4row"><h4>Grinding</h4><a class="rule" href="#r-grinding"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Grinding</a></div>
           <p class="sub">Put grind hours into Skills. When a Skill’s hours reach its Rank, it rolls an advancement check right away. Each Skill once a day. 5 hours a day is safe; hours past 5 each need an Endurance check.</p>
           <div class="fields">
             <label class="narrow">Hours<input type="number" id="gr-h" min="1" max="24" value="5" inputmode="numeric"></label>
@@ -316,12 +246,14 @@
           <div class="btnrow"><button type="button" class="btn primary" id="gr-go">Log the grind</button></div>
           <p class="sub" id="gr-lvl"></p>
         </div>
+        </div>
         <ol class="hist" id="sk-log" aria-live="polite"></ol>
       </div>
 
       <div class="toolpanel hide" id="tp-gear" role="tabpanel" aria-labelledby="tt-gear">
+        <div class="tbar"><h2 class="ph">Gear &amp; Inventory</h2></div>
         <div id="gear-sum"></div>
-        <h4>Gear slots</h4>
+        <div class="h4row"><h4>Gear slots</h4><a class="rule" href="#r-gearslots"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Gear slots</a></div>
         <div class="slots" id="gear-slots"></div>
         <p class="note">Only equipped gear gives bonuses. Equipping or removing gear moves your Enhanced Stats, Armor DR and Evade Buffs by its bonus; your Unenhanced Stats stay put. Accessories hold up to 10 (one belt, one cape). Hands/Holding takes gloves, a main hand and an off hand; a two-handed item takes both hands.</p>
         <p class="sub" id="gear-log" role="status"></p>
@@ -351,7 +283,7 @@
           </div>
           <div class="btnrow"><button type="button" class="btn primary" id="ie-save">Save</button><button type="button" class="btn" id="ie-cancel">Cancel</button><button type="button" class="btn danger" id="ie-del">Delete</button><span class="sub" id="ie-msg" role="status"></span></div>
         </div>
-        <h4>Inventory <small id="inv-count"></small></h4>
+        <div class="h4row"><h4>Inventory <small id="inv-count"></small></h4><a class="rule" href="#r-loot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Junk, loot and gold</a></div>
         <div class="fields">
           <label class="narrow">Gold<input type="text" id="inv-gold" autocomplete="off" aria-describedby="inv-hint"></label>
           <label class="narrow">Misc. Junk<input type="text" id="inv-junk" autocomplete="off" aria-describedby="inv-hint"></label>
@@ -402,12 +334,13 @@
         <p class="note">An item’s Gear Slot, bonuses and use are written at the start of its notes on your sheet, like “Head: +2 Int, DR 1.” or “Use: full Mana.”, so they come back when you reload.</p>
         <p class="note">Load from CrawlerForge reads a crawler file (CrawlerForge’s crawler export), an Export everything backup, or a pack. A crawler’s file brings in what it’s wearing and carrying, its unopened Loot Boxes, its Gold, Junk and Hotlist; a pack or your Forge lets you pick items and Loot Boxes to add. Stat, Armor, Evade and Skill bonuses come across; anything the sheet can’t track goes into the item’s notes.</p>
         <p class="note">A Loot Box sits in your Inventory until you open it. Opening one puts its items in your Inventory, adds its Gold and Junk, and drinks its Skill and Stat potions straight away. A crawler can only ever drink two Stat potions and two Skill potions (Core p. 226). CrawlerForge rolls a random box’s contents when it hands the box out; a random box from a pack holds only its Gold here, and your GM rolls the rest (Core p. 219).</p>
-        <h4>Hotlist</h4>
+        <div class="h4row"><h4>Hotlist</h4><a class="rule" href="#r-hotlist"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Hotlist</a></div>
         <div class="hot" id="hot-grid"></div>
         <p class="note">Spells and items in your Hotlist can be used with one Action. Spells must be here to cast them in combat.</p>
       </div>
 
       <div class="toolpanel hide" id="tp-pet" role="tabpanel" aria-labelledby="tt-pet">
+        <div class="tbar"><h2 class="ph">Pet</h2></div>
         <div id="pet-none">
           <p>No pet on your sheet. One pet per crawler unless your Class says otherwise. Pets start at Level 1 however you get them.</p>
           <div class="fields">
@@ -483,6 +416,7 @@
       </div>
 
       <div class="toolpanel hide" id="tp-notes" role="tabpanel" aria-labelledby="tt-notes">
+        <div class="tbar"><h2 class="ph">Notes</h2></div>
         <label class="tx"><span>Notes</span><textarea id="nt-notes" data-tx="notes" rows="9"></textarea></label>
         <p class="note">Everything here saves into your sheet. The PDF’s Notes box is small, so a long note is all there but your PDF reader may only show the start of it.</p>
         <div class="txgrid">
@@ -510,16 +444,144 @@
           </div>
         </details>
       </div>
+  </main>
+
+  <aside class="col roll" aria-label="Rolls">
+    <section class="card" aria-labelledby="h-roll">
+      <div class="card-h"><h2 id="h-roll">Roll</h2></div>
+      <div class="seg tabs3" role="tablist" aria-label="Roll tools">
+        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button>
+      </div>
+      <div class="toolpanel" id="tp-check" role="tabpanel" aria-labelledby="tt-check">
+        <div class="fields" id="ck-src-l-wrap">
+          <label id="ck-src-l" class="hide wide-l">From your sheet<select id="ck-src"><option value="">Pick a Skill or attack</option></select></label>
+        </div>
+        <div class="seg" role="group" aria-label="Kind of roll">
+          <button type="button" data-kind="skill" aria-pressed="true">Skill Check</button><button type="button" data-kind="attack" aria-pressed="false">Attack</button><button type="button" data-kind="evade" aria-pressed="false">Evade</button><button type="button" data-kind="stat" aria-pressed="false">Stat Check</button>
+        </div>
+        <div class="fields">
+          <label>Stat<select id="ck-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option></select></label>
+          <label id="ck-rank-l">Skill Rank<input type="number" id="ck-rank" min="0" max="20" value="1" inputmode="numeric"></label>
+          <label>Other bonus<input type="number" id="ck-other" value="0" inputmode="numeric"></label>
+          <label>Roll with<select id="ck-mode"><option value="n">Normal</option><option value="a">Advantage</option><option value="d">Disadvantage</option></select></label>
+          <label class="chk" id="ck-untr-l"><input type="checkbox" id="ck-untr"> No Ranks</label>
+        </div>
+        <p class="sub pen" id="ck-pen"></p>
+        <div class="fields">
+          <label><span id="ck-tgt-lab">Target</span><input type="number" id="ck-tgt" value="12" inputmode="numeric"></label>
+          <label>Foe’s Mod<input type="number" id="ck-foe" value="0" inputmode="numeric"></label>
+          <div class="presets" aria-label="Target presets">
+            <button type="button" data-preset="unopp">Unopposed</button>
+            <button type="button" data-preset="stat">Stat check</button>
+            <button type="button" data-preset="foe">Foe or Mob</button>
+          </div>
+          <label>The Mob has<select id="ck-mob"><option value="0">No edge</option><option value="5">Advantage (+5)</option><option value="-5">Disadvantage (−5)</option></select></label>
+        </div>
+        <p class="sub" id="ck-odds"></p>
+        <div class="fields">
+          <label class="narrow">d20<input type="number" id="ck-d1" min="1" max="20" inputmode="numeric"></label>
+          <label class="narrow" id="ck-d2-l">Second d20<input type="number" id="ck-d2" min="1" max="20" inputmode="numeric"></label>
+          <button type="button" class="btn primary" id="ck-roll">Roll for me</button>
+          <button type="button" class="btn" id="ck-fav">Reroll with AI Favor</button>
+        </div>
+        <p class="out" id="ck-out" aria-live="polite"></p>
+        <p class="rules-l"><a class="rule" href="#checks"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Checks</a><a class="rule" href="#results"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Results</a></p>
+      </div>
+
+      <div class="toolpanel hide" id="tp-damage" role="tabpanel" aria-labelledby="tt-damage">
+        <div class="fields">
+          <label id="dm-src-l" class="hide wide-l">Attack from your sheet<select id="dm-src"><option value="">Pick an attack</option></select></label>
+        </div>
+        <div class="fields">
+          <label>Base dice<span class="pair"><input type="number" id="dm-n" min="0" max="99" value="1" inputmode="numeric" aria-label="Number of base dice">d<select id="dm-x" aria-label="Base die size"><option>2</option><option selected>4</option><option>6</option><option>8</option><option>10</option><option>12</option></select></span></label>
+          <label>Extra base dice<input type="text" id="dm-extra" placeholder="e.g. 1d2" autocomplete="off"></label>
+          <label>Add Stat Mod<select id="dm-stat"><option value="none">None</option><option value="str" selected>Str</option><option value="dex">Dex</option><option value="int">Int</option><option value="con">Con</option><option value="cha">Cha</option></select></label>
+          <label>Flat bonus<input type="number" id="dm-flat" value="0" inputmode="numeric"></label>
+        </div>
+        <div class="fields">
+          <label class="chk"><input type="checkbox" id="dm-rank-on"> Add Rank damage die</label>
+          <label class="narrow" id="dm-rank-l">Skill Rank<input type="number" id="dm-rank" min="1" max="20" value="1" inputmode="numeric"></label>
+          <label>Result<select id="dm-res"><option value="hit">Hit</option><option value="amazing">Amazing Success</option><option value="crit">Critical Hit</option></select></label>
+        </div>
+        <p class="sub">Roll this</p>
+        <p class="formula-out"><span id="dm-formula">1d4 + 2</span></p>
+        <p class="sub" id="dm-why"></p>
+        <div class="btnrow"><button type="button" class="btn primary" id="dm-roll">Roll for me</button></div>
+        <p class="out" id="dm-out" aria-live="polite"></p>
+        <p class="rules-l"><a class="rule" href="#r-damage"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Damage</a></p>
+        <p class="note">Extra base dice are upgrades or Damage Effects that add “base damage”, like Iron Punch’s 1d2. They double on a Critical Hit; the Rank die doesn’t.</p>
+      </div>
+
+      <div class="toolpanel hide" id="tp-dice" role="tabpanel" aria-labelledby="tt-dice">
+        <div class="btnrow">
+          <button type="button" class="btn" data-roll="d20">d20</button>
+          <button type="button" class="btn" data-roll="adv">d20 with Advantage</button>
+          <button type="button" class="btn" data-roll="dis">d20 with Disadvantage</button>
+          <button type="button" class="btn" data-roll="help">Help 1d2</button>
+          <button type="button" class="btn" data-roll="d6">Help or Intervene 1d6</button>
+          <button type="button" class="btn" data-roll="play">Call a Play 2d6</button>
+        </div>
+        <div class="fields">
+          <label>Any dice<input type="text" id="dt-expr" placeholder="e.g. 3d6+2" autocomplete="off"></label>
+          <button type="button" class="btn primary" id="dt-go">Roll</button>
+        </div>
+        <div class="adv-box">
+          <h4>Skill advancement</h4>
+          <p class="sub">For the Skills on your sheet, use the <a href="#tp-skills">Skills tab</a>. This one is for any Rank you type in.</p>
+          <div class="fields" id="adv-manual">
+            <label class="narrow">Skill Rank<input type="number" id="dt-rank" min="1" max="20" value="1" inputmode="numeric"></label>
+            <button type="button" class="btn" data-roll="advance">Roll an advancement check</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="h-hist">
+      <div class="card-h"><h2 id="h-hist">Recent rolls</h2></div>
+      <ol class="hist" id="dt-hist" aria-live="polite"></ol>
+      <p class="sub hist-none">Checks, damage and dice you roll here are listed, newest first.</p>
+    </section>
+  </aside>
+
+</div>
+
+<div class="scrim noprint" id="rules-scrim" hidden></div>
+<aside class="drawer" id="rules" role="dialog" aria-modal="true" aria-labelledby="rules-h" tabindex="-1">
+  <div class="dr-head">
+    <div class="dr-top">
+      <h2 id="rules-h"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6"/></svg>Rules</h2>
+      <span class="print-floor">Numbers set for Floor <span class="lv" data-lk="num">1</span></span>
+      <button type="button" class="btn icon noprint" id="rules-close" aria-label="Close rules"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
+    <label class="search noprint">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="hide">Search rules</span>
+      <input id="q" type="search" placeholder="Search rules, e.g. evade, prone, mana" autocomplete="off">
+    </label>
+    <nav class="hbnav noprint" aria-label="Rule sections">
+      <ol>
+        <li><a href="#checks" style="--c:var(--hb1)">Checks</a></li>
+        <li><a href="#results" style="--c:var(--hb2)">Results</a></li>
+        <li><a href="#round" style="--c:var(--hb3)">Round</a></li>
+        <li><a href="#actions" style="--c:var(--hb4)">Actions</a></li>
+        <li><a href="#attacks" style="--c:var(--hb5)">Attacks</a></li>
+        <li><a href="#exploring" style="--c:var(--hb6)">Exploring</a></li>
+        <li><a href="#health" style="--c:var(--hb7)">Health</a></li>
+        <li><a href="#gear" style="--c:var(--hb8)">Magic &amp; gear</a></li>
+        <li><a href="#debuffs" style="--c:var(--hb9)">Debuffs</a></li>
+        <li><a href="#growth" style="--c:var(--hb10)">Growth</a></li>
+      </ol>
+    </nav>
   </div>
-</section>
+  <div class="dr-body" id="rules-body">
+    <p class="empty" id="empty" role="status"></p>
+    <div class="rules-main">
 
 <!-- 1 CHECKS -->
 <section class="band" id="checks" style="--slot:var(--hb1)">
   <div class="band-head"><div class="in"><h2>Checks</h2><p>How every roll works, and who sets the number.</p></div></div>
   <div class="blocks">
 
-    <article class="blk">
+    <article class="blk" id="r-roll">
       <h3>The roll</h3>
       <div class="formula" aria-label="d20 plus Skill Rank plus Stat Mod, meet or beat the Difficulty">
         <span><b>d20</b><small>roll</small></span><i>+</i>
@@ -542,7 +604,7 @@
       <p class="ref">Core p. 59, 82; Survival p. 13–14</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-mods">
       <h3>Stat Mods</h3>
       <div class="mods">
         <div><small>1–2</small><b>+1</b></div><div><small>3–5</small><b>+2</b></div><div><small>6–9</small><b>+3</b></div><div><small>10–19</small><b>+4</b></div><div><small>20–49</small><b>+5</b></div>
@@ -741,7 +803,7 @@
       <p class="ref">Core p. 82–83</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-damage">
       <h3>Damage</h3>
       <p>Base dice + Stat Mod (per the entry) + Rank damage die (if the entry grants one) + bonuses. The target’s DR comes off after.</p>
       <p><b>Critical Hit:</b> double the base dice, including upgrade dice that say “base damage”. The Rank damage die is not doubled.</p>
@@ -909,7 +971,7 @@
       <p class="ref">Core p. 94, 96–97</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-healing">
       <h3>Healing and rest</h3>
       <p><b>Heal Spell:</b> every crawler has it. 2 Mana, an Interrupt, self only, heals 2 slots.</p>
       <p><b>Each calm hour</b> outside combat: 1 slot and 5 Mana.</p>
@@ -954,7 +1016,7 @@
       <p class="ref">Core p. 85, 202; Crawlers &amp; Customization p. 36</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-mana">
       <h3>Mana</h3>
       <p><b>Max Mana</b> equals your Enhanced Intelligence score. Update it when Intelligence changes.</p>
       <p>Get it back by resting (see Health), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
@@ -969,7 +1031,7 @@
       <p class="ref">Core p. 99</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-hotlist">
       <h3>Hotlist and Inventory</h3>
       <p><b>Hotlist:</b> 10 slots, up to 999 of the same item per slot. Anything there can appear in your hand or at your feet as part of using it.</p>
       <p><b>Inventory:</b> weightless, but gives no bonuses. Pulling something out is a Retrieve Action; from Inventory to an attack takes 2 Actions.</p>
@@ -977,7 +1039,7 @@
       <p class="ref">Core p. 98; Crawlers &amp; Customization p. 15</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-gearslots">
       <h3>Gear slots</h3>
       <p><b>Head, Torso, Arms, Legs, Feet:</b> one item each.</p>
       <p><b>Hands:</b> one item per hand plus a pair of gloves. A shield takes a hand; Two-Handed takes both.</p>
@@ -994,7 +1056,7 @@
       <p class="ref">Core p. 95–96</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-loot">
       <h3>Junk, loot and gold</h3>
       <p><b>Misc. Junk:</b> spend 1 to find any small household item in your Inventory (not food or water). Merchants pay 1 gold each.</p>
       <p><b>Dead Mobs</b> drop 1d6 Junk each plus gold by floor. Yours: <span class="lv" data-lk="gold">no gold</span></p>
@@ -1070,7 +1132,7 @@
       <p class="ref">Core p. 87–88, 169–170</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-skills">
       <h3>Raising Skills</h3>
       <p>Each time you roll a Skill, pass or fail, <b>tick its box</b>.</p>
       <p><b>Advancement check:</b> 1d20 equal to or over the current Rank gives +1 Rank.</p>
@@ -1080,7 +1142,7 @@
       <p class="ref">Core p. 169, 173; Crawlers &amp; Customization p. 20, 42</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-grinding">
       <h3>Grinding</h3>
       <p>Declare hours against weak Mobs. Up to 5 a day is safe; each extra hour needs an Unopposed Endurance Check or it’s wasted and you gain Fatigued.</p>
       <p>Put hours into Skills. When a Skill has hours equal to its Rank, roll its advancement check. Same Skill once a day.</p>
@@ -1125,16 +1187,17 @@
   </div>
 </section>
 
-</main>
+    </div>
+  </div>
+</aside>
 
-<footer>
+<footer class="foot">
   <div class="upd" id="upd" data-version="__VERSION__">
     <p>Crawler Companion __VERSION__ <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
 </footer>
-</div>
 
 <script>
 /*__SCRIPT__*/

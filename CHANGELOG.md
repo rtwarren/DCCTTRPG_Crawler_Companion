@@ -2,6 +2,15 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.5.3 (2026-11-15)
+
+- **New layout: your crawler first.** The top bar holds your crawler's name and Level, the floor, your linked sheet with Save, the Rules button and a More menu. The floor's target numbers sit under it. Health, Mana, Evade, DR, AI Favor, Buffs and Debuffs, resting and your Stats are on the left. Skills, Gear & Inventory, Pet and Notes are in the middle. Check, Damage, Dice and Recent rolls are on the right. On a narrow screen the columns stack.
+- **Rules drawer.** The cheat sheet opens in a drawer over the page, with search and the ten rule sections. Rule links next to the tools open it at that rule. Print the cheat sheet from the More menu.
+- **Buffs and Debuffs.** Minor Injury, Major Injury, Sore as Shit and Fatigued are tags you add and remove, and the Check tool takes them off every roll. A long rest clears Fatigued. Other Debuffs and External Buffs written on your sheet show as tags too.
+- **Recent rolls.** Checks, damage and dice rolls are listed, newest first.
+- **Skills.** Find a Skill, show only the ticked ones, and see which Skills are in your Hotlist.
+- The Health & Mana tab is now the Health and Mana card on the left. Load from CrawlerForge, dark mode and Check for updates are in the More menu.
+
 ## 1.5.2 (2026-11-12)
 
 - **Check for updates updates the file you have open.** Opened as a file in Chrome or Edge, the page now offers Update this file, which writes the new version over this file and reloads it, instead of downloading a second copy. The first time, pick this file when asked and allow the change; the page remembers it after that. Nothing is written unless the file you pick is the one you have open and the new page is the version GitHub announced. With unsaved sheet changes it doesn't reload, so you can save them first. Firefox, Safari and copies not opened as a file still get the Download button.

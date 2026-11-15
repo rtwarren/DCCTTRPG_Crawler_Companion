@@ -318,6 +318,30 @@
 
   /* ============================== SKILLS ============================== */
   var skEdit = null;   /* {row} being edited, or {row: -1} for a new Skill */
+  /* a Skill is in the Hotlist when an entry is its name, or starts with it followed by ":" or " (" */
+  function onHot(name){
+    var lo = String(name || "").trim().toLowerCase(); if(!lo) return false;
+    return D.hot.some(function(t){ t = String(t || "").trim().toLowerCase(); return t === lo || t.indexOf(lo + ":") === 0 || t.indexOf(lo + " (") === 0; });
+  }
+  /* Find a Skill and All / Ticked only hide rows; nothing is changed */
+  var skShow = "all";
+  function skFilter(){
+    var term = $("sk-q").value.trim().toLowerCase(), rows = 0, shown = 0;
+    Array.prototype.forEach.call($("sk-rows").children, function(tr){
+      var nm = tr.querySelector("td.nm b"); if(!nm) return;
+      var ok = (!term || nm.textContent.toLowerCase().indexOf(term) > -1) && (skShow !== "tick" || tr.classList.contains("on"));
+      tr.classList.toggle("hide", !ok); rows++; if(ok) shown++;
+    });
+    var none = $("sk-none");
+    none.classList.toggle("hide", !rows || shown > 0);
+    none.textContent = skShow === "tick" && !term ? "No Skills are ticked." : "No Skills match" + (term ? " “" + $("sk-q").value.trim() + "”" : "") + (skShow === "tick" ? " among the ticked ones." : ".");
+  }
+  $("sk-q").addEventListener("input", skFilter);
+  ["all", "tick"].forEach(function(k){
+    $("sk-f-" + k).addEventListener("click", function(){
+      skShow = k; $("sk-f-all").setAttribute("aria-pressed", String(k === "all")); $("sk-f-tick").setAttribute("aria-pressed", String(k === "tick")); skFilter();
+    });
+  });
   function renderSkills(){
     var c = crawler(), tb = $("sk-rows"); tb.innerHTML = "";
     sortSkills();
@@ -331,7 +355,8 @@
         onchange: function(){ s.mark = this.checked; changed(); }});
       var row = el("tr", {cls: s.mark ? "on" : ""}, [
         el("td", {cls: "tk"}, [tick]),
-        el("td", {cls: "nm"}, [el("b", {text: s.name.trim()}), skAdvBonus(s.name) ? el("span", {cls: "chips"}, [chip("Adv +" + skAdvBonus(s.name), "fx", "Adds " + skAdvBonus(s.name) + " to this Skill’s end-of-floor advancement checks")]) : null,
+        el("td", {cls: "nm"}, [el("b", {text: s.name.trim()}), chipsOf([onHot(s.name) ? chip("Hotlist", "hotc", "In your Hotlist, so it can be used in combat") : null,
+          skAdvBonus(s.name) ? chip("Adv +" + skAdvBonus(s.name), "fx", "Adds " + skAdvBonus(s.name) + " to this Skill’s end-of-floor advancement checks") : null].filter(Boolean)),
           el("small", {text: [s.type, stripTags(s.notes)].filter(Boolean).join(". ")})]),
         el("td", {cls: "n", "data-label": "Rank"}, [el("span", {cls: "rk", text: String(r)}), " ", el("small", {text: "of " + skMax(s.name)})]),
         el("td", {cls: "n", "data-label": "Roll"}, [pas ? el("small", {text: "Passive"}) : span("d20 " + sgn(tot), eq)]),
@@ -344,6 +369,7 @@
       tb.appendChild(row);
     });
     if(!D.skills.length) tb.appendChild(el("tr", {}, [el("td", {colspan: "6", cls: "emptyrow", text: SH.doc ? "No Skills on your sheet yet." : "No Skills yet. Link your sheet, or add them here."})]));
+    skFilter();
     $("sk-sum").textContent = plural(D.skills.length, "Skill") + " of " + SK_ROWS + " rows" + (ticked ? ", " + ticked + " ticked for advancement." : ". None ticked yet.");
     $("sk-add").disabled = D.skills.length >= SK_ROWS;
     /* Advantage picker for the Human end-of-floor perk */

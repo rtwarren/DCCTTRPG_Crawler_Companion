@@ -30,7 +30,6 @@ const { chromium } = require("playwright");
   await p.setInputFiles("#sb-file", sheet);
   await p.waitForTimeout(800);
   console.log("Opened read-only:", await text("sb-who"), "|", await text("sb-file-name"));
-  await p.click("#tt-health");
   await p.fill("#hm-dmg", "3");
   await p.click("#hm-hit");
   console.log("Save button:", await text("sb-save"), "| disabled:", await p.$eval("#sb-save", b => b.disabled));
@@ -53,7 +52,6 @@ const { chromium } = require("playwright");
   await p.click('[data-preset="unopp"]');
   await p.click("#ck-roll");
   console.log("Check:", await text("ck-out"));
-  await p.click("#tt-health");
   await p.fill("#hm-dmg", "3");
   await p.click("#hm-hit");
   // a level-up point: raise Unenhanced Intelligence by 1, which should carry Enhanced with it

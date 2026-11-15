@@ -115,40 +115,85 @@
     b.addEventListener("click", function(){ setFloor(+b.getAttribute("data-floor"), true); });
   });
 
-  /* ---------- section tabs ---------- */
-  var nav = document.querySelector(".hbnav"), bands = Array.prototype.slice.call(document.querySelectorAll(".band"));
-  var links = {}, current = null;
-  document.querySelectorAll(".hbnav a").forEach(function(a){ links[a.getAttribute("href").slice(1)] = a; });
+  /* ---------- the Rules drawer ---------- */
+  /* The cheat sheet lives in a drawer over the page. Its sections are the .band elements; the
+     links in its nav act as tabs and showTab() shows one section at a time. */
+  var drawer = $("rules"), drBody = $("rules-body"), scrim = $("rules-scrim"), topbar = $("topbar");
+  var bands = Array.prototype.slice.call(drawer.querySelectorAll(".band"));
+  var links = {}, current = null, lastFocus = null;
+  drawer.querySelectorAll(".hbnav a").forEach(function(a){ links[a.getAttribute("href").slice(1)] = a; });
   function markNav(id){ Object.keys(links).forEach(function(k){ if(k === id) links[k].setAttribute("aria-current", "true"); else links[k].removeAttribute("aria-current"); }); }
-  function navH(){ return nav ? nav.getBoundingClientRect().height : 0; }
+  /* height of the top bar when it stays on screen, for scrolling things into view below it */
+  function navH(){ return topbar && getComputedStyle(topbar).position === "sticky" ? topbar.getBoundingClientRect().height : 0; }
+  function rulesOpen(){ return drawer.classList.contains("open"); }
   function showTab(id, opts){
     opts = opts || {};
-    if(!$(id) || !links[id]) id = "calc";
+    if(!links[id]) id = bands[0].id;
     current = id;
     bands.forEach(function(b){ b.classList.toggle("tab-off", b.id !== id); });
     markNav(id); store(TABKEY, id);
-    try{ if(!opts.noHash) history.replaceState(null, "", "#" + id); }catch(e){}
-    if(opts.scroll !== false){
-      var main = document.querySelector("main"), top = main.getBoundingClientRect().top + window.scrollY - navH() - 10;
-      if(window.scrollY > top) window.scrollTo(0, top);
-    }
+    try{ if(!opts.noHash && rulesOpen()) history.replaceState(null, "", "#" + id); }catch(e){}
+    if(opts.scroll !== false) drBody.scrollTop = 0;
   }
+  function setInert(on){
+    ["topbar", "app"].forEach(function(id){ var el = $(id); if(!el) return; if(on) el.setAttribute("inert", ""); else el.removeAttribute("inert"); });
+    document.querySelectorAll(".targetbar, footer.foot").forEach(function(el){ if(on) el.setAttribute("inert", ""); else el.removeAttribute("inert"); });
+  }
+  function openRules(id, at){
+    if(!rulesOpen()){
+      lastFocus = document.activeElement;
+      drawer.classList.add("open"); scrim.hidden = false; setInert(true);
+      document.body.classList.add("dr-on");
+      $("rules-open").setAttribute("aria-expanded", "true");
+    }
+    if(q.value && (id || at)){ q.value = ""; filter(); }
+    if(!q.value) showTab(id || current || store(TABKEY) || bands[0].id, {scroll: !at});
+    if(at) requestAnimationFrame(function(){ drBody.scrollTop += at.getBoundingClientRect().top - drBody.getBoundingClientRect().top - 12; });
+    hideTip();
+    $("rules-close").focus();
+  }
+  function closeRules(){
+    if(!rulesOpen()) return;
+    drawer.classList.remove("open"); scrim.hidden = true; setInert(false);
+    document.body.classList.remove("dr-on");
+    $("rules-open").setAttribute("aria-expanded", "false");
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    hideTip();
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $("rules-open").setAttribute("aria-expanded", "false");
+  $("rules-open").addEventListener("click", function(){ openRules(); });
+  $("rules-close").addEventListener("click", closeRules);
+  scrim.addEventListener("click", closeRules);
+  drawer.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ e.preventDefault(); closeRules(); return; }
+    if(e.key !== "Tab") return;
+    /* keep Tab inside the drawer while it is open */
+    var f = Array.prototype.filter.call(drawer.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'), function(x){ return x.offsetParent !== null; });
+    if(!f.length) return;
+    if(e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length - 1].focus(); }
+    else if(!e.shiftKey && document.activeElement === f[f.length - 1]){ e.preventDefault(); f[0].focus(); }
+  });
   bands.forEach(function(b, i){
     var bn = document.createElement("div"); bn.className = "bandnav noprint";
     if(i > 0){ var pv = document.createElement("a"); pv.href = "#" + bands[i - 1].id; pv.className = "btn"; pv.textContent = "Previous: " + labelOf(bands[i - 1].id); bn.appendChild(pv); }
     if(i < bands.length - 1){ var nx = document.createElement("a"); nx.href = "#" + bands[i + 1].id; nx.className = "btn next"; nx.textContent = "Next: " + labelOf(bands[i + 1].id); bn.appendChild(nx); }
     b.appendChild(bn);
   });
-  function labelOf(id){ var a = links[id], f = a.querySelector(".full"); return (f ? f.textContent : a.textContent).trim(); }
+  function labelOf(id){ return links[id].textContent.trim(); }
+  /* links to "#something": a rule opens the drawer at it, a tool panel switches to that tab */
   document.addEventListener("click", function(e){
     var a = e.target.closest ? e.target.closest('a[href^="#"]') : null; if(!a) return;
     var id = a.getAttribute("href").slice(1), el = $(id); if(!el) return;
+    if(el.classList.contains("toolpanel")){
+      e.preventDefault(); closeRules(); selectTool(id.slice(3));
+      var t = el.getBoundingClientRect().top + window.scrollY - navH() - 12; if(window.scrollY > t || el.getBoundingClientRect().top > window.innerHeight) window.scrollTo(0, t);
+      return;
+    }
     var band = el.classList.contains("band") ? el : el.closest(".band"); if(!band) return;
     e.preventDefault();
-    if(q.value){ q.value = ""; filter(); }
-    showTab(band.id, {scroll: el === band});
-    if(el.classList.contains("toolpanel")) selectTool(el.id.slice(3));
-    if(el !== band){ var top = el.getBoundingClientRect().top + window.scrollY - navH() - 12; window.scrollTo(0, top); }
+    if(!rulesOpen()) openRules(band.id, el === band ? null : el);
+    else { if(q.value){ q.value = ""; filter(); } showTab(band.id, {scroll: el === band}); if(el !== band) drBody.scrollTop += el.getBoundingClientRect().top - drBody.getBoundingClientRect().top - 12; }
   });
 
   /* ---------- search ---------- */
@@ -156,16 +201,16 @@
   function filter(){
     var term = q.value.trim().toLowerCase(), any = false;
     if(!term){
-      document.querySelectorAll(".hide-s").forEach(function(el){ el.classList.remove("hide-s"); });
+      drawer.querySelectorAll(".hide-s").forEach(function(el){ el.classList.remove("hide-s"); });
       empty.classList.remove("show"); empty.textContent = "";
-      showTab(current || "calc", {scroll: false, noHash: true});
+      showTab(current || bands[0].id, {scroll: false, noHash: true});
       return;
     }
-    markNav(null);
+    markNav(null); drBody.scrollTop = 0;
     bands.forEach(function(band){
       band.classList.remove("tab-off");
       var blocks = band.querySelectorAll(".blk"), shown = 0;
-      if(!blocks.length){ var scope = band.querySelector(".calc-wrap") || band; shown = scope.textContent.toLowerCase().indexOf(term) > -1 ? 1 : 0; }
+      if(!blocks.length) shown = band.textContent.toLowerCase().indexOf(term) > -1 ? 1 : 0;
       blocks.forEach(function(blk){
         var hit, rows = blk.querySelectorAll(".debuffs tbody tr");
         if(rows.length){
@@ -185,7 +230,18 @@
     empty.textContent = any ? "" : "Nothing matches “" + q.value.trim() + "”. Try a shorter word, like evade, mana or prone.";
   }
   q.addEventListener("input", filter);
-  q.addEventListener("keydown", function(e){ if(e.key === "Escape"){ q.value = ""; filter(); } });
+  /* Escape in a search with text clears it; a second Escape closes the drawer */
+  q.addEventListener("keydown", function(e){ if(e.key === "Escape" && q.value){ e.preventDefault(); e.stopPropagation(); q.value = ""; filter(); } });
+
+  /* ---------- menus (the sheet's change list and More) ---------- */
+  var pops = Array.prototype.slice.call(document.querySelectorAll("details.pop"));
+  function closePops(except){ pops.forEach(function(d){ if(d !== except) d.open = false; }); }
+  pops.forEach(function(d){ d.addEventListener("toggle", function(){ if(d.open) closePops(d); }); });
+  document.addEventListener("click", function(e){ pops.forEach(function(d){ if(d.open && !d.contains(e.target)) d.open = false; }); });
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Escape") return;
+    pops.forEach(function(d){ if(d.open){ d.open = false; d.querySelector("summary").focus(); } });
+  });
 
   /* ---------- theme and print ---------- */
   var tBtn = $("theme");
@@ -193,9 +249,9 @@
   function syncTheme(){ tBtn.textContent = isDark() ? "Light mode" : "Dark mode"; }
   var savedTheme = store(TKEY);
   if(savedTheme === "dark" || savedTheme === "light") root.setAttribute("data-theme", savedTheme);
-  tBtn.addEventListener("click", function(){ var nx = isDark() ? "light" : "dark"; root.setAttribute("data-theme", nx); store(TKEY, nx); syncTheme(); });
+  tBtn.addEventListener("click", function(){ var nx = isDark() ? "light" : "dark"; root.setAttribute("data-theme", nx); store(TKEY, nx); syncTheme(); closePops(); });
   syncTheme();
-  $("print").addEventListener("click", function(){ window.print(); });
+  $("print").addEventListener("click", function(){ closePops(); window.print(); });
 
   /* ---------- dice expressions ---------- */
   function parseDice(str){
@@ -276,41 +332,95 @@
   }
   function modBand(s){ return s >= 300 ? "300+" : s >= 200 ? "200–299" : s >= 150 ? "150–199" : s >= 100 ? "100–149" : s >= 50 ? "50–99" : s >= 20 ? "20–49" : s >= 10 ? "10–19" : s >= 6 ? "6–9" : s >= 3 ? "3–5" : "1–2"; }
 
-  /* ---------- status strip ---------- */
+  /* ---------- vitals: the Health, Mana, Evade, DR and AI Favor summary in the left column ---------- */
   function renderStrip(){
-    var c = crawler(), bar = $("strip-bar"); bar.innerHTML = "";
-    for(var i = 0; i < 10; i++){ var cell = document.createElement("div"); if(i >= hm.slots) cell.className = "gone"; else cell.style.background = "var(" + HB[i] + ")"; bar.appendChild(cell); }
-    var parts = [
-      span("Health " + hm.slots + " of 10", hm.slots + " of 10 slots left, " + c.slot + " each\n= " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health (" + hm.slots * 10 + "%)", "si"), ", ",
-      span("Mana " + hm.mana + " of " + c.mana, "Current Mana " + hm.mana + "\nMax Mana = Intelligence " + c.mana, "si"), ", ",
-      span("AI Favor " + c.fav, "Spend 1 to reroll a d20 once per Check (not a natural 1),\nor for an extra non-Attack Action once per round", "si")
-    ];
-    if(hm.slots === 0) parts.push(span("Dying", "Countdown: Con Mod " + c.mod.con + " rounds. Heal 1 slot to stop it.", "si dying"));
+    var c = crawler(), mana = hm.mana == null ? c.mana : hm.mana;
+    fill($("vt-hbtxt"), [span(hm.slots + " of 10 slots", hm.slots + " of 10 slots left, " + c.slot + " each\n= " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health (" + hm.slots * 10 + "%)")]);
+    $("vt-hbtxt").classList.toggle("dying", hm.slots === 0);
+    fill($("vt-manatxt"), [span(mana + " of " + c.mana, "Current Mana " + mana + "\nMax Mana = Enhanced Intelligence " + c.mana)]);
+    $("vt-manafill").style.width = (c.mana ? Math.max(0, Math.min(100, mana / c.mana * 100)) : 0) + "%";
+    fill($("vt-evade"), [span("d20 " + sgn(c.evade), "d20 + Dex Mod " + c.mod.dex + " + Evade Buffs " + c.evb + "\n= d20 " + sgn(c.evade))]);
+    fill($("vt-dr"), [span(String(c.dr), "Armor " + c.arm + " + DR Buffs " + c.drb + " = " + c.dr)]);
+    fill($("vt-fav"), [span(String(c.fav), "Spend 1 to reroll a d20 once per Check (not a natural 1),\nor for an extra non-Attack Action once per round")]);
+    var pet = $("vt-pet");
     if(typeof D !== "undefined" && D && hasPet() && barCount(D.pet)){
-      var pn = petHead().name || "Pet";
-      parts.push(", ", span(pn + " " + barLeft(D.pet) + " of " + barCount(D.pet), "Your pet’s Health Bar: " + barLeft(D.pet) + " of " + barCount(D.pet) + " slots left", "si"));
-    }
-    fill($("strip-text"), parts);
+      var pn = petHead().name || "Your pet";
+      fill(pet, [pn + ": ", span(barLeft(D.pet) + " of " + barCount(D.pet) + " slots", "Your pet’s Health Bar: " + barLeft(D.pet) + " of " + barCount(D.pet) + " slots left")]);
+      pet.classList.remove("hide");
+    } else { pet.textContent = ""; pet.classList.add("hide"); }
+    renderWho();
+  }
+  /* the crawler's name and Level in the top bar */
+  function renderWho(){
+    var m = SH.model, c = crawler(), sub = ["Level " + c.lvl];
+    $("tb-name").textContent = (m && m.name) || "Your crawler";
+    if(m && m.race) sub.push(m.race); if(m && m.cls) sub.push(m.cls);
+    $("tb-sub").textContent = sub.join(" · ");
   }
 
-  /* ---------- tool tabs ---------- */
-  var TOOLS = ["check","damage","health","dice","skills","gear","pet","notes"];
+  /* ---------- Buffs and Debuffs ---------- */
+  /* The four Debuffs that change every Check are tags here. Each tag stands for one of the hidden
+     inputs the Check tool reads (ck-minor, ck-major, ck-sore, ck-fat). Other Debuffs and External
+     Buffs written on the sheet are shown as plain tags. */
+  var DEB = [["minor", "Minor Injury", 2], ["major", "Major Injury", 5], ["sore", "Sore as Shit", 1]];
+  function tag(text, eq, onRemove, label, cls){
+    var t = document.createElement("span"); t.className = "dtag" + (cls ? " " + cls : "");
+    t.appendChild(eq ? span(text, eq) : document.createTextNode(text));
+    if(onRemove){
+      var b = document.createElement("button"); b.type = "button"; b.className = "x"; b.setAttribute("aria-label", label);
+      b.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      b.addEventListener("click", function(){ onRemove(); debChanged(); var f = document.querySelector("#db-tags .x") || $("db-add"); f.focus(); });
+      t.appendChild(b);
+    }
+    return t;
+  }
+  function renderTags(){
+    var box = $("db-tags"); box.innerHTML = "";
+    DEB.forEach(function(d){
+      if(!$("ck-" + d[0]).checked) return;
+      box.appendChild(tag(d[1], "−" + d[2] + " to every Check", function(){ $("ck-" + d[0]).checked = false; }, "Remove " + d[1], "deb"));
+    });
+    var fat = Math.max(0, num("ck-fat", 0));
+    if(fat) box.appendChild(tag("Fatigued " + fat, "−" + fat + " to every Check (1 per stack)\nA long rest removes it", function(){ $("ck-fat").value = fat - 1; }, "Remove one stack of Fatigued", "deb"));
+    var m = SH.model, known = /minor injur|major injur|sore as|fatigue/i;
+    if(m){
+      m.debuffs.split(/[,;\n]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s && !known.test(s); })
+        .forEach(function(s){ box.appendChild(tag(s, "Written in your sheet’s Debuffs box", null, "", "deb sheet")); });
+      m.ext.forEach(function(s){ box.appendChild(tag(s, "External Buff from your sheet", null, "", "buf sheet")); });
+    }
+    if(!box.children.length){ var p = document.createElement("p"); p.className = "sub"; p.textContent = "None. Debuffs added here come off every Check."; box.appendChild(p); }
+  }
+  function debChanged(){ renderTags(); ckRefresh(); }
+  $("db-add").addEventListener("change", function(){
+    var v = this.value; if(!v) return;
+    if(v === "fat") $("ck-fat").value = Math.max(0, num("ck-fat", 0)) + 1; else $("ck-" + v).checked = true;
+    this.value = ""; debChanged();
+  });
+
+  /* ---------- tabs: the crawler's tabs in the middle and the roll tools on the right ---------- */
+  var MAINTABS = ["skills","gear","pet","notes"], ROLLTABS = ["check","damage","dice"], ROLLKEY = "dcc-cheat-roll";
   function selectTool(t){
-    if(TOOLS.indexOf(t) < 0) t = "check";
-    TOOLS.forEach(function(k){
+    var group = MAINTABS.indexOf(t) > -1 ? MAINTABS : ROLLTABS.indexOf(t) > -1 ? ROLLTABS : null;
+    if(!group) return;
+    group.forEach(function(k){
       $("tt-" + k).setAttribute("aria-selected", String(k === t));
       $("tt-" + k).tabIndex = k === t ? 0 : -1;
       $("tp-" + k).classList.toggle("hide", k !== t);
     });
-    store(TOOLKEY, t);
+    store(group === MAINTABS ? TOOLKEY : ROLLKEY, t);
   }
-  TOOLS.forEach(function(k, i){
-    $("tt-" + k).addEventListener("click", function(){ selectTool(k); });
-    $("tt-" + k).addEventListener("keydown", function(e){
-      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if(!d) return;
-      var nk = TOOLS[(i + d + TOOLS.length) % TOOLS.length]; selectTool(nk); $("tt-" + nk).focus();
+  [MAINTABS, ROLLTABS].forEach(function(group){
+    group.forEach(function(k, i){
+      $("tt-" + k).addEventListener("click", function(){ selectTool(k); });
+      $("tt-" + k).addEventListener("keydown", function(e){
+        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if(!d) return;
+        var nk = group[(i + d + group.length) % group.length]; selectTool(nk); $("tt-" + nk).focus();
+      });
     });
   });
+  function loadForge(){ closePops(); selectTool("gear"); $("cf-load").click(); }
+  $("tb-cf").addEventListener("click", loadForge);
+  $("menu-cf").addEventListener("click", loadForge);
 
   /* ---------- check calculator ---------- */
   var ck = {kind: "skill", fav: false, tgtSrc: "manual", src: null};
@@ -358,10 +468,15 @@
     else if(ck.tgtSrc === "foe") tl.push("10 + Floor " + floor + " + foe’s Mod " + num("ck-foe", 0) + " = " + base);
     else tl.push("Typed in: " + base);
     if(shift) tl.push(op(shift) + "  Mob has " + (shift > 0 ? "Advantage" : "Disadvantage") + "\n= " + (base + shift));
-    return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr};
+    return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr, pens: pens};
   }
+  var KINDNAME = {skill: "Skill Check", attack: "Attack", evade: "Evade", stat: "Stat Check"};
   function ckRefresh(){
     var s = ckState(), c = crawler();
+    ck.last = null;
+    var penEl = $("ck-pen");
+    if(s.pens.length) fill(penEl, ["Debuffs on every Check: " + s.pens.map(function(p){ return p[0].replace(" × ", " ") + " −" + p[1]; }).join(", ") + ". ", (function(){ var a = document.createElement("a"); a.href = "#h-status"; a.textContent = "Change them"; a.addEventListener("click", function(e){ e.preventDefault(); $("db-add").focus(); }); return a; })()]);
+    else penEl.textContent = "";
     $("ck-d2-l").classList.toggle("hide", s.net === "n");
     var odds = $("ck-odds"), out = $("ck-out"), fav = $("ck-fav");
     var bonusEq = "Bonus added to the d20:\n" + s.lines.join("\n") + "\n= " + sgn(s.bonus) + (s.net !== "n" ? "\nRoll 2 d20s and keep the " + (s.net === "a" ? "higher (Advantage)" : "lower (Disadvantage)") : "");
@@ -398,6 +513,8 @@
     parts.push(eff);
     if(ck.fav) parts.push(" (AI Favor spent.)");
     fill(out, parts);
+    ck.last = {head: EFF[key][0],
+      detail: (ck.src ? ck.src.name.trim() : KINDNAME[s.kind]) + ": " + (key === "crit" || key === "fumble" ? "natural " + kept : tot + " vs " + s.tgt) + (ck.fav ? ", rerolled with AI Favor" : ""), eq: totEq};
     fav.disabled = ck.fav || kept === 1 || c.fav < 1;
     fav.textContent = kept === 1 ? "Can’t reroll a natural 1" : ck.fav ? "AI Favor used" : c.fav < 1 ? "No AI Favor left" : "Reroll with AI Favor";
     if(ck.src && !ck.ticked){ ck.ticked = true; tickSkill(ck.src.name); }
@@ -415,7 +532,12 @@
     $(id).addEventListener($(id).tagName === "SELECT" || $(id).type === "checkbox" ? "change" : "input", ckRefresh);
   });
   $("ck-tgt").addEventListener("input", function(){ ck.tgtSrc = "manual"; ckRefresh(); });
-  ["ck-d1","ck-d2"].forEach(function(id){ $(id).addEventListener("input", function(){ ck.fav = false; ck.ticked = false; ckRefresh(); }); });
+  ["ck-d1","ck-d2"].forEach(function(id){
+    $(id).addEventListener("input", function(){ ck.fav = false; ck.ticked = false; ckRefresh(); });
+    /* a d20 typed in from real dice goes in Recent rolls once it's complete */
+    $(id).addEventListener("change", logCheck);
+  });
+  function logCheck(){ if(ck.last) addHist(ck.last.head, ck.last.detail, ck.last.eq); }
   document.querySelectorAll("#tp-check [data-preset]").forEach(function(b){
     b.addEventListener("click", function(){
       var p = b.getAttribute("data-preset"); ck.tgtSrc = p;
@@ -426,14 +548,14 @@
   $("ck-roll").addEventListener("click", function(){
     var s = ckState(); ck.fav = false; ck.ticked = false;
     $("ck-d1").value = rnd(20); $("ck-d2").value = s.net === "n" ? "" : rnd(20);
-    ckRefresh();
+    ckRefresh(); logCheck();
   });
   $("ck-fav").addEventListener("click", function(){
     var s = ckState(), d1 = num("ck-d1", 0), d2 = num("ck-d2", 0);
     var useSecond = s.net === "a" ? d2 > d1 : s.net === "d" ? d2 < d1 : false;
     $(useSecond ? "ck-d2" : "ck-d1").value = rnd(20);
     $("cr-fav").value = Math.max(0, num("cr-fav", 0) - 1); saveCrawler();
-    ck.fav = true; calcRefresh(); sheetChanged();
+    ck.fav = true; calcRefresh(); sheetChanged(); logCheck();
   });
   $("ck-src").addEventListener("change", function(){
     var v = $("ck-src").value; ck.src = null; $("ck-other").value = 0; ck.ticked = false; ck.fav = false; $("ck-d1").value = ""; $("ck-d2").value = "";
@@ -525,6 +647,8 @@
     var tot = Math.max(0, sum);
     lines[0] = lines.length ? lines[0].replace(/^\+ /, "") : "";
     fill($("dm-out"), [span(tot + " damage", lines.join("\n") + "\n= " + tot), ": " + bits.join(" ") + ". The target’s DR comes off after."]);
+    var src = $("dm-src").value !== "" && D.attacks[+$("dm-src").value];
+    addHist(tot + " damage", (src ? src.name.trim() + ": " : "") + bits.join(" "), lines.join("\n") + "\n= " + tot);
   });
   $("dm-src").addEventListener("change", function(){
     var v = $("dm-src").value; if(!v) return;
@@ -564,8 +688,9 @@
       if(i >= hm.slots) cell.className = "gone"; else cell.style.background = "var(" + HB[i] + ")";
       bar.appendChild(cell);
     }
-    fill($("hm-status"), [hm.slots + " of 10 slots (" + hm.slots * 10 + "%). Mana " + hm.mana + " of " + c.mana + "." +
+    fill($("hm-status"), ["Each slot holds " + c.slot + " (Con Mod). " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health." +
       (hm.slots === 0 ? " Dying: " + plural(c.mod.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
+    $("hm-status").classList.toggle("dying", hm.slots === 0);
     var h = hmCalc(), pv = $("hm-preview");
     if(!num("hm-dmg", 0)) fill(pv, ["Enter damage to see how many slots it costs."]);
     else fill(pv, [(h.steps.length ? h.steps.join(", ") + ". " : ""),
@@ -590,14 +715,15 @@
     if(cost > hm.mana){ hmLog("Not enough Mana: you have " + hm.mana + "."); return; }
     hm.mana -= cost; hmLog("Spent " + cost + " Mana."); hmRender(); sheetChanged();
   });
-  document.querySelectorAll("#tp-health [data-rest]").forEach(function(b){
+  var RESTNAME = {hour: "1 calm hour", short: "Short rest (2 h)", long: "Long rest (8 h)"};
+  document.querySelectorAll("[data-rest]").forEach(function(b){
     b.addEventListener("click", function(){
-      var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana;
+      var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana, fat = Math.max(0, num("ck-fat", 0));
       if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + 5); }
       if(r === "short"){ hm.slots = Math.min(10, hm.slots + 5); hm.mana = Math.min(c.mana, hm.mana + Math.floor(c.mana / 2)); }
-      if(r === "long"){ hm.slots = 10; hm.mana = c.mana; }
-      hmLog(b.textContent + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" ? ". Fatigued is gone too." : "."));
-      hmRender(); sheetChanged();
+      if(r === "long"){ hm.slots = 10; hm.mana = c.mana; $("ck-fat").value = 0; }
+      hmLog(RESTNAME[r] + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" && fat ? ". Fatigued is gone too." : "."));
+      hmRender(); if(r === "long") debChanged(); sheetChanged();
     });
   });
 
@@ -723,12 +849,13 @@
   }
   function renderSheetBox(){
     var on = !!SH.doc;
+    renderWho(); renderTags();
     $("sb-off").classList.toggle("hide", on); $("sb-on").classList.toggle("hide", !on);
     $("cr-note").textContent = on ? "Numbers come from your linked sheet. Changes save back to it." : "Saved in this browser only.";
     if(!on) return;
     var m = SH.model;
     $("sb-who").textContent = (m.name || "Your crawler") + (m.race ? ", " + m.race : "") + (m.cls ? " " + m.cls : "");
-    $("sb-file-name").textContent = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
+    $("sb-file-name").textContent = SH.fileName; $("sb-file-name").title = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
     var info = [];
     if(m.crawler) info.push("Crawler " + m.crawler);
     if(m.debuffs) info.push("Debuffs: " + m.debuffs);
@@ -739,7 +866,9 @@
     d.list.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
     $("sb-count").textContent = d.list.length ? plural(d.list.length, "unsaved change") : "No unsaved changes";
     $("sb-save").disabled = SH.mode !== "handle" || !d.list.length || SH.saving;
-    $("sb-save").textContent = SH.mode === "handle" ? "Save to sheet" : "Saving needs Chrome or Edge";
+    $("sb-save").textContent = SH.mode === "handle" ? "Save" : "Read-only here";
+    $("sb-save").title = SH.mode === "handle" ? "Save the changes into your PDF" : "This browser can’t write into the PDF. Use Chrome or Edge to save.";
+    $("sb-count").classList.toggle("due", d.list.length > 0);
     $("sb-auto-l").classList.toggle("hide", SH.mode !== "handle");
   }
   function fillSources(){
@@ -897,12 +1026,19 @@
   setFloor(floor, false);
   ready = true;
   if(window.matchMedia("(max-width: 640px)").matches) $("cr-more").open = false;
-  selectTool(store(TOOLKEY) || "check");
-  calcRefresh();
   (function(){
-    var h = location.hash.slice(1), el = h ? $(h) : null, band = el ? (el.classList.contains("band") ? el : el.closest(".band")) : null;
-    showTab(band ? band.id : (store(TABKEY) || "calc"), {scroll: false, noHash: !band});
-    if(el && el.classList.contains("toolpanel")) selectTool(el.id.slice(3));
+    /* versions before 1.5.0 kept one tab for everything, so a saved roll tool can arrive in the old key */
+    var mt = store(TOOLKEY), rt = store(ROLLKEY) || mt;
+    selectTool(MAINTABS.indexOf(mt) > -1 ? mt : "skills");
+    selectTool(ROLLTABS.indexOf(rt) > -1 ? rt : "check");
+  })();
+  calcRefresh();
+  showTab(store(TABKEY), {scroll: false, noHash: true});
+  (function(){
+    var h = location.hash.slice(1), el = h ? $(h) : null; if(!el) return;
+    if(el.classList.contains("toolpanel")){ selectTool(el.id.slice(3)); return; }
+    var band = el.classList.contains("band") ? el : el.closest(".band");
+    if(band) openRules(band.id, el === band ? null : el);
   })();
   if(canHandle) idbGet("sheet").then(async function(h){
     if(!h) return;
@@ -980,6 +1116,7 @@
         : "Couldn’t update " + SELF + " (" + m + "). The file is unchanged.";
     }finally{ btn.disabled = false; }
   }
+  $("menu-upd").addEventListener("click", function(){ closePops(); $("upd").scrollIntoView({block: "center"}); $("upd-check").click(); });
   $("upd-check").addEventListener("click", async function(){
     var out = $("upd-out"), btn = this, link = function(t){ return el("a", {href: RELEASES, target: "_blank", rel: "noopener", text: t}); };
     btn.disabled = true; out.innerHTML = ""; out.textContent = "Checking GitHub…";
