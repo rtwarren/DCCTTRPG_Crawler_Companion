@@ -6,13 +6,13 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 
 | Path | What it is |
 | --- | --- |
-| `src/index.html` | Page markup: hero, section tabs, every rules section, the Crawler panel and the footer with Check for updates. Has the placeholders `/*__STYLES__*/`, `/*__SCRIPT__*/` and `__VERSION__`. |
+| `src/index.html` | Page markup: the top bar, the floor targets, the three columns (vitals and Stats, the crawler's tabs, the roll tools), the Rules drawer with every rules section, and the footer with Check for updates. Has the placeholders `/*__STYLES__*/`, `/*__SCRIPT__*/` and `__VERSION__`. |
 | `src/styles.css` | All styling, including light and dark themes, phone layout and print layout. Headings use the system font Bahnschrift (built into Windows), with Arial Narrow as the fallback. |
-| `src/main.js` | Everything interactive: floor picker, tabs, search, hover equations, the calculators, linking the character sheet, and Check for updates. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes, and `/*__TOOLS__*/` is where `tools.js` goes. |
+| `src/main.js` | Everything interactive: floor picker, the Rules drawer and its search, tabs, menus, hover equations, Health and Mana, Buffs and Debuffs, the roll tools and Recent rolls, linking the character sheet, and Check for updates. `/*__PDFENGINE__*/` is where `pdf-engine.js` goes, and `/*__TOOLS__*/` is where `tools.js` goes. |
 | `src/tools.js` | The Skills, Gear, Pet and Notes tabs: reading those parts of the sheet, the change list for them, and saving them back. |
 | `src/pdf-engine.js` | A small PDF reader and writer with no libraries. Reads form fields and saves changes as an incremental update. |
 | `build.py` | Combines the pieces into one HTML file. |
-| `dist/Crawler_Companion_v1.5.2.html` | The built page, named with its version. This is the file to open or share. |
+| `dist/Crawler_Companion_v1.5.3.html` | The built page, named with its version. This is the file to open or share. |
 | `CHANGELOG.md` | What changed in each version. |
 | `guides/Crawler_Companion_Player_Guide.pdf` | The Player Guide: every Crawler tab, Load from CrawlerForge and Loot Boxes. Attached to every release. |
 | `guides/Crawler_Companion_GM_Loot_Box_Guide.pdf` | The GM Guide: making Loot Boxes in CrawlerForge and getting them to players. Attached to every release. |
@@ -22,6 +22,7 @@ Source for `Crawler_Companion_v<version>.html`, the rules reference, calculator 
 | `tests/crawlerforge-test.js` | End-to-end test of Load from CrawlerForge (needs Playwright). |
 | `tests/fixtures/` | Made-up CrawlerForge crawler files and a pack for that test. |
 | `tests/update-test.js` | Test of Check for updates, with GitHub's answers made up (needs Playwright). |
+| `tests/layout-test.js` | Test of the Rules drawer, rule links, Buffs and Debuffs, Recent rolls, Find a Skill, the tabs and the phone layout (needs Playwright). |
 | `.github/workflows/release.yml` | Publishes a GitHub Release with the built page and the guides attached whenever a new version reaches `main` or a version tag is pushed, puts the page on GitHub Pages, and replaces the guides on the newest release when they change. |
 
 ## Building
@@ -39,8 +40,8 @@ Edit the files in `src/`, then run the build again. Don't edit the built HTML by
 - **Floor-aware numbers.** In `index.html`, a yellow number is a `span.lv`. It has `data-f` (a formula using `F`, like `10+2*F`), `data-d` (dice plus floor, like `1d6`), or `data-lk` (a lookup, like `timer` or `gold`). `setFloor()` in `main.js` fills them in and writes their hover equations. Formulas must have the form `A+B*F` (either part optional); they are parsed, never run as code.
 - **Floor-only rules.** Any element with `data-floors="1-2"` or `data-floors="3-5"` is dimmed when the chosen floor is outside that range.
 - **Hover equations.** Any element with a `data-eq` attribute shows a tooltip with that text (new lines allowed). The `span(text, eq)` helper in `main.js` makes these.
-- **Tabs.** Each rules section is a `section.band`. The links in `nav.hbnav` act as tabs, and `showTab()` shows one band at a time. Print shows every band except Crawler.
-- **Crawler tabs.** Your crawler, Check, Damage, Health & Mana and Dice each have a block in `main.js`. Skills, Gear, Pet and Notes are in `tools.js`, which keeps everything in one object, `D`. `calcRefresh()` redraws them all.
+- **Rules drawer.** Each rules section is a `section.band` inside `#rules`. The links in its `nav.hbnav` act as tabs, and `showTab()` shows one band at a time. `openRules()` and `closeRules()` show and hide the drawer; while it's open the rest of the page is `inert`. Any link to `#id` inside a band (the `a.rule` links next to the tools, for example) opens the drawer at that block, and `#round` in the address opens it there on load. Print shows every band, with the floor targets above them.
+- **Columns and tabs.** The left column (Health, Mana, Buffs and Debuffs, Stats) and the roll tools on the right (Check, Damage, Dice, Recent rolls) each have a block in `main.js`. `selectTool()` switches the crawler's tabs (Skills, Gear, Pet, Notes) and the roll tools separately. The Debuff tags stand for hidden inputs (`ck-minor`, `ck-major`, `ck-sore`, `ck-fat`) that the Check tool reads. `addHist()` writes to Recent rolls. Skills, Gear, Pet and Notes are in `tools.js`, which keeps everything in one object, `D`. `calcRefresh()` redraws them all.
 - **Rank upgrades.** Picking an attack in the Damage tab reads its Skill's notes for upgrades written like `Rank 5: +1d4` (`rankUps()` in `main.js`) and adds those dice to the base damage once the attack's Rank reaches them: Rank 5 on any Floor, Ranks 10 and 15 from Floor 3. The sheet's base damage box stays at the Rank 1 dice, so nothing is counted twice.
 - **Loot Boxes.** A box is an Inventory row whose notes start with `Loot Box`. `boxNotes()` writes the wording and `parseBoxNotes()` reads it back; `boxOf()` prefers the full box kept in this browser. Opening one (`bx-go`) tries it on a copy of the Inventory first, so a full Inventory changes nothing. Then it adds the items, rolls the Gold and Junk, drinks the potions (a Stat potion raises Unenhanced and Enhanced together; a Skill potion stops at Rank 15, or 20 with `Max 20`) and adds a Skill the box teaches.
 - **Gear and Stats.** Equipping or removing an item works out the gear bonus before and after, and moves Enhanced Stats, Armor and Evade Buffs by the difference (`applyGearDelta()`). Bonuses from Race, Class, potions or Spells that you typed in stay where they are.
@@ -153,6 +154,12 @@ node tests/update-test.js
 ```
 
 This checks Check for updates without contacting GitHub: every request is answered with a made-up release, and the file picker is replaced by a stand-in file. It checks Update this file: the new page is read from the release's tag, written over the open file, and the page reloads; a file with another name, a file that isn't this version, a cancelled pick, a refused permission and a new page without the new version are handled without a wrong write. In a browser that can't write files it checks the Download link, plus the same and an older version, a release without the file, a download link outside github.com (never shown), no releases, a rate limit and no network. It also checks nothing is sent to GitHub until the button is pressed.
+
+```
+node tests/layout-test.js
+```
+
+This opens and closes the Rules drawer (button, Escape, a rule link and `#round` in the address), searches it, adds and removes Debuff tags and checks the Check tool counts them, checks a long rest clears Fatigued, checks Checks, damage and dice reach Recent rolls, filters the Skills, switches tabs, opens the More menu, and checks there's no sideways scrolling at phone width.
 
 ## Sources
 

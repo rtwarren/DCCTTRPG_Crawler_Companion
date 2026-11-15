@@ -8,273 +8,282 @@
 <style>
 :root{
   --bg:#E3E4DF; --panel:#F6F6F2; --ink:#1B1D21; --soft:#565B62; --rule:#CBCDC6; --well:#ECEDE8;
-  --live:#F4C51C; --live-ink:#1B1D21; --focus:#1D63A8; --lost:#C8242B;
+  --live:#F4C51C; --live-ink:#1B1D21; --focus:#1D63A8; --lost:#C8242B; --mana:#1D63A8;
+  --bar:#1B1D21; --bar-ink:#F6F6F2; --bar-soft:#A9ADB4; --bar-rule:#3D4148;
   --hb1:#C8242B; --hb2:#D8421F; --hb3:#E6621A; --hb4:#EE8418; --hb5:#F2A51B;
   --hb6:#EEC01E; --hb7:#C6C22B; --hb8:#94B636; --hb9:#5FA73F; --hb10:#3A9A48;
+  --deb:#FBEBEB; --deb-line:#E3A9AC; --deb-ink:#8A1A1F;
   --head:"Bahnschrift Condensed","Bahnschrift","Arial Narrow","Roboto Condensed",sans-serif;
   --body:"Bahnschrift","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
-  --navh:3.1rem;
+  --navh:0px;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#131518; --panel:#1C1F23; --ink:#ECEBE6; --soft:#A3A7AE; --rule:#33373D; --well:#24282D;
-    --focus:#6FA8E8; --lost:#E5484D; color-scheme:dark;
+    --focus:#6FA8E8; --lost:#E5484D; --mana:#4D8FD6; --bar:#0B0D0F; --bar-rule:#2C3036;
+    --deb:#3A2022; --deb-line:#6E3A3E; --deb-ink:#F2B8BB; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#131518; --panel:#1C1F23; --ink:#ECEBE6; --soft:#A3A7AE; --rule:#33373D; --well:#24282D;
-  --focus:#6FA8E8; --lost:#E5484D; color-scheme:dark;
+  --focus:#6FA8E8; --lost:#E5484D; --mana:#4D8FD6; --bar:#0B0D0F; --bar-rule:#2C3036;
+  --deb:#3A2022; --deb-line:#6E3A3E; --deb-ink:#F2B8BB; color-scheme:dark;
 }
 
 *{box-sizing:border-box}
 html{scroll-padding-top:calc(var(--navh) + .75rem)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+body.dr-on{overflow:hidden}
 h1,h2,h3{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;margin:0;line-height:1.05}
 p{margin:0 0 .45rem}
 b,strong{font-weight:700}
 a{color:inherit}
 button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.wrap{max-width:1320px;margin:0 auto;padding:0 16px}
-
-/* ---------- hero ---------- */
-.hero{padding:28px 0 22px}
-.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px 40px;align-items:end}
-h1{font-size:clamp(3rem,8.5vw,6.4rem);letter-spacing:-.01em;line-height:.88}
-h1 span{display:block}
-.lede{max-width:34rem;margin-top:14px;color:var(--soft);font-size:1rem}
-.lede .lv{margin:0 .1em}
-.floorbox{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
-.stairs-wrap h2{font-size:1.15rem;margin-bottom:8px}
-.stairs{display:flex;align-items:flex-end;gap:3px;height:168px}
-.stairs button{position:relative;width:56px;border:0;padding:0;cursor:pointer;background:var(--well);border-top:5px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:6px;color:var(--ink)}
-.stairs button:nth-child(1){height:100%}
-.stairs button:nth-child(2){height:84%}
-.stairs button:nth-child(3){height:68%}
-.stairs button:nth-child(4){height:52%}
-.stairs button:nth-child(5){height:37%}
-.stairs .n{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.8rem;line-height:1}
-.stairs button[aria-pressed="true"]{background:var(--live);color:var(--live-ink)}
-.stairs button:hover{background:color-mix(in srgb,var(--live) 45%,var(--well))}
-.stairs button[aria-pressed="true"]:hover{background:var(--live)}
-.stairs-note{font-size:.8rem;color:var(--soft);margin-top:8px;max-width:17rem}
-.targets{margin:0;display:grid;grid-template-columns:auto auto;gap:5px 14px;align-items:baseline;font-size:.95rem}
-.targets dt{color:var(--soft)}
-.targets dd{margin:0;font-weight:700}
-.targets .lv{font-size:1.15rem}
+.hide{display:none!important}
+.tab-off,.hide-s{display:none!important}
 
 /* ---------- live values ---------- */
 .lv{display:inline-block;background:var(--live);color:var(--live-ink);font-weight:700;padding:0 .3em;border-radius:3px;line-height:1.35;white-space:nowrap}
 .lv.flash{animation:flash .7s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 70%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
 .fx{color:var(--soft);font-size:.86em;white-space:nowrap}
+[data-eq]:not(.lv){text-decoration:underline dotted;text-underline-offset:3px;text-decoration-thickness:1px;cursor:help}
+.lv[data-eq]{cursor:help}
+.tip{position:fixed;z-index:80;max-width:24rem;background:var(--ink);color:var(--panel);font-size:.84rem;line-height:1.4;padding:8px 11px;border-radius:6px;white-space:pre-line;pointer-events:none;opacity:0;transform:translateY(2px);transition:opacity .12s,transform .12s;font-variant-numeric:tabular-nums;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tip.show{opacity:1;transform:none}
 
-/* ---------- HB nav ---------- */
-.hbnav{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--rule)}
-.hbnav ol{list-style:none;margin:0 auto;padding:6px 16px 7px;max-width:1320px;display:grid;grid-template-columns:1.25fr repeat(10,1fr);gap:3px}
-.hbnav a{display:block;text-decoration:none;padding-top:11px;position:relative;font-size:.8rem;line-height:1.2;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hbnav a::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:var(--c);transition:height .15s}
-.hbnav a:hover,.hbnav a[aria-current="true"]{color:var(--ink);font-weight:700}
-.hbnav a[aria-current="true"]::before{height:10px;box-shadow:inset 0 -2px 0 var(--ink)}
+/* ---------- buttons ---------- */
+.btn{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:9px 14px;cursor:pointer;line-height:1.2}
+.btn:hover{border-color:var(--soft)}
+.btn.primary{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:700}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.small{padding:5px 9px;font-size:.82rem}
+.btn.danger{color:var(--lost)}
+.btn.danger:hover{border-color:var(--lost)}
+.btn.icon{display:inline-grid;place-items:center;width:42px;height:42px;padding:0}
+a.btn{text-decoration:none;display:inline-block}
 
-/* ---------- toolbar ---------- */
-.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 0 6px}
-.search{flex:1 1 18rem;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:0 10px}
-.search input{flex:1;border:0;background:transparent;padding:10px 0;min-width:0;outline:none}
+/* ---------- top bar ---------- */
+.topbar{background:var(--bar);color:var(--bar-ink);z-index:30}
+.tb-in{max-width:1680px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.15rem;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.mark{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:28px;height:28px;padding:5px;background:var(--live);border-radius:4px}
+.mark i{background:#1B1D21;border-radius:1px}
+.mark i.o{background:transparent}
+.who{flex:1 1 8rem;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--bar-rule);padding-left:18px;line-height:1.2}
+.who b{font-size:1.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who span{color:var(--bar-soft);font-size:.86rem}
+.floorpick{display:flex;align-items:center;gap:10px}
+.floorpick > span{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1rem;letter-spacing:.06em;text-transform:uppercase;color:var(--bar-soft)}
+.stairs{display:flex;gap:4px}
+.stairs button{width:42px;height:42px;border:1px solid var(--bar-rule);border-radius:4px;background:transparent;color:var(--bar-ink);cursor:pointer;padding:0;display:grid;place-items:center}
+.stairs .n{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.35rem;line-height:1}
+.stairs button:hover{border-color:var(--live)}
+.stairs button[aria-pressed="true"]{background:var(--live);border-color:var(--live);color:var(--live-ink)}
+.sheetbox{display:flex;align-items:center;min-width:0}
+.sb-row{display:flex;align-items:center;gap:10px;min-width:0}
+.sb-ico{flex:none;color:var(--bar-soft)}
+.sb-txt{display:flex;flex-direction:column;min-width:0;max-width:13rem;line-height:1.25}
+.sb-txt b{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-sub{font-size:.8rem;color:var(--bar-soft)}
+.sb-err:empty{display:none}
+.topbar .btn{background:transparent;color:var(--bar-ink);border-color:var(--bar-rule)}
+.topbar .btn:hover{border-color:var(--bar-soft)}
+.topbar .btn.primary,.topbar .btn.rules-btn{background:var(--bar-ink);color:#1B1D21;border-color:var(--bar-ink);font-weight:700}
+.topbar .btn:disabled{opacity:.55}
+.rules-btn{display:inline-flex;align-items:center;gap:8px;height:42px}
+.tb-end{display:flex;align-items:center;gap:8px;margin-left:auto}
+
+/* pop-up panels from a summary button: the sheet's change list and the More menu */
+details.pop{position:relative}
+details.pop > summary{list-style:none;display:inline-flex;align-items:center;height:42px;white-space:nowrap}
+details.pop > summary::-webkit-details-marker{display:none}
+.topbar #sb-count{font-size:.86rem}
+.topbar #sb-count.due{border-color:var(--live);color:var(--live)}
+.pop-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:min(22rem,calc(100vw - 32px));background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.pop-panel h3{font-size:1.15rem;margin:0 0 6px}
+.pop-panel .sub{font-size:.85rem;color:var(--soft);margin:0 0 6px}
+.pop-panel .chk{display:flex;gap:6px;align-items:center;font-size:.88rem;margin-top:10px}
+.pop-panel .btnrow .btn{background:var(--panel);color:var(--ink);border-color:var(--rule)}
+.changes{margin:4px 0 0;padding-left:1.1rem;font-size:.86rem;max-height:12rem;overflow:auto}
+.changes li{margin:1px 0}
+.menu-panel{width:16rem;padding:6px}
+.mi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:4px;padding:11px 12px;cursor:pointer;font-size:.95rem}
+.mi:hover{background:var(--well)}
+
+/* ---------- floor targets ---------- */
+.targetbar{background:var(--panel);border-bottom:1px solid var(--rule)}
+.targetbar .tb-in{padding:8px 24px;gap:6px 24px}
+.tg-h{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1rem;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.tg-h .lv{background:none;color:inherit;padding:0}
+.targets{margin:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.92rem}
+.targets div{display:flex;gap:7px;align-items:baseline}
+.targets dt{color:var(--soft)}
+.targets dd{margin:0;font-weight:700}
+.targets .lv{font-size:1.02rem}
+
+/* ---------- three columns ---------- */
+.app{max-width:1680px;margin:0 auto;padding:20px 24px 8px;display:grid;gap:20px;align-items:start;
+  grid-template-columns:minmax(17rem,20rem) minmax(0,1fr) minmax(19rem,23rem);grid-template-areas:"v m r"}
+.col{min-width:0;display:flex;flex-direction:column;gap:16px}
+.vitals{grid-area:v}
+.mid{grid-area:m}
+.roll{grid-area:r}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.card-h h2{font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase}
+.card-h.sep{border-top:1px solid var(--rule);padding-top:12px;margin-top:14px}
+.card-n{font-size:1rem}
+.card-n.dying,.sub.dying{color:var(--lost)}
+.card .sub{font-size:.86rem;color:var(--soft);margin:8px 0 0}
+.card .note{font-size:.78rem;color:var(--soft);margin:10px 0 0}
+.card .out{margin-top:10px}
+.mini-h{font-size:1rem;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);border-top:1px solid var(--rule);padding-top:12px;margin:14px 0 8px}
+.rules-l{display:flex;flex-wrap:wrap;gap:4px 16px;margin:12px 0 0}
+a.rule{display:inline-flex;align-items:center;gap:5px;min-height:28px;font-size:.84rem;font-weight:700;color:var(--focus);text-underline-offset:3px}
+a.rule svg{flex:none}
+.h4row{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;margin:16px 0 8px}
+.h4row h4{margin:0!important}
+.toolpanel .h4row:first-child{margin-top:0}
+
+/* vitals */
+.hb{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.hb div{height:28px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#1B1D21;position:relative}
+.hb div.gone{background:transparent!important;border:1px dashed var(--rule);color:var(--soft)}
+.hb div.none{background:transparent!important;border:0}
+.hb-cap{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;font-size:.66rem;color:var(--soft);text-align:center;margin-top:2px}
+.manabar{height:14px;border-radius:3px;background:var(--well);border:1px solid var(--rule);overflow:hidden}
+.manabar div{height:100%;background:var(--mana);width:0}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border-top:1px solid var(--rule);padding-top:12px;margin-top:14px}
+.tiles div{background:var(--well);border-radius:4px;padding:7px 10px;min-width:0}
+.tiles small{display:block;font-size:.78rem;color:var(--soft)}
+.tiles b{font-size:1.15rem;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px}
+.tags .sub{margin:0}
+.dtag{display:inline-flex;align-items:center;gap:4px;min-height:34px;padding:0 4px 0 12px;border-radius:17px;font-weight:700;font-size:.9rem;background:var(--well);border:1px solid var(--rule)}
+.dtag.deb{background:var(--deb);border-color:var(--deb-line)}
+.dtag.sheet{padding-right:12px;font-weight:400}
+.dtag .x{display:grid;place-items:center;width:28px;height:28px;border-radius:14px;border:0;background:transparent;color:var(--deb-ink);cursor:pointer}
+.dtag .x:hover{background:color-mix(in srgb,var(--deb-ink) 15%,transparent)}
+.rest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rest .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;font-weight:700;font-size:.9rem;text-align:center}
+.rest small{font-weight:400;font-size:.74rem;color:var(--soft)}
+.statin{width:100%;border-collapse:collapse}
+.statin th,.statin td{border-bottom:0;padding:2px 8px 2px 0;vertical-align:middle}
+.statin th{font-size:.78rem;color:var(--soft);font-weight:700;text-align:left}
+.statin input{width:4.3rem;padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:1rem}
+.vitals .statin input{width:100%;min-width:3.4rem}
+.statin b{font-size:1.05rem}
+.derived{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0 0;font-size:.88rem}
+.derived dt{color:var(--soft)}
+.derived dd{margin:0;font-weight:700}
+.more{margin-top:12px}
+.more summary{cursor:pointer;font-weight:700;font-size:.9rem;padding:4px 0}
+
+/* tabs */
+.tabbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 12px;border-bottom:2px solid var(--ink)}
+.tabs{display:flex;flex-wrap:wrap;gap:3px}
+.tabs button{border:0;border-radius:6px 6px 0 0;background:transparent;padding:12px 18px;font-weight:700;font-size:1rem;cursor:pointer;color:var(--ink)}
+.tabs button:hover{background:var(--well)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel)}
+.tabbar > .btn{margin-bottom:6px}
+.mid .toolpanel{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin-top:-8px}
+.roll .toolpanel{padding:0}
+.roll .toolpanel .seg:not(.tabs3){display:grid;grid-template-columns:1fr 1fr;width:100%}
+.roll .toolpanel .seg:not(.tabs3) button{border-bottom:1px solid var(--rule)}
+.roll .toolpanel .seg:not(.tabs3) button:nth-child(2n){border-right:0}
+.roll .toolpanel .seg:not(.tabs3) button:nth-last-child(-n+2){border-bottom:0}
+.ph{font-size:1.6rem}
+.seg{display:inline-flex;flex-wrap:wrap;margin-bottom:12px;border:1px solid var(--rule);border-radius:6px;overflow:hidden;max-width:100%}
+.seg button{border:0;border-right:1px solid var(--rule);background:var(--panel);padding:8px 13px;cursor:pointer;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--ink);color:var(--panel);font-weight:700}
+.seg button[hidden]{display:none}
+.seg.tabs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+.seg.tabs3 button{padding:10px 6px;font-weight:700}
+.tbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tbar .sub{margin:0}
+.tools-row{justify-content:flex-start}
+.tools-row .seg{margin:0}
+.search{flex:1 1 14rem;display:flex;align-items:center;gap:8px;background:var(--well);border:1px solid var(--rule);border-radius:6px;padding:0 10px;min-width:0}
+.search input{flex:1;border:0;background:transparent;padding:9px 0;min-width:0;outline:none}
 .search:focus-within{outline:3px solid var(--focus);outline-offset:1px}
 .search svg{flex:none;color:var(--soft)}
-.btn{border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:9px 14px;cursor:pointer}
-.btn:hover{border-color:var(--soft)}
-.empty{display:none;padding:22px;background:var(--panel);border-radius:6px;margin:10px 0}
-.empty.show{display:block}
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:14px;margin-top:16px}
+.duo .adv-box{margin:0;border:1px solid var(--rule);border-radius:8px;padding:12px 14px;background:var(--well)}
+.duo .h4row{margin-top:0}
 
-/* ---------- bands ---------- */
-main{padding-bottom:30px}
-.band{display:grid;grid-template-columns:12.5rem minmax(0,1fr);background:var(--panel);border-left:8px solid var(--slot);margin:12px 0 0;border-radius:0 6px 6px 0}
-.band-head{padding:20px 18px 20px 20px;border-right:1px solid var(--rule)}
-.band-head .in{position:sticky;top:calc(var(--navh) + 16px)}
-.band-head h2{font-size:2.1rem}
-.band-head p{color:var(--soft);font-size:.9rem;margin-top:6px}
-.blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr));gap:22px 30px;padding:20px 22px 22px}
-.blk{min-width:0}
-.blk.wide{grid-column:1/-1}
-.blk h3{font-size:1.25rem;padding-top:8px;border-top:3px solid var(--rule);margin-bottom:7px}
-.blk p,.blk li{font-size:.94rem}
-.blk ul,.blk ol{margin:0 0 .45rem;padding-left:1.15rem}
-.blk li{margin-bottom:.22rem}
-.ref{font-size:.76rem;color:var(--soft);margin-top:4px}
-.tag{display:inline-block;font-size:.72rem;font-weight:700;border:1px solid currentColor;border-radius:3px;padding:0 .35em;margin-right:.3em;vertical-align:1px;color:var(--soft);white-space:nowrap}
-.off{opacity:.45}
-.off .tag{text-decoration:line-through}
-
-/* formula */
-.formula{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:4px 0 10px}
-.formula span{display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:3.3rem;padding:7px 9px;background:var(--well);border-radius:4px;text-align:center}
-.formula span b{font-family:var(--head);font-variation-settings:"wdth" 75;font-size:1.45rem;line-height:1}
-.formula span small{font-size:.72rem;color:var(--soft);margin-top:3px}
-.formula i{font-style:normal;align-self:center;font-weight:700;font-size:1.1rem;color:var(--soft);padding:0 1px}
-.formula span.goal{background:var(--ink);color:var(--panel)}
-.formula span.goal small{color:var(--panel);opacity:.8}
-
-/* tables */
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;vertical-align:top;padding:6px 8px;border-bottom:1px solid var(--rule)}
-th{font-size:.78rem;color:var(--soft);font-weight:700;border-bottom:2px solid var(--rule)}
-.mini td,.mini th{padding:3px 6px}
-.mods{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:6px}
-.mods div{background:var(--well);text-align:center;padding:5px 2px;border-radius:3px}
-.mods small{display:block;font-size:.72rem;color:var(--soft)}
-.mods b{font-size:1.05rem}
-
-.deg td:first-child{border-left:6px solid var(--c);white-space:nowrap}
-.deg tr.hit td{background:color-mix(in srgb,var(--live) 35%,transparent)}
-.deg .nm{display:block;font-weight:700}
-.deg .mg{display:block;font-size:.8rem;color:var(--soft)}
-
-/* round track */
-.blk .track{list-style:none;margin:2px 0 8px;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;counter-reset:st}
-.track li{counter-increment:st;padding:10px 12px 12px;background:var(--well);border-radius:4px;position:relative;margin:0}
-.track li.mob{background:color-mix(in srgb,var(--hb1) 13%,var(--well))}
-.track li.crw{background:color-mix(in srgb,var(--hb10) 15%,var(--well))}
-.track li::before{content:counter(st);font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:2rem;line-height:1;display:block;margin-bottom:4px}
-.track b{display:block;margin-bottom:3px}
-.track .who{font-size:.74rem;color:var(--soft);display:block;margin-bottom:4px}
-.track p{font-size:.88rem;margin:0}
-
-ol.seq{padding-left:1.3rem}
-
-/* tools */
-.tool{background:var(--well);border-radius:6px;padding:12px 14px;margin-top:10px}
-.tool h4{margin:0 0 8px;font-size:.95rem}
+/* form bits used by every tool */
 .fields{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
 .fields label{display:flex;flex-direction:column;font-size:.78rem;color:var(--soft);gap:3px}
 .fields select{width:auto}
 .fields input[type=number],.fields input[type=text],.fields input[type=search],.fields select{min-width:6.5rem;max-width:12rem;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:1rem}
 .fields .chk{flex-direction:row;align-items:center;gap:6px;font-size:.85rem;color:var(--ink);padding-bottom:8px}
+.fields .btn{align-self:flex-end}
+.fields + .fields,.fields + .sub,.sub + .fields,.seg + .fields,.fields + .seg{margin-top:12px}
+.fields.two{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.fields.two label input{max-width:none;width:100%;min-width:0}
+.fields.two .btn{min-width:7.5rem}
+.fields label.narrow input{min-width:0;width:5.2rem}
+.fields label.wide{flex:1 1 14rem}
+.fields label.wide input,.fields label.wide select{max-width:none;width:100%}
+.fields label.wide-l select{min-width:16rem;max-width:100%}
+.fields.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;margin-top:10px}
+.fields.grid3 label input{min-width:0;width:100%;max-width:none}
+.roll .fields label.wide-l select{min-width:0;width:100%}
+.roll .fields input[type=number],.roll .fields select{min-width:5rem}
+.lab{display:block;width:100%;font-size:.78rem;color:var(--soft);margin-bottom:-4px}
+.btnrow .lab{width:auto;margin:0 4px 0 0}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
 .presets{display:flex;gap:4px;flex-wrap:wrap}
 .presets button{border:1px solid var(--rule);background:var(--panel);border-radius:4px;padding:6px 9px;font-size:.82rem;cursor:pointer}
 .presets button:hover{border-color:var(--soft)}
 .out{margin-top:10px;font-weight:700;min-height:1.4em}
-.hb{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:10px;max-width:34rem}
-.hb div{height:30px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#1B1D21;position:relative}
-.hb div.gone{background:transparent!important;border:1px dashed var(--rule);color:var(--soft)}
-.hb div.hitnow{background:repeating-linear-gradient(135deg,var(--lost) 0 5px,color-mix(in srgb,var(--lost) 60%,var(--panel)) 5px 10px)!important;color:#fff}
-.hb-cap{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:34rem;font-size:.66rem;color:var(--soft);text-align:center;margin-top:2px}
-
-/* debuffs */
-.debuff-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,30rem),1fr));gap:0 28px;align-items:start}
-.debuffs td:first-child{font-weight:700;white-space:nowrap}
-.debuffs td:last-child{color:var(--soft);min-width:11rem}
-.debuffs tr.hide{display:none}
-
-footer{color:var(--soft);font-size:.82rem;padding:18px 0 40px}
-footer p{max-width:60rem}
-.upd{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:12px}
-.upd p{margin:6px 0}
-.upd .btn.small{margin-left:8px}
-.upd ul{margin:6px 0 6px 1.2rem;padding:0;max-width:60rem}
-.upd .btn.primary{display:inline-block;text-decoration:none}
-.print-floor{display:none}
-.hide{display:none!important}
-
-/* calculators */
-.hbnav .short{display:none}
-.tab-off,.hide-s{display:none!important}
-.seg{display:inline-flex;flex-wrap:wrap;margin-bottom:12px;border:1px solid var(--rule);border-radius:6px;overflow:hidden;max-width:100%}
-.seg button{border:0;border-right:1px solid var(--rule);background:var(--panel);padding:8px 13px;cursor:pointer;color:var(--ink)}
-.seg button:last-child{border-right:0}
-.seg button[aria-pressed="true"],.seg button[aria-selected="true"]{background:var(--ink);color:var(--panel);font-weight:700}
-.btn.primary{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:700}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-a.btn{text-decoration:none;display:inline-block}
-.fields .btn{align-self:flex-end}
-.fields + .fields,.fields + .sub,.sub + .fields,.seg + .fields,.fields + .seg{margin-top:12px}
-.lab{display:block;width:100%;font-size:.78rem;color:var(--soft);margin-bottom:-4px}
-.btnrow .lab{width:auto;margin:0 4px 0 0}
-.fields label.narrow input{min-width:0;width:5.2rem}
-.fields label.wide-l select{min-width:16rem;max-width:100%}
-.calc-wrap{display:grid;grid-template-columns:minmax(16rem,21rem) minmax(0,1fr);gap:24px 28px;padding:20px 22px 22px}
-.crawler-panel h3,.tools h4,.sheetbox h3{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.25rem;margin:0 0 8px}
-.crawler-panel > h3{padding-top:8px;border-top:3px solid var(--ink);margin-top:16px}
-.sheetbox{background:var(--well);border-radius:6px;padding:12px 14px;border-left:4px solid var(--live)}
-.sheetbox .btnrow{margin-top:10px}
-.sheetbox .chk{display:flex;gap:6px;align-items:center;font-size:.85rem;margin-top:10px}
-.pending{margin-top:8px;padding-top:8px;border-top:1px solid var(--rule)}
-.pend-head{font-weight:700;font-size:.9rem;margin:0}
-.changes{margin:4px 0 0;padding-left:1.1rem;font-size:.85rem;max-height:9rem;overflow:auto}
-.changes li{margin:1px 0}
-.statin{width:auto;border-collapse:collapse}
-.statin th,.statin td{border-bottom:0;padding:2px 8px 2px 0;vertical-align:middle}
-.statin th{font-size:.78rem;color:var(--soft);font-weight:700;text-align:left}
-.statin input{width:4.3rem;padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:1rem}
-.statin b{font-size:1.05rem}
-.fields.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;margin-top:10px}
-.fields.grid3 label input{min-width:0;width:100%;max-width:none}
-.more{margin-top:12px}
-.more summary{cursor:pointer;font-weight:700;font-size:.9rem}
-.derived{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0 0;font-size:.88rem}
-.derived dt{color:var(--soft)}
-.derived dd{margin:0;font-weight:700}
-.calc-wrap .sub{font-size:.86rem;color:var(--soft);margin:8px 0 0}
-.calc-wrap .note{font-size:.78rem;color:var(--soft);margin:12px 0 0}
-.calc-wrap p{margin:0 0 .3rem}
-.tools{min-width:0}
-.strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--rule)}
-.strip p{margin:0;display:flex;flex-wrap:wrap;gap:4px 16px;font-weight:700;font-size:.92rem}
-.strip .dying{color:var(--lost)}
-.hb.mini{width:12rem;margin:0;gap:2px}
-.hb.mini div{height:12px}
-.toolpanel{background:var(--well);border-radius:6px;padding:14px 16px}
-.toolpanel .seg{background:var(--panel)}
+.pen{color:var(--deb-ink)!important}
+.pen a{color:inherit}
+.toolpanel .sub{font-size:.86rem;color:var(--soft);margin:8px 0 0}
+.toolpanel .note{font-size:.78rem;color:var(--soft);margin:12px 0 0}
+.toolpanel p{margin:0 0 .3rem}
 .formula-out{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:2rem;line-height:1.1;margin:2px 0 4px;overflow-wrap:anywhere}
-.btnrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
 .pair{display:flex;align-items:center;gap:5px;color:var(--ink);font-weight:700}
 .fields .pair input[type=number]{min-width:0;width:4.2rem}
 .fields .pair select{min-width:0;width:4.6rem}
 .adv-box{margin-top:16px;padding-top:12px;border-top:1px solid var(--rule)}
-.hist{list-style:none;padding:0;margin:12px 0 0;font-size:.9rem}
-.hist li{padding:6px 0;border-bottom:1px solid var(--rule)}
+.hist{list-style:none;padding:0;margin:0;font-size:.9rem}
+.hist li{padding:7px 0;border-bottom:1px solid var(--rule)}
+.hist li:last-child{border-bottom:0}
 .hist li .h{font-weight:700;font-size:1.1rem;margin-right:4px}
 .hist li:not(:first-child){color:var(--soft)}
 .hist li:not(:first-child) .h{font-size:.95rem}
-#tp-health .hb,#tp-health .hb-cap{max-width:none}
-.bandnav{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;padding:0 22px 20px}
-.bandnav .next{margin-left:auto}
-.band-head + .calc-wrap + .bandnav{padding-top:0}
-[data-eq]:not(.lv){text-decoration:underline dotted;text-underline-offset:3px;text-decoration-thickness:1px;cursor:help}
-.lv[data-eq]{cursor:help}
-.tip{position:fixed;z-index:50;max-width:24rem;background:var(--ink);color:var(--panel);font-size:.84rem;line-height:1.4;padding:8px 11px;border-radius:6px;white-space:pre-line;pointer-events:none;opacity:0;transform:translateY(2px);transition:opacity .12s,transform .12s;font-variant-numeric:tabular-nums;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.tip.show{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){ .tip{transition:none} }
-
-/* Skills, Gear, Pet and Notes tabs */
-.btn.small{padding:5px 9px;font-size:.82rem}
-.btn.danger{color:var(--lost)}
-.btn.danger:hover{border-color:var(--lost)}
-select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:.82rem;max-width:9rem}
-.tbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;margin-bottom:8px}
-.tbar .sub{margin:0}
+.toolpanel .hist{margin-top:12px}
+.toolpanel .hist li:last-child{border-bottom:1px solid var(--rule)}
+.hist:not(:empty) + .hist-none{display:none}
 .toolpanel h4{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.15rem;margin:16px 0 8px}
 .toolpanel h4:first-child{margin-top:0}
 .toolpanel h4 small{font-family:var(--body);font-size:.78rem;font-weight:400;color:var(--soft);margin-left:6px}
+
+/* Skills, Gear, Pet and Notes */
+select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:.82rem;max-width:9rem}
 .edit{background:var(--panel);border:1px solid var(--rule);border-left:4px solid var(--live);border-radius:6px;padding:12px 14px;margin:10px 0 14px}
 .edit h4{margin-top:0}
-.fields label.wide{flex:1 1 14rem}
-.fields label.wide input{max-width:none;width:100%}
 .fields.fx label.narrow input{width:4.2rem}
 .fields textarea,.tx textarea,.hot textarea{font:inherit;color:inherit;width:100%;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);resize:vertical}
 .tx input{font:inherit;color:inherit;padding:7px 8px;border:1px solid var(--rule);border-radius:4px;background:var(--panel)}
 .tscroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:6px 8px;border-bottom:1px solid var(--rule)}
+th{font-size:.78rem;color:var(--soft);font-weight:700;border-bottom:2px solid var(--rule)}
 .tlist{background:var(--panel);border-radius:4px}
-.tlist td{vertical-align:middle}
+.tlist td{vertical-align:middle;padding:8px}
 .tlist td.nm b{display:block}
 .tlist td.nm small{display:block;color:var(--soft);font-size:.78rem;margin-top:1px}
 .tlist th.n,.tlist td.n{text-align:center;white-space:nowrap}
 .tlist td.act{white-space:nowrap;text-align:right}
 .tlist td.act > *{margin-left:4px}
 .tlist th.tk,.tlist td.tk{width:2.6rem;text-align:center}
-.tlist td.tk input{width:18px;height:18px}
+.tlist td.tk input{width:20px;height:20px}
 .tlist tr.on td{background:color-mix(in srgb,var(--live) 18%,transparent)}
 .tlist .rk{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1.25rem}
 .tlist .emptyrow{color:var(--soft);text-align:center;padding:14px}
@@ -285,8 +294,9 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 .chip.wear{border-color:var(--ink)}
 .chip.use{background:color-mix(in srgb,var(--hb9) 30%,var(--panel))}
 .chip.box{border-style:dashed;border-color:var(--ink)}
+.chip.hotc{background:color-mix(in srgb,var(--mana) 16%,var(--panel));border-color:color-mix(in srgb,var(--mana) 45%,var(--panel))}
 .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:8px}
-.slot{background:var(--panel);border-radius:4px;padding:8px 10px;border-top:3px solid var(--ink)}
+.slot{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:8px 10px;border-top:3px solid var(--ink)}
 .slot.vacant{border-top-color:var(--rule)}
 .slot h5{font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:1rem;margin:0 0 4px}
 .slot h5 small{font-family:var(--body);font-weight:400;color:var(--soft);font-size:.75rem}
@@ -302,7 +312,6 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 .tlist td.qty span{display:inline-block;min-width:1.8em;text-align:center;font-weight:700}
 .btn.step{padding:2px 8px;line-height:1.2}
 .seg.cats{margin:8px 0}
-.seg button[hidden]{display:none}
 .seg.cats button{padding:6px 10px;font-size:.84rem}
 .fields.invbar{margin-top:10px}
 .fields.try{margin-top:14px}
@@ -321,38 +330,134 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 .gr-list label span{font-weight:700}
 .gr-list label small{grid-row:2;color:var(--soft);font-size:.74rem}
 .gr-list label input{grid-row:1/3;grid-column:2;width:4.2rem;padding:5px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--well);font-size:1rem}
-.hb div.none{background:transparent!important;border:0}
+.statin.pet{width:auto}
 .statin.pet td{padding-right:10px}
 .statin.pet td:nth-child(4){padding-left:14px;color:var(--soft);font-size:.85rem}
 .statin.pet input[type=text]{width:4.3rem;padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:1rem}
-#tp-pet .hb,#tp-pet .hb-cap{max-width:none}
+#tp-pet .hb{margin-top:10px}
+.cf-list{list-style:none;margin:.4rem 0;padding:0;background:var(--panel);max-height:22rem;overflow:auto;border:1px solid var(--rule);border-radius:6px}
+.cf-list li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.3rem .5rem;padding:.4rem .6rem;border-top:1px solid var(--rule)}
+.cf-list li:first-child{border-top:0}
+.cf-list li input{margin:0}
+.cf-list li .nt{flex-basis:100%;color:var(--soft)}
+.cf-list li select,.cf-list li input[type=text]{padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:.95rem;max-width:14rem}
 
-@media (max-width:980px){
-  .hero .wrap{grid-template-columns:1fr}
-  .band{grid-template-columns:1fr}
-  .calc-wrap{grid-template-columns:1fr}
-  .band-head{border-right:0;border-bottom:1px solid var(--rule);padding:16px 18px 12px}
-  .band-head .in{position:static}
-  .band-head h2{font-size:1.8rem}
+/* ---------- footer ---------- */
+.foot{max-width:1680px;margin:0 auto;color:var(--soft);font-size:.82rem;padding:8px 24px 40px}
+.foot p{max-width:60rem}
+.upd{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:12px}
+.upd p{margin:6px 0}
+.upd .btn.small{margin-left:8px}
+.upd ul{margin:6px 0 6px 1.2rem;padding:0;max-width:60rem}
+.upd .btn.primary{display:inline-block;text-decoration:none}
+
+/* ---------- the Rules drawer ---------- */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(15,17,20,.55)}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:60;width:min(760px,100vw);display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--rule);box-shadow:-14px 0 36px rgba(0,0,0,.28);transform:translateX(100%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s}
+.drawer.open{transform:none;visibility:visible;transition:transform .2s ease}
+.drawer:focus{outline:none}
+.dr-head{padding:14px 22px 12px;border-bottom:1px solid var(--rule);display:flex;flex-direction:column;gap:10px}
+.dr-top{display:flex;align-items:center;gap:12px}
+.dr-top h2{display:flex;align-items:center;gap:8px;font-size:1.6rem;letter-spacing:.04em;text-transform:uppercase}
+.dr-top .print-floor{font-size:.88rem;color:var(--soft)}
+.dr-top .btn.icon{margin-left:auto}
+.dr-body{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:4px 22px 24px}
+.drawer .search{background:var(--well);flex:none}
+.hbnav ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.hbnav a{display:inline-flex;align-items:center;min-height:34px;padding:0 11px;border-radius:4px;border-top:4px solid var(--c);background:var(--well);text-decoration:none;font-size:.88rem;font-weight:700;color:var(--ink)}
+.hbnav a:hover{background:color-mix(in srgb,var(--c) 18%,var(--well))}
+.hbnav a[aria-current="true"]{background:var(--ink);color:var(--panel)}
+.empty{display:none;padding:22px;background:var(--well);border-radius:6px;margin:12px 0}
+.empty.show{display:block}
+.band{background:var(--panel);border-top:6px solid var(--slot);margin:16px 0 0}
+.band-head{padding:12px 0 4px}
+.band-head h2{font-size:1.9rem}
+.band-head p{color:var(--soft);font-size:.92rem;margin-top:4px}
+.blocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,19rem),1fr));gap:20px 26px;padding:12px 0 18px}
+.blk{min-width:0}
+.blk.wide{grid-column:1/-1}
+.blk h3{font-size:1.25rem;padding-top:8px;border-top:3px solid var(--rule);margin-bottom:7px}
+.blk p,.blk li{font-size:.94rem}
+.blk ul,.blk ol{margin:0 0 .45rem;padding-left:1.15rem}
+.blk li{margin-bottom:.22rem}
+.ref{font-size:.76rem;color:var(--soft);margin-top:4px}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;border:1px solid currentColor;border-radius:3px;padding:0 .35em;margin-right:.3em;vertical-align:1px;color:var(--soft);white-space:nowrap}
+.off{opacity:.45}
+.off .tag{text-decoration:line-through}
+.bandnav{display:flex;justify-content:space-between;gap:10px;padding:0 0 8px}
+.bandnav .next{margin-left:auto}
+.print-floor .lv{font-size:.95rem}
+
+/* rule content */
+.formula{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:4px 0 10px}
+.formula span{display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:3.3rem;padding:7px 9px;background:var(--well);border-radius:4px;text-align:center}
+.formula span b{font-family:var(--head);font-variation-settings:"wdth" 75;font-size:1.45rem;line-height:1}
+.formula span small{font-size:.72rem;color:var(--soft);margin-top:3px}
+.formula i{font-style:normal;align-self:center;font-weight:700;font-size:1.1rem;color:var(--soft);padding:0 1px}
+.formula span.goal{background:var(--ink);color:var(--panel)}
+.formula span.goal small{color:var(--panel);opacity:.8}
+.mini td,.mini th{padding:3px 6px}
+.mods{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:6px}
+.mods div{background:var(--well);text-align:center;padding:5px 2px;border-radius:3px}
+.mods small{display:block;font-size:.72rem;color:var(--soft)}
+.mods b{font-size:1.05rem}
+.deg td:first-child{border-left:6px solid var(--c);white-space:nowrap}
+.deg tr.hit td{background:color-mix(in srgb,var(--live) 35%,transparent)}
+.deg .nm{display:block;font-weight:700}
+.deg .mg{display:block;font-size:.8rem;color:var(--soft)}
+.blk .track{list-style:none;margin:2px 0 8px;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;counter-reset:st}
+.track li{counter-increment:st;padding:10px 12px 12px;background:var(--well);border-radius:4px;position:relative;margin:0}
+.track li.mob{background:color-mix(in srgb,var(--hb1) 13%,var(--well))}
+.track li.crw{background:color-mix(in srgb,var(--hb10) 15%,var(--well))}
+.track li::before{content:counter(st);font-family:var(--head);font-variation-settings:"wdth" 75;font-weight:700;font-size:2rem;line-height:1;display:block;margin-bottom:4px}
+.track b{display:block;margin-bottom:3px}
+.track .who{font-size:.74rem;color:var(--soft);display:block;margin-bottom:4px}
+.track p{font-size:.88rem;margin:0}
+ol.seq{padding-left:1.3rem}
+.debuff-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,30rem),1fr));gap:0 28px;align-items:start}
+.debuffs td:first-child{font-weight:700;white-space:nowrap}
+.debuffs td:last-child{color:var(--soft);min-width:11rem}
+.debuffs tr.hide{display:none}
+
+/* ---------- narrower screens ---------- */
+@media (min-width:1100px){
+  .topbar{position:sticky;top:0}
+  :root{--navh:62px}
+}
+@media (max-width:1279px){
+  .app{grid-template-columns:minmax(17rem,21rem) minmax(0,1fr);grid-template-areas:"v m" "r m";grid-template-rows:auto 1fr}
+  .roll{align-self:start}
+}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-areas:"v" "m" "r";grid-template-rows:none;padding:16px 16px 8px}
+  .tb-in,.targetbar .tb-in{padding-left:16px;padding-right:16px}
+  .foot{padding-left:16px;padding-right:16px}
+  .who{border-left:0;padding-left:0;flex-basis:100%;order:-1}
+  .brand{order:-2}
+  .tb-end{margin-left:0}
   .track{grid-template-columns:1fr 1fr}
+  .blk .track{grid-template-columns:1fr 1fr}
 }
 @media (max-width:640px){
   body{font-size:14.5px}
-  .hbnav ol{grid-template-columns:.9fr repeat(5,1fr);row-gap:6px;padding:6px 16px}
-  .hbnav li.calc-link{grid-row:span 2}
-  .hbnav li.calc-link a{height:100%}
-  .hbnav .full{display:none}
-  .hbnav .short{display:inline}
-  .seg{display:grid;grid-template-columns:1fr 1fr;width:100%}
-  .seg button{border-bottom:1px solid var(--rule)}
-  .seg button:nth-child(2n){border-right:0}
-  .seg button:nth-last-child(-n+2){border-bottom:0}
-  :root{--navh:5.3rem}
-  .blocks{grid-template-columns:1fr;padding:16px}
-  .track{grid-template-columns:1fr}
-  .stairs button{width:44px}
-  .floorbox{gap:18px}
-  .stairs button{width:52px}
+  .tb-in{gap:10px 14px}
+  .brand{font-size:1.1rem}
+  .floorpick{flex-basis:100%}
+  .stairs{flex:1}
+  .stairs button{flex:1;width:auto}
+  .sheetbox{flex:1 1 100%}
+  .sb-row{flex-wrap:wrap}
+  .sb-txt{max-width:none;flex:1 1 12rem}
+  .tabs button{padding:10px 12px}
+  .seg:not(.tabs3){display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .seg:not(.tabs3) button{border-bottom:1px solid var(--rule)}
+  .seg:not(.tabs3) button:nth-child(2n){border-right:0}
+  .seg:not(.tabs3) button:nth-last-child(-n+2){border-bottom:0}
+  .tools-row .seg{width:auto;display:inline-flex}
+  .tools-row .seg button{border-bottom:0}
+  .tools-row .seg button:nth-child(2n){border-right:0}
+  .dr-head,.dr-body{padding-left:16px;padding-right:16px}
+  .blk .track{grid-template-columns:1fr}
   .deg thead,.debuffs thead{display:none}
   .deg tr,.debuffs tr{display:block;padding:8px 0 8px 10px;border-bottom:1px solid var(--rule)}
   .deg tr{border-left:6px solid var(--c)}
@@ -363,6 +468,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   .debuffs td:last-child{min-width:0}
   .tlist thead{display:none}
   .tlist tr{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;padding:8px;border-bottom:1px solid var(--rule)}
+  .tlist tr.hide{display:none}
   .tlist td{display:block;border:0;padding:0}
   .tlist td.nm{grid-column:2 / -1}
   .sk td.tk{grid-row:1 / span 3;align-self:start;padding-top:2px}
@@ -380,32 +486,31 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 }
 @media (prefers-reduced-motion:reduce){
   .lv.flash{animation:none}
-  .hbnav a::before{transition:none}
+  .tip,.drawer,.drawer.open{transition:none}
 }
 
-/* ---------- print ---------- */
+/* ---------- print: the cheat sheet ---------- */
 @media print{
   @page{size:letter landscape;margin:.32in}
   :root{--bg:#fff;--panel:#fff;--ink:#000;--soft:#444;--rule:#bbb;--well:#f1f1ee;color-scheme:light}
   body{font-size:7pt;line-height:1.27;background:#fff}
+  body.dr-on{overflow:visible}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .hbnav,.toolbar,.tool,.stairs-wrap,.empty,.noprint,.band.calc,.tip,.bandnav,.upd{display:none!important}
-  .band.tab-off:not(.calc){display:block!important}
-  .hero{padding:0 0 4pt}
-  .hero .wrap{grid-template-columns:auto 1fr;align-items:end;gap:6pt 18pt;padding:0}
-  h1{font-size:24pt;line-height:.9}
-  h1 span{display:inline}
-  .lede{display:none}
-  .print-floor{display:block;font-weight:700;font-size:9pt}
-  .floorbox{gap:8pt}
-  .targets{grid-template-columns:repeat(5,auto auto);font-size:7.5pt;gap:2pt 6pt}
-  .targets .lv{font-size:8pt}
+  .noprint,.topbar,.app,.scrim,.tip,.bandnav,.upd,.empty,.dr-head .search,.dr-head .hbnav{display:none!important}
   html{font-size:8.5pt}
-  .wrap{max-width:none;padding:0}
-  main{padding:0}
+  .targetbar{border:0;background:none}
+  .targetbar .tb-in{padding:0 0 3pt;max-width:none;gap:2pt 10pt}
+  .tg-h{font-size:8pt}
+  .targets{font-size:7.5pt;gap:2pt 10pt}
+  .targets .lv{font-size:8pt}
+  .drawer{position:static;transform:none;visibility:visible;width:auto;box-shadow:none;border:0;display:block;background:none}
+  .dr-head{padding:0;border:0}
+  .dr-top h2{font-size:16pt}
+  .dr-top h2 svg{display:none}
+  .dr-body{overflow:visible;padding:0}
+  .band.tab-off,.band.hide-s,.blk.hide-s{display:block!important}
   .band{display:block;background:none;border:0;margin:0;border-radius:0}
   .band-head{border:0;border-top:3.5pt solid var(--slot);padding:2pt 0 3pt;margin-top:3pt;break-after:avoid;break-inside:avoid}
-  .band-head .in{position:static}
   .band-head h2{font-size:12pt;display:inline}
   .band-head p{display:inline;font-size:7pt;margin:0 0 0 6pt}
   .blocks{display:block;padding:0;column-count:5;column-gap:12pt}
@@ -428,7 +533,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   .mods div{padding:1pt}
   .mods b{font-size:7.5pt}
   .mods small{font-size:5.8pt}
-  .blk .track{gap:2pt;margin:0;break-inside:avoid}
+  .blk .track{gap:2pt;margin:0;break-inside:avoid;grid-template-columns:repeat(5,minmax(0,1fr))}
   .track li{padding:3pt 4pt}
   .track li::before{font-size:10pt;margin-bottom:0}
   .track p{font-size:6.8pt}
@@ -438,119 +543,152 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   .deg .nm{display:inline;margin-right:4pt}
   .deg .mg{display:inline;font-size:6.4pt}
   .tag{font-size:6pt}
-  footer{column-span:all}
-  footer{font-size:6.5pt;padding:4pt 0 0}
+  .foot{font-size:6.5pt;padding:4pt 0 0;max-width:none}
   .off{opacity:.5}
 }
-.cf-list{list-style:none;margin:.4rem 0;padding:0;background:var(--panel);max-height:22rem;overflow:auto;border:1px solid var(--rule);border-radius:6px}
-.cf-list li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.3rem .5rem;padding:.4rem .6rem;border-top:1px solid var(--rule)}
-.cf-list li:first-child{border-top:0}
-.cf-list li input{margin:0}
-.cf-list li .nt{flex-basis:100%;color:var(--soft)}
-.cf-list li select,.cf-list li input[type=text]{padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--panel);font-size:.95rem;max-width:14rem}
 
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="wrap">
-    <div>
-      <h1><span>Crawler</span> <span>companion</span></h1>
-      <p class="lede">Rules reference and character manager for the Dungeon Crawler Carl Roleplaying Game. Choose your floor and every number in yellow, like <span class="lv" data-f="10+2*F">12</span>, updates to match it.</p>
+<header class="topbar noprint" id="topbar">
+  <div class="tb-in">
+    <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i class="o"></i></span><span>Crawler Companion</span></div>
+    <div class="who"><b id="tb-name">Your crawler</b><span id="tb-sub">Level 1</span></div>
+    <div class="floorpick" role="group" aria-labelledby="floor-label">
+      <span id="floor-label">Floor</span>
+      <div class="stairs">
+        <button type="button" data-floor="1" aria-pressed="true" aria-label="Floor 1"><span class="n">1</span></button>
+        <button type="button" data-floor="2" aria-pressed="false" aria-label="Floor 2"><span class="n">2</span></button>
+        <button type="button" data-floor="3" aria-pressed="false" aria-label="Floor 3"><span class="n">3</span></button>
+        <button type="button" data-floor="4" aria-pressed="false" aria-label="Floor 4"><span class="n">4</span></button>
+        <button type="button" data-floor="5" aria-pressed="false" aria-label="Floor 5"><span class="n">5</span></button>
+      </div>
     </div>
-    <div class="floorbox">
-      <div class="stairs-wrap">
-        <h2 id="floor-label">Your floor</h2>
-        <div class="stairs" role="group" aria-labelledby="floor-label">
-          <button type="button" data-floor="1" aria-pressed="true" aria-label="Floor 1"><span class="n">1</span></button>
-          <button type="button" data-floor="2" aria-pressed="false" aria-label="Floor 2"><span class="n">2</span></button>
-          <button type="button" data-floor="3" aria-pressed="false" aria-label="Floor 3"><span class="n">3</span></button>
-          <button type="button" data-floor="4" aria-pressed="false" aria-label="Floor 4"><span class="n">4</span></button>
-          <button type="button" data-floor="5" aria-pressed="false" aria-label="Floor 5"><span class="n">5</span></button>
+    <div class="sheetbox" id="sheetbox">
+      <div class="sb-row" id="sb-off">
+        <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
+        <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
+        <span class="sb-txt"><span class="sb-sub">Without a sheet, numbers stay in this browser.</span><span class="sb-sub sb-err" id="sb-msg" aria-live="polite"></span></span>
+        <input type="file" id="sb-file" accept="application/pdf,.pdf" class="hide" tabindex="-1" aria-hidden="true">
+      </div>
+      <div class="sb-row hide" id="sb-on">
+        <svg class="sb-ico" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>
+        <span class="sb-txt"><b id="sb-file-name"></b><span class="sb-sub" id="sb-status" aria-live="polite"></span></span>
+        <button type="button" class="btn" id="sb-save">Save</button>
+        <details class="pop" id="sb-pop">
+          <summary class="btn" id="sb-count">No unsaved changes</summary>
+          <div class="pop-panel">
+            <h3 id="sb-who">Linked</h3>
+            <p class="sub" id="sb-info"></p>
+            <ul class="changes" id="sb-changes"></ul>
+            <label class="chk" id="sb-auto-l"><input type="checkbox" id="sb-auto" checked> Save changes automatically</label>
+            <div class="btnrow"><button type="button" class="btn" id="sb-reload">Reload</button><button type="button" class="btn" id="sb-unlink">Unlink</button></div>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="tb-end">
+      <button type="button" class="btn rules-btn" id="rules-open" aria-haspopup="dialog" aria-controls="rules">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6"/></svg>
+        Rules
+      </button>
+      <details class="pop menu" id="more">
+        <summary class="btn icon" aria-label="More: Load from CrawlerForge, dark mode, print, check for updates"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></summary>
+        <div class="pop-panel menu-panel">
+          <button type="button" class="mi" id="menu-cf">Load from CrawlerForge</button>
+          <button type="button" class="mi" id="theme">Dark mode</button>
+          <button type="button" class="mi" id="print">Print the cheat sheet</button>
+          <button type="button" class="mi" id="menu-upd">Check for updates</button>
         </div>
-        <p class="stairs-note">F in any formula means your current floor number.</p>
-      </div>
-      <div>
-        <p class="print-floor">Numbers set for Floor <span data-lk="num">1</span></p>
-        <dl class="targets" aria-live="polite">
-          <dt>Unopposed check</dt><dd><span class="lv" data-f="10+2*F">12</span></dd>
-          <dt>Stat check</dt><dd><span class="lv" data-f="10+F">11</span></dd>
-          <dt>Opposed check</dt><dd><span class="lv" data-f="10+F">11</span> + foe’s Mod</dd>
-          <dt>Hit a Mob</dt><dd><span class="lv" data-f="10+F">11</span> + its Dex Mod</dd>
-          <dt>Floor collapses in</dt><dd><span class="lv" data-lk="timer">5 days</span></dd>
-        </dl>
-      </div>
+      </details>
     </div>
   </div>
 </header>
 
-<nav class="hbnav" aria-label="Sections">
-  <ol>
-    <li class="calc-link"><a href="#calc" style="--c:var(--ink)"><span class="full">Crawler</span><span class="short">Crawler</span></a></li>
-    <li><a href="#checks" style="--c:var(--hb1)">Checks</a></li>
-    <li><a href="#results" style="--c:var(--hb2)">Results</a></li>
-    <li><a href="#round" style="--c:var(--hb3)">Round</a></li>
-    <li><a href="#actions" style="--c:var(--hb4)">Actions</a></li>
-    <li><a href="#attacks" style="--c:var(--hb5)">Attacks</a></li>
-    <li><a href="#exploring" style="--c:var(--hb6)"><span class="full">Exploring</span><span class="short">Explore</span></a></li>
-    <li><a href="#health" style="--c:var(--hb7)">Health</a></li>
-    <li><a href="#gear" style="--c:var(--hb8)">Gear</a></li>
-    <li><a href="#debuffs" style="--c:var(--hb9)">Debuffs</a></li>
-    <li><a href="#growth" style="--c:var(--hb10)">Growth</a></li>
-  </ol>
-</nav>
-
-<div class="wrap">
-  <div class="toolbar noprint">
-    <label class="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <span class="hide">Search rules</span>
-      <input id="q" type="search" placeholder="Search rules, e.g. evade, prone, mana" autocomplete="off">
-    </label>
-    <button class="btn" id="theme" type="button">Dark mode</button>
-    <button class="btn" id="print" type="button">Print</button>
+<div class="targetbar">
+  <div class="tb-in">
+    <span class="tg-h">Floor <span data-lk="num">1</span> targets</span>
+    <dl class="targets" aria-live="polite">
+      <div><dt>Unopposed check</dt><dd><span class="lv" data-f="10+2*F">12</span></dd></div>
+      <div><dt>Stat check</dt><dd><span class="lv" data-f="10+F">11</span></dd></div>
+      <div><dt>Opposed check</dt><dd><span class="lv" data-f="10+F">11</span> + foe’s Mod</dd></div>
+      <div><dt>Hit a Mob</dt><dd><span class="lv" data-f="10+F">11</span> + its Dex Mod</dd></div>
+      <div><dt>Floor collapses in</dt><dd><span class="lv" data-lk="timer">5 days</span></dd></div>
+    </dl>
   </div>
-  <p class="empty" id="empty" role="status"></p>
+</div>
 
-<main>
+<div class="app noprint" id="app">
 
-<!-- 0 CALCULATORS -->
-<section class="band calc" id="calc" style="--slot:var(--ink)">
-  <div class="band-head"><div class="in"><h2>Crawler</h2><p>Your Skills, gear, pet and notes, plus the math your VTT can’t do. Link your character sheet or type your numbers in. Hover over or tap any underlined number to see how it was worked out.</p></div></div>
-  <div class="calc-wrap">
-
-    <aside class="crawler-panel" id="calc-crawler" aria-label="Your crawler">
-      <div class="sheetbox" id="sheetbox">
-        <div id="sb-off">
-          <h3>Character sheet</h3>
-          <p class="sub">Link your fillable PDF to load your numbers. Health, Mana, Skills, gear, Inventory, your pet and your notes save back into it.</p>
-          <div class="btnrow">
-            <button type="button" class="btn primary" id="sb-link">Link your PDF</button>
-            <button type="button" class="btn hide" id="sb-relink">Reconnect</button>
-          </div>
-          <input type="file" id="sb-file" accept="application/pdf,.pdf" class="hide" tabindex="-1" aria-hidden="true">
-          <p class="sub" id="sb-msg" aria-live="polite"></p>
-        </div>
-        <div id="sb-on" class="hide">
-          <h3 id="sb-who">Linked</h3>
-          <p class="sub" id="sb-file-name"></p>
-          <p class="sub" id="sb-info"></p>
-          <div class="pending">
-            <p class="pend-head" id="sb-count">No unsaved changes</p>
-            <ul class="changes" id="sb-changes"></ul>
-          </div>
-          <div class="btnrow">
-            <button type="button" class="btn primary" id="sb-save">Save to sheet</button>
-            <button type="button" class="btn" id="sb-reload">Reload</button>
-            <button type="button" class="btn" id="sb-unlink">Unlink</button>
-          </div>
-          <label class="chk" id="sb-auto-l"><input type="checkbox" id="sb-auto" checked> Save changes automatically</label>
-          <p class="sub" id="sb-status" aria-live="polite"></p>
-        </div>
+  <aside class="col vitals" aria-label="Health, Mana and stats">
+    <section class="card" aria-labelledby="h-health">
+      <div class="card-h"><h2 id="h-health">Health</h2><b class="card-n" id="vt-hbtxt"></b></div>
+      <div class="hb" id="hm-bar" aria-hidden="true"></div>
+      <p class="sub" id="hm-status"></p>
+      <div class="fields two">
+        <label>Damage<input type="number" id="hm-dmg" min="0" inputmode="numeric"></label>
+        <button type="button" class="btn primary" id="hm-hit">Take the hit</button>
       </div>
+      <details class="more" id="hm-more">
+        <summary>Damage type and area</summary>
+        <div class="fields">
+          <label>Damage type is<select id="hm-type"><option value="n">Normal for me</option><option value="r">Resisted</option><option value="v">Vulnerable</option><option value="i">Immune</option></select></label>
+          <label>Area attack<select id="hm-area"><option value="1">No, or full area</option><option value="0.5">Evaded, or in the Splash (half)</option><option value="0.25">Evaded in the Splash (quarter)</option></select></label>
+          <label class="chk"><input type="checkbox" id="hm-deb"> From a Debuff (skips DR)</label>
+        </div>
+      </details>
+      <p class="sub" id="hm-preview"></p>
+      <div class="fields two">
+        <label>Heal slots<input type="number" id="hm-heal" min="1" max="10" value="2" inputmode="numeric"></label>
+        <button type="button" class="btn" id="hm-heal-b">Heal</button>
+      </div>
+      <div class="card-h sep"><h2>Mana</h2><b class="card-n" id="vt-manatxt"></b></div>
+      <div class="manabar" aria-hidden="true"><div id="vt-manafill"></div></div>
+      <div class="fields two">
+        <label>Mana<input type="number" id="hm-mana" min="1" value="2" inputmode="numeric"></label>
+        <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
+      </div>
+      <div class="btnrow"><button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button></div>
+      <p class="sub" id="hm-log" aria-live="polite"></p>
+      <div class="tiles">
+        <div><small>Evade</small><b id="vt-evade"></b></div>
+        <div><small>DR</small><b id="vt-dr"></b></div>
+        <div><small>AI Favor</small><b id="vt-fav"></b></div>
+      </div>
+      <p class="sub" id="vt-pet"></p>
+      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a></p>
+    </section>
 
-      <h3>Your crawler</h3>
+    <section class="card" aria-labelledby="h-status">
+      <div class="card-h"><h2 id="h-status">Buffs and Debuffs</h2></div>
+      <div class="tags" id="db-tags"></div>
+      <div class="fields">
+        <label class="wide">Add a Debuff<select id="db-add">
+          <option value="">Pick one</option>
+          <option value="minor">Minor Injury (−2 to Checks)</option>
+          <option value="major">Major Injury (−5 to Checks)</option>
+          <option value="sore">Sore as Shit (−1 to Checks)</option>
+          <option value="fat">Fatigued, one more stack (−1 each)</option>
+        </select></label>
+      </div>
+      <div class="hide" aria-hidden="true">
+        <input type="checkbox" id="ck-minor" tabindex="-1">
+        <input type="checkbox" id="ck-major" tabindex="-1">
+        <input type="checkbox" id="ck-sore" tabindex="-1">
+        <input type="number" id="ck-fat" min="0" value="0" tabindex="-1">
+      </div>
+      <h3 class="mini-h">Rest</h3>
+      <div class="rest">
+        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 5 Mana</small></button>
+        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, half Mana</small></button>
+        <button type="button" class="btn" data-rest="long">Long rest<small>8 h: full, clears Fatigued</small></button>
+      </div>
+      <p class="rules-l"><a class="rule" href="#debuffs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Debuffs</a><a class="rule" href="#r-healing"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Rest</a></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-stats">
+      <div class="card-h"><h2 id="h-stats">Stats</h2></div>
       <table class="statin">
         <thead><tr><th>Stat</th><th>Unenhanced</th><th>Enhanced</th><th>Mod</th></tr></thead>
         <tbody>
@@ -574,136 +712,24 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
         <dl class="derived" id="cr-out"></dl>
       </details>
       <p class="note" id="cr-note">Saved in this browser only.</p>
-    </aside>
+      <p class="rules-l"><a class="rule" href="#r-mods"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Stat Mods</a></p>
+    </section>
+  </aside>
 
-    <div class="tools">
-      <div class="strip" id="strip" aria-live="polite">
-        <div class="hb mini" id="strip-bar" aria-hidden="true"></div>
-        <p id="strip-text"></p>
+  <main class="col mid" id="main">
+    <div class="tabbar">
+      <div class="tabs" role="tablist" aria-label="Your crawler">
+        <button type="button" role="tab" id="tt-skills" aria-controls="tp-skills" aria-selected="true">Skills</button><button type="button" role="tab" id="tt-gear" aria-controls="tp-gear" aria-selected="false">Gear &amp; Inventory</button><button type="button" role="tab" id="tt-pet" aria-controls="tp-pet" aria-selected="false">Pet</button><button type="button" role="tab" id="tt-notes" aria-controls="tp-notes" aria-selected="false">Notes</button>
       </div>
-      <div class="seg tooltabs" role="tablist" aria-label="Crawler tools">
-        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-health" aria-controls="tp-health" aria-selected="false">Health &amp; Mana</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button><button type="button" role="tab" id="tt-skills" aria-controls="tp-skills" aria-selected="false">Skills</button><button type="button" role="tab" id="tt-gear" aria-controls="tp-gear" aria-selected="false">Gear</button><button type="button" role="tab" id="tt-pet" aria-controls="tp-pet" aria-selected="false">Pet</button><button type="button" role="tab" id="tt-notes" aria-controls="tp-notes" aria-selected="false">Notes</button>
-      </div>
-
-      <div class="toolpanel" id="tp-check" role="tabpanel" aria-labelledby="tt-check">
-        <div class="fields" id="ck-src-l-wrap">
-          <label id="ck-src-l" class="hide wide-l">From your sheet<select id="ck-src"><option value="">Pick a Skill or attack</option></select></label>
+      <button type="button" class="btn" id="tb-cf">Load from CrawlerForge</button>
+    </div>
+      <div class="toolpanel" id="tp-skills" role="tabpanel" aria-labelledby="tt-skills">
+        <div class="tbar"><h2 class="ph">Skills</h2><p class="sub" id="sk-sum"></p></div>
+        <div class="tbar tools-row">
+          <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="hide">Find a Skill</span><input type="search" id="sk-q" placeholder="Find a Skill" autocomplete="off"></label>
+          <div class="seg" role="group" aria-label="Show"><button type="button" id="sk-f-all" aria-pressed="true">All</button><button type="button" id="sk-f-tick" aria-pressed="false">Ticked</button></div>
+          <button type="button" class="btn primary" id="sk-add">Add a Skill</button>
         </div>
-        <div class="seg" role="group" aria-label="Kind of roll">
-          <button type="button" data-kind="skill" aria-pressed="true">Skill Check</button><button type="button" data-kind="attack" aria-pressed="false">Attack</button><button type="button" data-kind="evade" aria-pressed="false">Evade</button><button type="button" data-kind="stat" aria-pressed="false">Stat Check</button>
-        </div>
-        <div class="fields">
-          <label>Stat<select id="ck-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option></select></label>
-          <label id="ck-rank-l">Skill Rank<input type="number" id="ck-rank" min="0" max="20" value="1" inputmode="numeric"></label>
-          <label>Other bonus<input type="number" id="ck-other" value="0" inputmode="numeric"></label>
-          <label>Roll with<select id="ck-mode"><option value="n">Normal</option><option value="a">Advantage</option><option value="d">Disadvantage</option></select></label>
-          <label class="chk" id="ck-untr-l"><input type="checkbox" id="ck-untr"> No Ranks</label>
-        </div>
-        <div class="fields">
-          <span class="lab">Penalties to all Checks</span>
-          <label class="chk"><input type="checkbox" id="ck-minor"> Minor Injury −2</label>
-          <label class="chk"><input type="checkbox" id="ck-major"> Major Injury −5</label>
-          <label class="chk"><input type="checkbox" id="ck-sore"> Sore as Shit −1</label>
-          <label class="narrow">Fatigued stacks<input type="number" id="ck-fat" min="0" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="fields">
-          <label><span id="ck-tgt-lab">Target</span><input type="number" id="ck-tgt" value="12" inputmode="numeric"></label>
-          <label>Foe’s Mod<input type="number" id="ck-foe" value="0" inputmode="numeric"></label>
-          <div class="presets" aria-label="Target presets">
-            <button type="button" data-preset="unopp">Unopposed</button>
-            <button type="button" data-preset="stat">Stat check</button>
-            <button type="button" data-preset="foe">Foe or Mob</button>
-          </div>
-          <label>The Mob has<select id="ck-mob"><option value="0">No edge</option><option value="5">Advantage (+5)</option><option value="-5">Disadvantage (−5)</option></select></label>
-        </div>
-        <p class="sub" id="ck-odds"></p>
-        <div class="fields">
-          <label class="narrow">d20<input type="number" id="ck-d1" min="1" max="20" inputmode="numeric"></label>
-          <label class="narrow" id="ck-d2-l">Second d20<input type="number" id="ck-d2" min="1" max="20" inputmode="numeric"></label>
-          <button type="button" class="btn primary" id="ck-roll">Roll for me</button>
-          <button type="button" class="btn" id="ck-fav">Reroll with AI Favor</button>
-        </div>
-        <p class="out" id="ck-out" aria-live="polite"></p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-damage" role="tabpanel" aria-labelledby="tt-damage">
-        <div class="fields">
-          <label id="dm-src-l" class="hide wide-l">Attack from your sheet<select id="dm-src"><option value="">Pick an attack</option></select></label>
-        </div>
-        <div class="fields">
-          <label>Base dice<span class="pair"><input type="number" id="dm-n" min="0" max="99" value="1" inputmode="numeric" aria-label="Number of base dice">d<select id="dm-x" aria-label="Base die size"><option>2</option><option selected>4</option><option>6</option><option>8</option><option>10</option><option>12</option></select></span></label>
-          <label>Extra base dice<input type="text" id="dm-extra" placeholder="e.g. 1d2" autocomplete="off"></label>
-          <label>Add Stat Mod<select id="dm-stat"><option value="none">None</option><option value="str" selected>Str</option><option value="dex">Dex</option><option value="int">Int</option><option value="con">Con</option><option value="cha">Cha</option></select></label>
-          <label>Flat bonus<input type="number" id="dm-flat" value="0" inputmode="numeric"></label>
-        </div>
-        <div class="fields">
-          <label class="chk"><input type="checkbox" id="dm-rank-on"> Add Rank damage die</label>
-          <label class="narrow" id="dm-rank-l">Skill Rank<input type="number" id="dm-rank" min="1" max="20" value="1" inputmode="numeric"></label>
-          <label>Result<select id="dm-res"><option value="hit">Hit</option><option value="amazing">Amazing Success</option><option value="crit">Critical Hit</option></select></label>
-        </div>
-        <p class="sub">Roll this</p>
-        <p class="formula-out"><span id="dm-formula">1d4 + 2</span></p>
-        <p class="sub" id="dm-why"></p>
-        <div class="btnrow"><button type="button" class="btn primary" id="dm-roll">Roll for me</button></div>
-        <p class="out" id="dm-out" aria-live="polite"></p>
-        <p class="note">Extra base dice are upgrades or Damage Effects that add “base damage”, like Iron Punch’s 1d2. They double on a Critical Hit; the Rank die doesn’t.</p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-health" role="tabpanel" aria-labelledby="tt-health">
-        <div class="hb" id="hm-bar" aria-hidden="true"></div>
-        <div class="hb-cap" aria-hidden="true"><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
-        <p class="out" id="hm-status"></p>
-        <div class="fields">
-          <label class="narrow">Damage<input type="number" id="hm-dmg" min="0" inputmode="numeric"></label>
-          <label>Damage type is<select id="hm-type"><option value="n">Normal for me</option><option value="r">Resisted</option><option value="v">Vulnerable</option><option value="i">Immune</option></select></label>
-          <label>Area attack<select id="hm-area"><option value="1">No, or full area</option><option value="0.5">Evaded, or in the Splash (half)</option><option value="0.25">Evaded in the Splash (quarter)</option></select></label>
-          <label class="chk"><input type="checkbox" id="hm-deb"> From a Debuff (skips DR)</label>
-          <button type="button" class="btn primary" id="hm-hit">Take the hit</button>
-        </div>
-        <p class="sub" id="hm-preview"></p>
-        <div class="fields">
-          <label class="narrow">Heal slots<input type="number" id="hm-heal" min="1" max="10" value="2" inputmode="numeric"></label>
-          <button type="button" class="btn" id="hm-heal-b">Heal</button>
-          <button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button>
-          <label class="narrow">Mana<input type="number" id="hm-mana" min="1" value="2" inputmode="numeric"></label>
-          <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
-        </div>
-        <div class="btnrow">
-          <span class="lab">Rest</span>
-          <button type="button" class="btn" data-rest="hour">1 calm hour</button>
-          <button type="button" class="btn" data-rest="short">Short rest (2 h)</button>
-          <button type="button" class="btn" data-rest="long">Long rest (8 h)</button>
-        </div>
-        <p class="sub" id="hm-log" aria-live="polite"></p>
-        <p class="note">Uses the Con Mod, DR and Intelligence from Your crawler. Area halving is applied before DR.</p>
-      </div>
-
-      <div class="toolpanel hide" id="tp-dice" role="tabpanel" aria-labelledby="tt-dice">
-        <div class="btnrow">
-          <button type="button" class="btn" data-roll="d20">d20</button>
-          <button type="button" class="btn" data-roll="adv">d20 with Advantage</button>
-          <button type="button" class="btn" data-roll="dis">d20 with Disadvantage</button>
-          <button type="button" class="btn" data-roll="help">Help 1d2</button>
-          <button type="button" class="btn" data-roll="d6">Help or Intervene 1d6</button>
-          <button type="button" class="btn" data-roll="play">Call a Play 2d6</button>
-        </div>
-        <div class="fields">
-          <label>Any dice<input type="text" id="dt-expr" placeholder="e.g. 3d6+2" autocomplete="off"></label>
-          <button type="button" class="btn primary" id="dt-go">Roll</button>
-        </div>
-        <div class="adv-box">
-          <h4>Skill advancement</h4>
-          <p class="sub">For the Skills on your sheet, use the <a href="#tp-skills">Skills tab</a>. This one is for any Rank you type in.</p>
-          <div class="fields" id="adv-manual">
-            <label class="narrow">Skill Rank<input type="number" id="dt-rank" min="1" max="20" value="1" inputmode="numeric"></label>
-            <button type="button" class="btn" data-roll="advance">Roll an advancement check</button>
-          </div>
-        </div>
-        <ol class="hist" id="dt-hist" aria-live="polite"></ol>
-      </div>
-
-      <div class="toolpanel hide" id="tp-skills" role="tabpanel" aria-labelledby="tt-skills">
-        <div class="tbar"><p class="sub" id="sk-sum"></p><button type="button" class="btn" id="sk-add">Add a Skill</button></div>
         <div class="edit hide" id="sk-edit">
           <h4 id="se-title">Add a Skill</h4>
           <div class="fields">
@@ -730,6 +756,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
             <tbody id="sk-rows"></tbody>
           </table>
         </div>
+        <p class="sub hide" id="sk-none" role="status"></p>
         <p class="note">Rolling a Skill or attack in the Check tab ticks it. Passive Skills don’t tick; they rise through training, magic, your Race or Class.</p>
         <div class="fields try">
           <label class="wide">Try a Skill you don’t have<input type="text" id="st-name" autocomplete="off" maxlength="40" placeholder="e.g. Climbing"></label>
@@ -739,15 +766,16 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
         <p class="note" data-floors="1-2">Untrained rolls take Disadvantage and add no Rank. On Floors 1 and 2 the Skill is added at Rank 0 and ticked, and at the end of each 2-hour session you learn one of the Skills you tried at Rank 1.</p>
         <p class="note" data-floors="3-5">Untrained rolls take Disadvantage and add no Rank. From Floor 3, trying a Skill no longer teaches it: get Rank 1 from a guild, gear, a potion, your Race or Class.</p>
         <p class="sub" id="st-msg" role="status"></p>
+        <div class="duo">
         <div class="adv-box">
-          <h4>Advancement checks</h4>
+          <div class="h4row"><h4>Advancement checks</h4><a class="rule" href="#r-skills"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Raising Skills</a></div>
           <p class="sub">Each ticked Skill rolls a d20. Equal to or over its Rank gives +1 Rank (cap 15). Rank 4 or lower rolls every 2 hours of play; Rank 5 and up roll at the end of each floor. Ticks clear after.</p>
           <div class="fields"><label class="wide-l">End of floor, roll one with Advantage (Human, Rank 9 or less)<select id="sk-advsel"></select></label></div>
           <div class="fields hide" id="sk-learn-l"><label class="wide-l">Learn one untrained Skill you tried (Floors 1 and 2)<select id="sk-learn"></select></label></div>
           <div class="btnrow"><button type="button" class="btn" id="sk-2h">Every 2 hours (Rank 4 or lower)</button><button type="button" class="btn" id="sk-floor">End of floor (every ticked Skill)</button></div>
         </div>
         <div class="adv-box">
-          <h4>Grinding</h4>
+          <div class="h4row"><h4>Grinding</h4><a class="rule" href="#r-grinding"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Grinding</a></div>
           <p class="sub">Put grind hours into Skills. When a Skill’s hours reach its Rank, it rolls an advancement check right away. Each Skill once a day. 5 hours a day is safe; hours past 5 each need an Endurance check.</p>
           <div class="fields">
             <label class="narrow">Hours<input type="number" id="gr-h" min="1" max="24" value="5" inputmode="numeric"></label>
@@ -758,12 +786,14 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
           <div class="btnrow"><button type="button" class="btn primary" id="gr-go">Log the grind</button></div>
           <p class="sub" id="gr-lvl"></p>
         </div>
+        </div>
         <ol class="hist" id="sk-log" aria-live="polite"></ol>
       </div>
 
       <div class="toolpanel hide" id="tp-gear" role="tabpanel" aria-labelledby="tt-gear">
+        <div class="tbar"><h2 class="ph">Gear &amp; Inventory</h2></div>
         <div id="gear-sum"></div>
-        <h4>Gear slots</h4>
+        <div class="h4row"><h4>Gear slots</h4><a class="rule" href="#r-gearslots"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Gear slots</a></div>
         <div class="slots" id="gear-slots"></div>
         <p class="note">Only equipped gear gives bonuses. Equipping or removing gear moves your Enhanced Stats, Armor DR and Evade Buffs by its bonus; your Unenhanced Stats stay put. Accessories hold up to 10 (one belt, one cape). Hands/Holding takes gloves, a main hand and an off hand; a two-handed item takes both hands.</p>
         <p class="sub" id="gear-log" role="status"></p>
@@ -793,7 +823,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
           </div>
           <div class="btnrow"><button type="button" class="btn primary" id="ie-save">Save</button><button type="button" class="btn" id="ie-cancel">Cancel</button><button type="button" class="btn danger" id="ie-del">Delete</button><span class="sub" id="ie-msg" role="status"></span></div>
         </div>
-        <h4>Inventory <small id="inv-count"></small></h4>
+        <div class="h4row"><h4>Inventory <small id="inv-count"></small></h4><a class="rule" href="#r-loot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Junk, loot and gold</a></div>
         <div class="fields">
           <label class="narrow">Gold<input type="text" id="inv-gold" autocomplete="off" aria-describedby="inv-hint"></label>
           <label class="narrow">Misc. Junk<input type="text" id="inv-junk" autocomplete="off" aria-describedby="inv-hint"></label>
@@ -844,12 +874,13 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
         <p class="note">An item’s Gear Slot, bonuses and use are written at the start of its notes on your sheet, like “Head: +2 Int, DR 1.” or “Use: full Mana.”, so they come back when you reload.</p>
         <p class="note">Load from CrawlerForge reads a crawler file (CrawlerForge’s crawler export), an Export everything backup, or a pack. A crawler’s file brings in what it’s wearing and carrying, its unopened Loot Boxes, its Gold, Junk and Hotlist; a pack or your Forge lets you pick items and Loot Boxes to add. Stat, Armor, Evade and Skill bonuses come across; anything the sheet can’t track goes into the item’s notes.</p>
         <p class="note">A Loot Box sits in your Inventory until you open it. Opening one puts its items in your Inventory, adds its Gold and Junk, and drinks its Skill and Stat potions straight away. A crawler can only ever drink two Stat potions and two Skill potions (Core p. 226). CrawlerForge rolls a random box’s contents when it hands the box out; a random box from a pack holds only its Gold here, and your GM rolls the rest (Core p. 219).</p>
-        <h4>Hotlist</h4>
+        <div class="h4row"><h4>Hotlist</h4><a class="rule" href="#r-hotlist"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Hotlist</a></div>
         <div class="hot" id="hot-grid"></div>
         <p class="note">Spells and items in your Hotlist can be used with one Action. Spells must be here to cast them in combat.</p>
       </div>
 
       <div class="toolpanel hide" id="tp-pet" role="tabpanel" aria-labelledby="tt-pet">
+        <div class="tbar"><h2 class="ph">Pet</h2></div>
         <div id="pet-none">
           <p>No pet on your sheet. One pet per crawler unless your Class says otherwise. Pets start at Level 1 however you get them.</p>
           <div class="fields">
@@ -925,6 +956,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       </div>
 
       <div class="toolpanel hide" id="tp-notes" role="tabpanel" aria-labelledby="tt-notes">
+        <div class="tbar"><h2 class="ph">Notes</h2></div>
         <label class="tx"><span>Notes</span><textarea id="nt-notes" data-tx="notes" rows="9"></textarea></label>
         <p class="note">Everything here saves into your sheet. The PDF’s Notes box is small, so a long note is all there but your PDF reader may only show the start of it.</p>
         <div class="txgrid">
@@ -952,16 +984,144 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
           </div>
         </details>
       </div>
+  </main>
+
+  <aside class="col roll" aria-label="Rolls">
+    <section class="card" aria-labelledby="h-roll">
+      <div class="card-h"><h2 id="h-roll">Roll</h2></div>
+      <div class="seg tabs3" role="tablist" aria-label="Roll tools">
+        <button type="button" role="tab" id="tt-check" aria-controls="tp-check" aria-selected="true">Check</button><button type="button" role="tab" id="tt-damage" aria-controls="tp-damage" aria-selected="false">Damage</button><button type="button" role="tab" id="tt-dice" aria-controls="tp-dice" aria-selected="false">Dice</button>
+      </div>
+      <div class="toolpanel" id="tp-check" role="tabpanel" aria-labelledby="tt-check">
+        <div class="fields" id="ck-src-l-wrap">
+          <label id="ck-src-l" class="hide wide-l">From your sheet<select id="ck-src"><option value="">Pick a Skill or attack</option></select></label>
+        </div>
+        <div class="seg" role="group" aria-label="Kind of roll">
+          <button type="button" data-kind="skill" aria-pressed="true">Skill Check</button><button type="button" data-kind="attack" aria-pressed="false">Attack</button><button type="button" data-kind="evade" aria-pressed="false">Evade</button><button type="button" data-kind="stat" aria-pressed="false">Stat Check</button>
+        </div>
+        <div class="fields">
+          <label>Stat<select id="ck-stat"><option value="str">Str</option><option value="int">Int</option><option value="con">Con</option><option value="dex">Dex</option><option value="cha">Cha</option></select></label>
+          <label id="ck-rank-l">Skill Rank<input type="number" id="ck-rank" min="0" max="20" value="1" inputmode="numeric"></label>
+          <label>Other bonus<input type="number" id="ck-other" value="0" inputmode="numeric"></label>
+          <label>Roll with<select id="ck-mode"><option value="n">Normal</option><option value="a">Advantage</option><option value="d">Disadvantage</option></select></label>
+          <label class="chk" id="ck-untr-l"><input type="checkbox" id="ck-untr"> No Ranks</label>
+        </div>
+        <p class="sub pen" id="ck-pen"></p>
+        <div class="fields">
+          <label><span id="ck-tgt-lab">Target</span><input type="number" id="ck-tgt" value="12" inputmode="numeric"></label>
+          <label>Foe’s Mod<input type="number" id="ck-foe" value="0" inputmode="numeric"></label>
+          <div class="presets" aria-label="Target presets">
+            <button type="button" data-preset="unopp">Unopposed</button>
+            <button type="button" data-preset="stat">Stat check</button>
+            <button type="button" data-preset="foe">Foe or Mob</button>
+          </div>
+          <label>The Mob has<select id="ck-mob"><option value="0">No edge</option><option value="5">Advantage (+5)</option><option value="-5">Disadvantage (−5)</option></select></label>
+        </div>
+        <p class="sub" id="ck-odds"></p>
+        <div class="fields">
+          <label class="narrow">d20<input type="number" id="ck-d1" min="1" max="20" inputmode="numeric"></label>
+          <label class="narrow" id="ck-d2-l">Second d20<input type="number" id="ck-d2" min="1" max="20" inputmode="numeric"></label>
+          <button type="button" class="btn primary" id="ck-roll">Roll for me</button>
+          <button type="button" class="btn" id="ck-fav">Reroll with AI Favor</button>
+        </div>
+        <p class="out" id="ck-out" aria-live="polite"></p>
+        <p class="rules-l"><a class="rule" href="#checks"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Checks</a><a class="rule" href="#results"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Results</a></p>
+      </div>
+
+      <div class="toolpanel hide" id="tp-damage" role="tabpanel" aria-labelledby="tt-damage">
+        <div class="fields">
+          <label id="dm-src-l" class="hide wide-l">Attack from your sheet<select id="dm-src"><option value="">Pick an attack</option></select></label>
+        </div>
+        <div class="fields">
+          <label>Base dice<span class="pair"><input type="number" id="dm-n" min="0" max="99" value="1" inputmode="numeric" aria-label="Number of base dice">d<select id="dm-x" aria-label="Base die size"><option>2</option><option selected>4</option><option>6</option><option>8</option><option>10</option><option>12</option></select></span></label>
+          <label>Extra base dice<input type="text" id="dm-extra" placeholder="e.g. 1d2" autocomplete="off"></label>
+          <label>Add Stat Mod<select id="dm-stat"><option value="none">None</option><option value="str" selected>Str</option><option value="dex">Dex</option><option value="int">Int</option><option value="con">Con</option><option value="cha">Cha</option></select></label>
+          <label>Flat bonus<input type="number" id="dm-flat" value="0" inputmode="numeric"></label>
+        </div>
+        <div class="fields">
+          <label class="chk"><input type="checkbox" id="dm-rank-on"> Add Rank damage die</label>
+          <label class="narrow" id="dm-rank-l">Skill Rank<input type="number" id="dm-rank" min="1" max="20" value="1" inputmode="numeric"></label>
+          <label>Result<select id="dm-res"><option value="hit">Hit</option><option value="amazing">Amazing Success</option><option value="crit">Critical Hit</option></select></label>
+        </div>
+        <p class="sub">Roll this</p>
+        <p class="formula-out"><span id="dm-formula">1d4 + 2</span></p>
+        <p class="sub" id="dm-why"></p>
+        <div class="btnrow"><button type="button" class="btn primary" id="dm-roll">Roll for me</button></div>
+        <p class="out" id="dm-out" aria-live="polite"></p>
+        <p class="rules-l"><a class="rule" href="#r-damage"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Damage</a></p>
+        <p class="note">Extra base dice are upgrades or Damage Effects that add “base damage”, like Iron Punch’s 1d2. They double on a Critical Hit; the Rank die doesn’t.</p>
+      </div>
+
+      <div class="toolpanel hide" id="tp-dice" role="tabpanel" aria-labelledby="tt-dice">
+        <div class="btnrow">
+          <button type="button" class="btn" data-roll="d20">d20</button>
+          <button type="button" class="btn" data-roll="adv">d20 with Advantage</button>
+          <button type="button" class="btn" data-roll="dis">d20 with Disadvantage</button>
+          <button type="button" class="btn" data-roll="help">Help 1d2</button>
+          <button type="button" class="btn" data-roll="d6">Help or Intervene 1d6</button>
+          <button type="button" class="btn" data-roll="play">Call a Play 2d6</button>
+        </div>
+        <div class="fields">
+          <label>Any dice<input type="text" id="dt-expr" placeholder="e.g. 3d6+2" autocomplete="off"></label>
+          <button type="button" class="btn primary" id="dt-go">Roll</button>
+        </div>
+        <div class="adv-box">
+          <h4>Skill advancement</h4>
+          <p class="sub">For the Skills on your sheet, use the <a href="#tp-skills">Skills tab</a>. This one is for any Rank you type in.</p>
+          <div class="fields" id="adv-manual">
+            <label class="narrow">Skill Rank<input type="number" id="dt-rank" min="1" max="20" value="1" inputmode="numeric"></label>
+            <button type="button" class="btn" data-roll="advance">Roll an advancement check</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="h-hist">
+      <div class="card-h"><h2 id="h-hist">Recent rolls</h2></div>
+      <ol class="hist" id="dt-hist" aria-live="polite"></ol>
+      <p class="sub hist-none">Checks, damage and dice you roll here are listed, newest first.</p>
+    </section>
+  </aside>
+
+</div>
+
+<div class="scrim noprint" id="rules-scrim" hidden></div>
+<aside class="drawer" id="rules" role="dialog" aria-modal="true" aria-labelledby="rules-h" tabindex="-1">
+  <div class="dr-head">
+    <div class="dr-top">
+      <h2 id="rules-h"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 8h6"/></svg>Rules</h2>
+      <span class="print-floor">Numbers set for Floor <span class="lv" data-lk="num">1</span></span>
+      <button type="button" class="btn icon noprint" id="rules-close" aria-label="Close rules"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
+    <label class="search noprint">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="hide">Search rules</span>
+      <input id="q" type="search" placeholder="Search rules, e.g. evade, prone, mana" autocomplete="off">
+    </label>
+    <nav class="hbnav noprint" aria-label="Rule sections">
+      <ol>
+        <li><a href="#checks" style="--c:var(--hb1)">Checks</a></li>
+        <li><a href="#results" style="--c:var(--hb2)">Results</a></li>
+        <li><a href="#round" style="--c:var(--hb3)">Round</a></li>
+        <li><a href="#actions" style="--c:var(--hb4)">Actions</a></li>
+        <li><a href="#attacks" style="--c:var(--hb5)">Attacks</a></li>
+        <li><a href="#exploring" style="--c:var(--hb6)">Exploring</a></li>
+        <li><a href="#health" style="--c:var(--hb7)">Health</a></li>
+        <li><a href="#gear" style="--c:var(--hb8)">Magic &amp; gear</a></li>
+        <li><a href="#debuffs" style="--c:var(--hb9)">Debuffs</a></li>
+        <li><a href="#growth" style="--c:var(--hb10)">Growth</a></li>
+      </ol>
+    </nav>
   </div>
-</section>
+  <div class="dr-body" id="rules-body">
+    <p class="empty" id="empty" role="status"></p>
+    <div class="rules-main">
 
 <!-- 1 CHECKS -->
 <section class="band" id="checks" style="--slot:var(--hb1)">
   <div class="band-head"><div class="in"><h2>Checks</h2><p>How every roll works, and who sets the number.</p></div></div>
   <div class="blocks">
 
-    <article class="blk">
+    <article class="blk" id="r-roll">
       <h3>The roll</h3>
       <div class="formula" aria-label="d20 plus Skill Rank plus Stat Mod, meet or beat the Difficulty">
         <span><b>d20</b><small>roll</small></span><i>+</i>
@@ -984,7 +1144,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 59, 82; Survival p. 13–14</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-mods">
       <h3>Stat Mods</h3>
       <div class="mods">
         <div><small>1–2</small><b>+1</b></div><div><small>3–5</small><b>+2</b></div><div><small>6–9</small><b>+3</b></div><div><small>10–19</small><b>+4</b></div><div><small>20–49</small><b>+5</b></div>
@@ -1183,7 +1343,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 82–83</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-damage">
       <h3>Damage</h3>
       <p>Base dice + Stat Mod (per the entry) + Rank damage die (if the entry grants one) + bonuses. The target’s DR comes off after.</p>
       <p><b>Critical Hit:</b> double the base dice, including upgrade dice that say “base damage”. The Rank damage die is not doubled.</p>
@@ -1351,7 +1511,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 94, 96–97</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-healing">
       <h3>Healing and rest</h3>
       <p><b>Heal Spell:</b> every crawler has it. 2 Mana, an Interrupt, self only, heals 2 slots.</p>
       <p><b>Each calm hour</b> outside combat: 1 slot and 5 Mana.</p>
@@ -1396,7 +1556,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 85, 202; Crawlers &amp; Customization p. 36</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-mana">
       <h3>Mana</h3>
       <p><b>Max Mana</b> equals your Enhanced Intelligence score. Update it when Intelligence changes.</p>
       <p>Get it back by resting (see Health), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
@@ -1411,7 +1571,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 99</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-hotlist">
       <h3>Hotlist and Inventory</h3>
       <p><b>Hotlist:</b> 10 slots, up to 999 of the same item per slot. Anything there can appear in your hand or at your feet as part of using it.</p>
       <p><b>Inventory:</b> weightless, but gives no bonuses. Pulling something out is a Retrieve Action; from Inventory to an attack takes 2 Actions.</p>
@@ -1419,7 +1579,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 98; Crawlers &amp; Customization p. 15</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-gearslots">
       <h3>Gear slots</h3>
       <p><b>Head, Torso, Arms, Legs, Feet:</b> one item each.</p>
       <p><b>Hands:</b> one item per hand plus a pair of gloves. A shield takes a hand; Two-Handed takes both.</p>
@@ -1436,7 +1596,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 95–96</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-loot">
       <h3>Junk, loot and gold</h3>
       <p><b>Misc. Junk:</b> spend 1 to find any small household item in your Inventory (not food or water). Merchants pay 1 gold each.</p>
       <p><b>Dead Mobs</b> drop 1d6 Junk each plus gold by floor. Yours: <span class="lv" data-lk="gold">no gold</span></p>
@@ -1512,7 +1672,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 87–88, 169–170</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-skills">
       <h3>Raising Skills</h3>
       <p>Each time you roll a Skill, pass or fail, <b>tick its box</b>.</p>
       <p><b>Advancement check:</b> 1d20 equal to or over the current Rank gives +1 Rank.</p>
@@ -1522,7 +1682,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       <p class="ref">Core p. 169, 173; Crawlers &amp; Customization p. 20, 42</p>
     </article>
 
-    <article class="blk">
+    <article class="blk" id="r-grinding">
       <h3>Grinding</h3>
       <p>Declare hours against weak Mobs. Up to 5 a day is safe; each extra hour needs an Unopposed Endurance Check or it’s wasted and you gain Fatigued.</p>
       <p>Put hours into Skills. When a Skill has hours equal to its Rank, roll its advancement check. Same Skill once a day.</p>
@@ -1567,16 +1727,17 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   </div>
 </section>
 
-</main>
+    </div>
+  </div>
+</aside>
 
-<footer>
-  <div class="upd" id="upd" data-version="1.5.2">
-    <p>Crawler Companion 1.5.2 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+<footer class="foot">
+  <div class="upd" id="upd" data-version="1.5.3">
+    <p>Crawler Companion 1.5.3 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
 </footer>
-</div>
 
 <script>
 (function(){
@@ -2116,40 +2277,85 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     b.addEventListener("click", function(){ setFloor(+b.getAttribute("data-floor"), true); });
   });
 
-  /* ---------- section tabs ---------- */
-  var nav = document.querySelector(".hbnav"), bands = Array.prototype.slice.call(document.querySelectorAll(".band"));
-  var links = {}, current = null;
-  document.querySelectorAll(".hbnav a").forEach(function(a){ links[a.getAttribute("href").slice(1)] = a; });
+  /* ---------- the Rules drawer ---------- */
+  /* The cheat sheet lives in a drawer over the page. Its sections are the .band elements; the
+     links in its nav act as tabs and showTab() shows one section at a time. */
+  var drawer = $("rules"), drBody = $("rules-body"), scrim = $("rules-scrim"), topbar = $("topbar");
+  var bands = Array.prototype.slice.call(drawer.querySelectorAll(".band"));
+  var links = {}, current = null, lastFocus = null;
+  drawer.querySelectorAll(".hbnav a").forEach(function(a){ links[a.getAttribute("href").slice(1)] = a; });
   function markNav(id){ Object.keys(links).forEach(function(k){ if(k === id) links[k].setAttribute("aria-current", "true"); else links[k].removeAttribute("aria-current"); }); }
-  function navH(){ return nav ? nav.getBoundingClientRect().height : 0; }
+  /* height of the top bar when it stays on screen, for scrolling things into view below it */
+  function navH(){ return topbar && getComputedStyle(topbar).position === "sticky" ? topbar.getBoundingClientRect().height : 0; }
+  function rulesOpen(){ return drawer.classList.contains("open"); }
   function showTab(id, opts){
     opts = opts || {};
-    if(!$(id) || !links[id]) id = "calc";
+    if(!links[id]) id = bands[0].id;
     current = id;
     bands.forEach(function(b){ b.classList.toggle("tab-off", b.id !== id); });
     markNav(id); store(TABKEY, id);
-    try{ if(!opts.noHash) history.replaceState(null, "", "#" + id); }catch(e){}
-    if(opts.scroll !== false){
-      var main = document.querySelector("main"), top = main.getBoundingClientRect().top + window.scrollY - navH() - 10;
-      if(window.scrollY > top) window.scrollTo(0, top);
-    }
+    try{ if(!opts.noHash && rulesOpen()) history.replaceState(null, "", "#" + id); }catch(e){}
+    if(opts.scroll !== false) drBody.scrollTop = 0;
   }
+  function setInert(on){
+    ["topbar", "app"].forEach(function(id){ var el = $(id); if(!el) return; if(on) el.setAttribute("inert", ""); else el.removeAttribute("inert"); });
+    document.querySelectorAll(".targetbar, footer.foot").forEach(function(el){ if(on) el.setAttribute("inert", ""); else el.removeAttribute("inert"); });
+  }
+  function openRules(id, at){
+    if(!rulesOpen()){
+      lastFocus = document.activeElement;
+      drawer.classList.add("open"); scrim.hidden = false; setInert(true);
+      document.body.classList.add("dr-on");
+      $("rules-open").setAttribute("aria-expanded", "true");
+    }
+    if(q.value && (id || at)){ q.value = ""; filter(); }
+    if(!q.value) showTab(id || current || store(TABKEY) || bands[0].id, {scroll: !at});
+    if(at) requestAnimationFrame(function(){ drBody.scrollTop += at.getBoundingClientRect().top - drBody.getBoundingClientRect().top - 12; });
+    hideTip();
+    $("rules-close").focus();
+  }
+  function closeRules(){
+    if(!rulesOpen()) return;
+    drawer.classList.remove("open"); scrim.hidden = true; setInert(false);
+    document.body.classList.remove("dr-on");
+    $("rules-open").setAttribute("aria-expanded", "false");
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    hideTip();
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $("rules-open").setAttribute("aria-expanded", "false");
+  $("rules-open").addEventListener("click", function(){ openRules(); });
+  $("rules-close").addEventListener("click", closeRules);
+  scrim.addEventListener("click", closeRules);
+  drawer.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ e.preventDefault(); closeRules(); return; }
+    if(e.key !== "Tab") return;
+    /* keep Tab inside the drawer while it is open */
+    var f = Array.prototype.filter.call(drawer.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'), function(x){ return x.offsetParent !== null; });
+    if(!f.length) return;
+    if(e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length - 1].focus(); }
+    else if(!e.shiftKey && document.activeElement === f[f.length - 1]){ e.preventDefault(); f[0].focus(); }
+  });
   bands.forEach(function(b, i){
     var bn = document.createElement("div"); bn.className = "bandnav noprint";
     if(i > 0){ var pv = document.createElement("a"); pv.href = "#" + bands[i - 1].id; pv.className = "btn"; pv.textContent = "Previous: " + labelOf(bands[i - 1].id); bn.appendChild(pv); }
     if(i < bands.length - 1){ var nx = document.createElement("a"); nx.href = "#" + bands[i + 1].id; nx.className = "btn next"; nx.textContent = "Next: " + labelOf(bands[i + 1].id); bn.appendChild(nx); }
     b.appendChild(bn);
   });
-  function labelOf(id){ var a = links[id], f = a.querySelector(".full"); return (f ? f.textContent : a.textContent).trim(); }
+  function labelOf(id){ return links[id].textContent.trim(); }
+  /* links to "#something": a rule opens the drawer at it, a tool panel switches to that tab */
   document.addEventListener("click", function(e){
     var a = e.target.closest ? e.target.closest('a[href^="#"]') : null; if(!a) return;
     var id = a.getAttribute("href").slice(1), el = $(id); if(!el) return;
+    if(el.classList.contains("toolpanel")){
+      e.preventDefault(); closeRules(); selectTool(id.slice(3));
+      var t = el.getBoundingClientRect().top + window.scrollY - navH() - 12; if(window.scrollY > t || el.getBoundingClientRect().top > window.innerHeight) window.scrollTo(0, t);
+      return;
+    }
     var band = el.classList.contains("band") ? el : el.closest(".band"); if(!band) return;
     e.preventDefault();
-    if(q.value){ q.value = ""; filter(); }
-    showTab(band.id, {scroll: el === band});
-    if(el.classList.contains("toolpanel")) selectTool(el.id.slice(3));
-    if(el !== band){ var top = el.getBoundingClientRect().top + window.scrollY - navH() - 12; window.scrollTo(0, top); }
+    if(!rulesOpen()) openRules(band.id, el === band ? null : el);
+    else { if(q.value){ q.value = ""; filter(); } showTab(band.id, {scroll: el === band}); if(el !== band) drBody.scrollTop += el.getBoundingClientRect().top - drBody.getBoundingClientRect().top - 12; }
   });
 
   /* ---------- search ---------- */
@@ -2157,16 +2363,16 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   function filter(){
     var term = q.value.trim().toLowerCase(), any = false;
     if(!term){
-      document.querySelectorAll(".hide-s").forEach(function(el){ el.classList.remove("hide-s"); });
+      drawer.querySelectorAll(".hide-s").forEach(function(el){ el.classList.remove("hide-s"); });
       empty.classList.remove("show"); empty.textContent = "";
-      showTab(current || "calc", {scroll: false, noHash: true});
+      showTab(current || bands[0].id, {scroll: false, noHash: true});
       return;
     }
-    markNav(null);
+    markNav(null); drBody.scrollTop = 0;
     bands.forEach(function(band){
       band.classList.remove("tab-off");
       var blocks = band.querySelectorAll(".blk"), shown = 0;
-      if(!blocks.length){ var scope = band.querySelector(".calc-wrap") || band; shown = scope.textContent.toLowerCase().indexOf(term) > -1 ? 1 : 0; }
+      if(!blocks.length) shown = band.textContent.toLowerCase().indexOf(term) > -1 ? 1 : 0;
       blocks.forEach(function(blk){
         var hit, rows = blk.querySelectorAll(".debuffs tbody tr");
         if(rows.length){
@@ -2186,7 +2392,18 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     empty.textContent = any ? "" : "Nothing matches “" + q.value.trim() + "”. Try a shorter word, like evade, mana or prone.";
   }
   q.addEventListener("input", filter);
-  q.addEventListener("keydown", function(e){ if(e.key === "Escape"){ q.value = ""; filter(); } });
+  /* Escape in a search with text clears it; a second Escape closes the drawer */
+  q.addEventListener("keydown", function(e){ if(e.key === "Escape" && q.value){ e.preventDefault(); e.stopPropagation(); q.value = ""; filter(); } });
+
+  /* ---------- menus (the sheet's change list and More) ---------- */
+  var pops = Array.prototype.slice.call(document.querySelectorAll("details.pop"));
+  function closePops(except){ pops.forEach(function(d){ if(d !== except) d.open = false; }); }
+  pops.forEach(function(d){ d.addEventListener("toggle", function(){ if(d.open) closePops(d); }); });
+  document.addEventListener("click", function(e){ pops.forEach(function(d){ if(d.open && !d.contains(e.target)) d.open = false; }); });
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Escape") return;
+    pops.forEach(function(d){ if(d.open){ d.open = false; d.querySelector("summary").focus(); } });
+  });
 
   /* ---------- theme and print ---------- */
   var tBtn = $("theme");
@@ -2194,9 +2411,9 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   function syncTheme(){ tBtn.textContent = isDark() ? "Light mode" : "Dark mode"; }
   var savedTheme = store(TKEY);
   if(savedTheme === "dark" || savedTheme === "light") root.setAttribute("data-theme", savedTheme);
-  tBtn.addEventListener("click", function(){ var nx = isDark() ? "light" : "dark"; root.setAttribute("data-theme", nx); store(TKEY, nx); syncTheme(); });
+  tBtn.addEventListener("click", function(){ var nx = isDark() ? "light" : "dark"; root.setAttribute("data-theme", nx); store(TKEY, nx); syncTheme(); closePops(); });
   syncTheme();
-  $("print").addEventListener("click", function(){ window.print(); });
+  $("print").addEventListener("click", function(){ closePops(); window.print(); });
 
   /* ---------- dice expressions ---------- */
   function parseDice(str){
@@ -2277,41 +2494,95 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   }
   function modBand(s){ return s >= 300 ? "300+" : s >= 200 ? "200–299" : s >= 150 ? "150–199" : s >= 100 ? "100–149" : s >= 50 ? "50–99" : s >= 20 ? "20–49" : s >= 10 ? "10–19" : s >= 6 ? "6–9" : s >= 3 ? "3–5" : "1–2"; }
 
-  /* ---------- status strip ---------- */
+  /* ---------- vitals: the Health, Mana, Evade, DR and AI Favor summary in the left column ---------- */
   function renderStrip(){
-    var c = crawler(), bar = $("strip-bar"); bar.innerHTML = "";
-    for(var i = 0; i < 10; i++){ var cell = document.createElement("div"); if(i >= hm.slots) cell.className = "gone"; else cell.style.background = "var(" + HB[i] + ")"; bar.appendChild(cell); }
-    var parts = [
-      span("Health " + hm.slots + " of 10", hm.slots + " of 10 slots left, " + c.slot + " each\n= " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health (" + hm.slots * 10 + "%)", "si"), ", ",
-      span("Mana " + hm.mana + " of " + c.mana, "Current Mana " + hm.mana + "\nMax Mana = Intelligence " + c.mana, "si"), ", ",
-      span("AI Favor " + c.fav, "Spend 1 to reroll a d20 once per Check (not a natural 1),\nor for an extra non-Attack Action once per round", "si")
-    ];
-    if(hm.slots === 0) parts.push(span("Dying", "Countdown: Con Mod " + c.mod.con + " rounds. Heal 1 slot to stop it.", "si dying"));
+    var c = crawler(), mana = hm.mana == null ? c.mana : hm.mana;
+    fill($("vt-hbtxt"), [span(hm.slots + " of 10 slots", hm.slots + " of 10 slots left, " + c.slot + " each\n= " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health (" + hm.slots * 10 + "%)")]);
+    $("vt-hbtxt").classList.toggle("dying", hm.slots === 0);
+    fill($("vt-manatxt"), [span(mana + " of " + c.mana, "Current Mana " + mana + "\nMax Mana = Enhanced Intelligence " + c.mana)]);
+    $("vt-manafill").style.width = (c.mana ? Math.max(0, Math.min(100, mana / c.mana * 100)) : 0) + "%";
+    fill($("vt-evade"), [span("d20 " + sgn(c.evade), "d20 + Dex Mod " + c.mod.dex + " + Evade Buffs " + c.evb + "\n= d20 " + sgn(c.evade))]);
+    fill($("vt-dr"), [span(String(c.dr), "Armor " + c.arm + " + DR Buffs " + c.drb + " = " + c.dr)]);
+    fill($("vt-fav"), [span(String(c.fav), "Spend 1 to reroll a d20 once per Check (not a natural 1),\nor for an extra non-Attack Action once per round")]);
+    var pet = $("vt-pet");
     if(typeof D !== "undefined" && D && hasPet() && barCount(D.pet)){
-      var pn = petHead().name || "Pet";
-      parts.push(", ", span(pn + " " + barLeft(D.pet) + " of " + barCount(D.pet), "Your pet’s Health Bar: " + barLeft(D.pet) + " of " + barCount(D.pet) + " slots left", "si"));
-    }
-    fill($("strip-text"), parts);
+      var pn = petHead().name || "Your pet";
+      fill(pet, [pn + ": ", span(barLeft(D.pet) + " of " + barCount(D.pet) + " slots", "Your pet’s Health Bar: " + barLeft(D.pet) + " of " + barCount(D.pet) + " slots left")]);
+      pet.classList.remove("hide");
+    } else { pet.textContent = ""; pet.classList.add("hide"); }
+    renderWho();
+  }
+  /* the crawler's name and Level in the top bar */
+  function renderWho(){
+    var m = SH.model, c = crawler(), sub = ["Level " + c.lvl];
+    $("tb-name").textContent = (m && m.name) || "Your crawler";
+    if(m && m.race) sub.push(m.race); if(m && m.cls) sub.push(m.cls);
+    $("tb-sub").textContent = sub.join(" · ");
   }
 
-  /* ---------- tool tabs ---------- */
-  var TOOLS = ["check","damage","health","dice","skills","gear","pet","notes"];
+  /* ---------- Buffs and Debuffs ---------- */
+  /* The four Debuffs that change every Check are tags here. Each tag stands for one of the hidden
+     inputs the Check tool reads (ck-minor, ck-major, ck-sore, ck-fat). Other Debuffs and External
+     Buffs written on the sheet are shown as plain tags. */
+  var DEB = [["minor", "Minor Injury", 2], ["major", "Major Injury", 5], ["sore", "Sore as Shit", 1]];
+  function tag(text, eq, onRemove, label, cls){
+    var t = document.createElement("span"); t.className = "dtag" + (cls ? " " + cls : "");
+    t.appendChild(eq ? span(text, eq) : document.createTextNode(text));
+    if(onRemove){
+      var b = document.createElement("button"); b.type = "button"; b.className = "x"; b.setAttribute("aria-label", label);
+      b.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      b.addEventListener("click", function(){ onRemove(); debChanged(); var f = document.querySelector("#db-tags .x") || $("db-add"); f.focus(); });
+      t.appendChild(b);
+    }
+    return t;
+  }
+  function renderTags(){
+    var box = $("db-tags"); box.innerHTML = "";
+    DEB.forEach(function(d){
+      if(!$("ck-" + d[0]).checked) return;
+      box.appendChild(tag(d[1], "−" + d[2] + " to every Check", function(){ $("ck-" + d[0]).checked = false; }, "Remove " + d[1], "deb"));
+    });
+    var fat = Math.max(0, num("ck-fat", 0));
+    if(fat) box.appendChild(tag("Fatigued " + fat, "−" + fat + " to every Check (1 per stack)\nA long rest removes it", function(){ $("ck-fat").value = fat - 1; }, "Remove one stack of Fatigued", "deb"));
+    var m = SH.model, known = /minor injur|major injur|sore as|fatigue/i;
+    if(m){
+      m.debuffs.split(/[,;\n]+/).map(function(s){ return s.trim(); }).filter(function(s){ return s && !known.test(s); })
+        .forEach(function(s){ box.appendChild(tag(s, "Written in your sheet’s Debuffs box", null, "", "deb sheet")); });
+      m.ext.forEach(function(s){ box.appendChild(tag(s, "External Buff from your sheet", null, "", "buf sheet")); });
+    }
+    if(!box.children.length){ var p = document.createElement("p"); p.className = "sub"; p.textContent = "None. Debuffs added here come off every Check."; box.appendChild(p); }
+  }
+  function debChanged(){ renderTags(); ckRefresh(); }
+  $("db-add").addEventListener("change", function(){
+    var v = this.value; if(!v) return;
+    if(v === "fat") $("ck-fat").value = Math.max(0, num("ck-fat", 0)) + 1; else $("ck-" + v).checked = true;
+    this.value = ""; debChanged();
+  });
+
+  /* ---------- tabs: the crawler's tabs in the middle and the roll tools on the right ---------- */
+  var MAINTABS = ["skills","gear","pet","notes"], ROLLTABS = ["check","damage","dice"], ROLLKEY = "dcc-cheat-roll";
   function selectTool(t){
-    if(TOOLS.indexOf(t) < 0) t = "check";
-    TOOLS.forEach(function(k){
+    var group = MAINTABS.indexOf(t) > -1 ? MAINTABS : ROLLTABS.indexOf(t) > -1 ? ROLLTABS : null;
+    if(!group) return;
+    group.forEach(function(k){
       $("tt-" + k).setAttribute("aria-selected", String(k === t));
       $("tt-" + k).tabIndex = k === t ? 0 : -1;
       $("tp-" + k).classList.toggle("hide", k !== t);
     });
-    store(TOOLKEY, t);
+    store(group === MAINTABS ? TOOLKEY : ROLLKEY, t);
   }
-  TOOLS.forEach(function(k, i){
-    $("tt-" + k).addEventListener("click", function(){ selectTool(k); });
-    $("tt-" + k).addEventListener("keydown", function(e){
-      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if(!d) return;
-      var nk = TOOLS[(i + d + TOOLS.length) % TOOLS.length]; selectTool(nk); $("tt-" + nk).focus();
+  [MAINTABS, ROLLTABS].forEach(function(group){
+    group.forEach(function(k, i){
+      $("tt-" + k).addEventListener("click", function(){ selectTool(k); });
+      $("tt-" + k).addEventListener("keydown", function(e){
+        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0; if(!d) return;
+        var nk = group[(i + d + group.length) % group.length]; selectTool(nk); $("tt-" + nk).focus();
+      });
     });
   });
+  function loadForge(){ closePops(); selectTool("gear"); $("cf-load").click(); }
+  $("tb-cf").addEventListener("click", loadForge);
+  $("menu-cf").addEventListener("click", loadForge);
 
   /* ---------- check calculator ---------- */
   var ck = {kind: "skill", fav: false, tgtSrc: "manual", src: null};
@@ -2359,10 +2630,15 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     else if(ck.tgtSrc === "foe") tl.push("10 + Floor " + floor + " + foe’s Mod " + num("ck-foe", 0) + " = " + base);
     else tl.push("Typed in: " + base);
     if(shift) tl.push(op(shift) + "  Mob has " + (shift > 0 ? "Advantage" : "Disadvantage") + "\n= " + (base + shift));
-    return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr};
+    return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr, pens: pens};
   }
+  var KINDNAME = {skill: "Skill Check", attack: "Attack", evade: "Evade", stat: "Stat Check"};
   function ckRefresh(){
     var s = ckState(), c = crawler();
+    ck.last = null;
+    var penEl = $("ck-pen");
+    if(s.pens.length) fill(penEl, ["Debuffs on every Check: " + s.pens.map(function(p){ return p[0].replace(" × ", " ") + " −" + p[1]; }).join(", ") + ". ", (function(){ var a = document.createElement("a"); a.href = "#h-status"; a.textContent = "Change them"; a.addEventListener("click", function(e){ e.preventDefault(); $("db-add").focus(); }); return a; })()]);
+    else penEl.textContent = "";
     $("ck-d2-l").classList.toggle("hide", s.net === "n");
     var odds = $("ck-odds"), out = $("ck-out"), fav = $("ck-fav");
     var bonusEq = "Bonus added to the d20:\n" + s.lines.join("\n") + "\n= " + sgn(s.bonus) + (s.net !== "n" ? "\nRoll 2 d20s and keep the " + (s.net === "a" ? "higher (Advantage)" : "lower (Disadvantage)") : "");
@@ -2399,6 +2675,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     parts.push(eff);
     if(ck.fav) parts.push(" (AI Favor spent.)");
     fill(out, parts);
+    ck.last = {head: EFF[key][0],
+      detail: (ck.src ? ck.src.name.trim() : KINDNAME[s.kind]) + ": " + (key === "crit" || key === "fumble" ? "natural " + kept : tot + " vs " + s.tgt) + (ck.fav ? ", rerolled with AI Favor" : ""), eq: totEq};
     fav.disabled = ck.fav || kept === 1 || c.fav < 1;
     fav.textContent = kept === 1 ? "Can’t reroll a natural 1" : ck.fav ? "AI Favor used" : c.fav < 1 ? "No AI Favor left" : "Reroll with AI Favor";
     if(ck.src && !ck.ticked){ ck.ticked = true; tickSkill(ck.src.name); }
@@ -2416,7 +2694,12 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     $(id).addEventListener($(id).tagName === "SELECT" || $(id).type === "checkbox" ? "change" : "input", ckRefresh);
   });
   $("ck-tgt").addEventListener("input", function(){ ck.tgtSrc = "manual"; ckRefresh(); });
-  ["ck-d1","ck-d2"].forEach(function(id){ $(id).addEventListener("input", function(){ ck.fav = false; ck.ticked = false; ckRefresh(); }); });
+  ["ck-d1","ck-d2"].forEach(function(id){
+    $(id).addEventListener("input", function(){ ck.fav = false; ck.ticked = false; ckRefresh(); });
+    /* a d20 typed in from real dice goes in Recent rolls once it's complete */
+    $(id).addEventListener("change", logCheck);
+  });
+  function logCheck(){ if(ck.last) addHist(ck.last.head, ck.last.detail, ck.last.eq); }
   document.querySelectorAll("#tp-check [data-preset]").forEach(function(b){
     b.addEventListener("click", function(){
       var p = b.getAttribute("data-preset"); ck.tgtSrc = p;
@@ -2427,14 +2710,14 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   $("ck-roll").addEventListener("click", function(){
     var s = ckState(); ck.fav = false; ck.ticked = false;
     $("ck-d1").value = rnd(20); $("ck-d2").value = s.net === "n" ? "" : rnd(20);
-    ckRefresh();
+    ckRefresh(); logCheck();
   });
   $("ck-fav").addEventListener("click", function(){
     var s = ckState(), d1 = num("ck-d1", 0), d2 = num("ck-d2", 0);
     var useSecond = s.net === "a" ? d2 > d1 : s.net === "d" ? d2 < d1 : false;
     $(useSecond ? "ck-d2" : "ck-d1").value = rnd(20);
     $("cr-fav").value = Math.max(0, num("cr-fav", 0) - 1); saveCrawler();
-    ck.fav = true; calcRefresh(); sheetChanged();
+    ck.fav = true; calcRefresh(); sheetChanged(); logCheck();
   });
   $("ck-src").addEventListener("change", function(){
     var v = $("ck-src").value; ck.src = null; $("ck-other").value = 0; ck.ticked = false; ck.fav = false; $("ck-d1").value = ""; $("ck-d2").value = "";
@@ -2526,6 +2809,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     var tot = Math.max(0, sum);
     lines[0] = lines.length ? lines[0].replace(/^\+ /, "") : "";
     fill($("dm-out"), [span(tot + " damage", lines.join("\n") + "\n= " + tot), ": " + bits.join(" ") + ". The target’s DR comes off after."]);
+    var src = $("dm-src").value !== "" && D.attacks[+$("dm-src").value];
+    addHist(tot + " damage", (src ? src.name.trim() + ": " : "") + bits.join(" "), lines.join("\n") + "\n= " + tot);
   });
   $("dm-src").addEventListener("change", function(){
     var v = $("dm-src").value; if(!v) return;
@@ -2565,8 +2850,9 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       if(i >= hm.slots) cell.className = "gone"; else cell.style.background = "var(" + HB[i] + ")";
       bar.appendChild(cell);
     }
-    fill($("hm-status"), [hm.slots + " of 10 slots (" + hm.slots * 10 + "%). Mana " + hm.mana + " of " + c.mana + "." +
+    fill($("hm-status"), ["Each slot holds " + c.slot + " (Con Mod). " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health." +
       (hm.slots === 0 ? " Dying: " + plural(c.mod.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
+    $("hm-status").classList.toggle("dying", hm.slots === 0);
     var h = hmCalc(), pv = $("hm-preview");
     if(!num("hm-dmg", 0)) fill(pv, ["Enter damage to see how many slots it costs."]);
     else fill(pv, [(h.steps.length ? h.steps.join(", ") + ". " : ""),
@@ -2591,14 +2877,15 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     if(cost > hm.mana){ hmLog("Not enough Mana: you have " + hm.mana + "."); return; }
     hm.mana -= cost; hmLog("Spent " + cost + " Mana."); hmRender(); sheetChanged();
   });
-  document.querySelectorAll("#tp-health [data-rest]").forEach(function(b){
+  var RESTNAME = {hour: "1 calm hour", short: "Short rest (2 h)", long: "Long rest (8 h)"};
+  document.querySelectorAll("[data-rest]").forEach(function(b){
     b.addEventListener("click", function(){
-      var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana;
+      var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana, fat = Math.max(0, num("ck-fat", 0));
       if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + 5); }
       if(r === "short"){ hm.slots = Math.min(10, hm.slots + 5); hm.mana = Math.min(c.mana, hm.mana + Math.floor(c.mana / 2)); }
-      if(r === "long"){ hm.slots = 10; hm.mana = c.mana; }
-      hmLog(b.textContent + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" ? ". Fatigued is gone too." : "."));
-      hmRender(); sheetChanged();
+      if(r === "long"){ hm.slots = 10; hm.mana = c.mana; $("ck-fat").value = 0; }
+      hmLog(RESTNAME[r] + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" && fat ? ". Fatigued is gone too." : "."));
+      hmRender(); if(r === "long") debChanged(); sheetChanged();
     });
   });
 
@@ -2724,12 +3011,13 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   }
   function renderSheetBox(){
     var on = !!SH.doc;
+    renderWho(); renderTags();
     $("sb-off").classList.toggle("hide", on); $("sb-on").classList.toggle("hide", !on);
     $("cr-note").textContent = on ? "Numbers come from your linked sheet. Changes save back to it." : "Saved in this browser only.";
     if(!on) return;
     var m = SH.model;
     $("sb-who").textContent = (m.name || "Your crawler") + (m.race ? ", " + m.race : "") + (m.cls ? " " + m.cls : "");
-    $("sb-file-name").textContent = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
+    $("sb-file-name").textContent = SH.fileName; $("sb-file-name").title = SH.fileName + (SH.mode === "handle" ? " (linked)" : " (read-only here)");
     var info = [];
     if(m.crawler) info.push("Crawler " + m.crawler);
     if(m.debuffs) info.push("Debuffs: " + m.debuffs);
@@ -2740,7 +3028,9 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
     d.list.forEach(function(t){ var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
     $("sb-count").textContent = d.list.length ? plural(d.list.length, "unsaved change") : "No unsaved changes";
     $("sb-save").disabled = SH.mode !== "handle" || !d.list.length || SH.saving;
-    $("sb-save").textContent = SH.mode === "handle" ? "Save to sheet" : "Saving needs Chrome or Edge";
+    $("sb-save").textContent = SH.mode === "handle" ? "Save" : "Read-only here";
+    $("sb-save").title = SH.mode === "handle" ? "Save the changes into your PDF" : "This browser can’t write into the PDF. Use Chrome or Edge to save.";
+    $("sb-count").classList.toggle("due", d.list.length > 0);
     $("sb-auto-l").classList.toggle("hide", SH.mode !== "handle");
   }
   function fillSources(){
@@ -3197,6 +3487,30 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
 
   /* ============================== SKILLS ============================== */
   var skEdit = null;   /* {row} being edited, or {row: -1} for a new Skill */
+  /* a Skill is in the Hotlist when an entry is its name, or starts with it followed by ":" or " (" */
+  function onHot(name){
+    var lo = String(name || "").trim().toLowerCase(); if(!lo) return false;
+    return D.hot.some(function(t){ t = String(t || "").trim().toLowerCase(); return t === lo || t.indexOf(lo + ":") === 0 || t.indexOf(lo + " (") === 0; });
+  }
+  /* Find a Skill and All / Ticked only hide rows; nothing is changed */
+  var skShow = "all";
+  function skFilter(){
+    var term = $("sk-q").value.trim().toLowerCase(), rows = 0, shown = 0;
+    Array.prototype.forEach.call($("sk-rows").children, function(tr){
+      var nm = tr.querySelector("td.nm b"); if(!nm) return;
+      var ok = (!term || nm.textContent.toLowerCase().indexOf(term) > -1) && (skShow !== "tick" || tr.classList.contains("on"));
+      tr.classList.toggle("hide", !ok); rows++; if(ok) shown++;
+    });
+    var none = $("sk-none");
+    none.classList.toggle("hide", !rows || shown > 0);
+    none.textContent = skShow === "tick" && !term ? "No Skills are ticked." : "No Skills match" + (term ? " “" + $("sk-q").value.trim() + "”" : "") + (skShow === "tick" ? " among the ticked ones." : ".");
+  }
+  $("sk-q").addEventListener("input", skFilter);
+  ["all", "tick"].forEach(function(k){
+    $("sk-f-" + k).addEventListener("click", function(){
+      skShow = k; $("sk-f-all").setAttribute("aria-pressed", String(k === "all")); $("sk-f-tick").setAttribute("aria-pressed", String(k === "tick")); skFilter();
+    });
+  });
   function renderSkills(){
     var c = crawler(), tb = $("sk-rows"); tb.innerHTML = "";
     sortSkills();
@@ -3210,7 +3524,8 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
         onchange: function(){ s.mark = this.checked; changed(); }});
       var row = el("tr", {cls: s.mark ? "on" : ""}, [
         el("td", {cls: "tk"}, [tick]),
-        el("td", {cls: "nm"}, [el("b", {text: s.name.trim()}), skAdvBonus(s.name) ? el("span", {cls: "chips"}, [chip("Adv +" + skAdvBonus(s.name), "fx", "Adds " + skAdvBonus(s.name) + " to this Skill’s end-of-floor advancement checks")]) : null,
+        el("td", {cls: "nm"}, [el("b", {text: s.name.trim()}), chipsOf([onHot(s.name) ? chip("Hotlist", "hotc", "In your Hotlist, so it can be used in combat") : null,
+          skAdvBonus(s.name) ? chip("Adv +" + skAdvBonus(s.name), "fx", "Adds " + skAdvBonus(s.name) + " to this Skill’s end-of-floor advancement checks") : null].filter(Boolean)),
           el("small", {text: [s.type, stripTags(s.notes)].filter(Boolean).join(". ")})]),
         el("td", {cls: "n", "data-label": "Rank"}, [el("span", {cls: "rk", text: String(r)}), " ", el("small", {text: "of " + skMax(s.name)})]),
         el("td", {cls: "n", "data-label": "Roll"}, [pas ? el("small", {text: "Passive"}) : span("d20 " + sgn(tot), eq)]),
@@ -3223,6 +3538,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
       tb.appendChild(row);
     });
     if(!D.skills.length) tb.appendChild(el("tr", {}, [el("td", {colspan: "6", cls: "emptyrow", text: SH.doc ? "No Skills on your sheet yet." : "No Skills yet. Link your sheet, or add them here."})]));
+    skFilter();
     $("sk-sum").textContent = plural(D.skills.length, "Skill") + " of " + SK_ROWS + " rows" + (ticked ? ", " + ticked + " ticked for advancement." : ". None ticked yet.");
     $("sk-add").disabled = D.skills.length >= SK_ROWS;
     /* Advantage picker for the Human end-of-floor perk */
@@ -4767,12 +5083,19 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
   setFloor(floor, false);
   ready = true;
   if(window.matchMedia("(max-width: 640px)").matches) $("cr-more").open = false;
-  selectTool(store(TOOLKEY) || "check");
-  calcRefresh();
   (function(){
-    var h = location.hash.slice(1), el = h ? $(h) : null, band = el ? (el.classList.contains("band") ? el : el.closest(".band")) : null;
-    showTab(band ? band.id : (store(TABKEY) || "calc"), {scroll: false, noHash: !band});
-    if(el && el.classList.contains("toolpanel")) selectTool(el.id.slice(3));
+    /* versions before 1.5.0 kept one tab for everything, so a saved roll tool can arrive in the old key */
+    var mt = store(TOOLKEY), rt = store(ROLLKEY) || mt;
+    selectTool(MAINTABS.indexOf(mt) > -1 ? mt : "skills");
+    selectTool(ROLLTABS.indexOf(rt) > -1 ? rt : "check");
+  })();
+  calcRefresh();
+  showTab(store(TABKEY), {scroll: false, noHash: true});
+  (function(){
+    var h = location.hash.slice(1), el = h ? $(h) : null; if(!el) return;
+    if(el.classList.contains("toolpanel")){ selectTool(el.id.slice(3)); return; }
+    var band = el.classList.contains("band") ? el : el.closest(".band");
+    if(band) openRules(band.id, el === band ? null : el);
   })();
   if(canHandle) idbGet("sheet").then(async function(h){
     if(!h) return;
@@ -4850,6 +5173,7 @@ select.small{padding:5px 6px;border:1px solid var(--rule);border-radius:4px;back
         : "Couldn’t update " + SELF + " (" + m + "). The file is unchanged.";
     }finally{ btn.disabled = false; }
   }
+  $("menu-upd").addEventListener("click", function(){ closePops(); $("upd").scrollIntoView({block: "center"}); $("upd-check").click(); });
   $("upd-check").addEventListener("click", async function(){
     var out = $("upd-out"), btn = this, link = function(t){ return el("a", {href: RELEASES, target: "_blank", rel: "noopener", text: t}); };
     btn.disabled = true; out.innerHTML = ""; out.textContent = "Checking GitHub…";
