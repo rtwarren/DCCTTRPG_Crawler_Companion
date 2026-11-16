@@ -6,14 +6,12 @@ name: Release
 #   has no release yet. Merging a pull request that adds a version releases it.
 #
 # A release attaches the built page as Crawler_Companion_v<version>.html, plus the guides in
-# guides/, and publishes the page to GitHub Pages as index.html. The page's Check for updates
-# button reads the newest Release, so the version always comes from CHANGELOG.md. Its Update
-# this file button reads dist/Crawler_Companion_v<version>.html at the release's tag, so the
-# release stops if that committed page doesn't match the build.
+# guides/. The page's Check for updates button reads the newest Release, so the version always
+# comes from CHANGELOG.md. Its Update this file button reads dist/Crawler_Companion_v<version>.html
+# at the release's tag, so the release stops if that committed page doesn't match the build.
 #
 # Pushing a change to guides/ on main replaces the guides on the newest Release, so an
-# updated guide doesn't need a new version. Run the workflow by hand (Actions, Release, Run
-# workflow) to publish the newest version to GitHub Pages again.
+# updated guide doesn't need a new version.
 
 on:
   push:
@@ -24,12 +22,9 @@ on:
     paths:
       - "CHANGELOG.md"
       - "guides/**"
-  workflow_dispatch:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 # a merge and a tag for the same version can arrive together; one run at a time
 concurrency:
@@ -119,28 +114,3 @@ jobs:
           }
           gh release upload "$tag" guides/*.pdf --repo "$GITHUB_REPOSITORY" --clobber
           echo "Replaced the guides on $tag."
-
-  # GitHub Pages serves the newest version at https://<owner>.github.io/<repo>/.
-  # Turn it on once: repo Settings, Pages, Source: GitHub Actions.
-  pages:
-    needs: release
-    if: needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build the page as index.html
-        run: |
-          mkdir -p "$RUNNER_TEMP/site"
-          python3 build.py "$RUNNER_TEMP/site/index.html"
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ runner.temp }}/site
-
-      - name: Publish to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
