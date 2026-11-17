@@ -170,6 +170,7 @@ a.rule svg{flex:none}
 .rest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .rest .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;font-weight:700;font-size:.9rem;text-align:center}
 .rest small{font-weight:400;font-size:.74rem;color:var(--soft)}
+.rest.two{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}
 .statin{width:100%;border-collapse:collapse}
 .statin th,.statin td{border-bottom:0;padding:2px 8px 2px 0;vertical-align:middle}
 .statin th{font-size:.78rem;color:var(--soft);font-weight:700;text-align:left}
@@ -650,6 +651,13 @@ ol.seq{padding-left:1.3rem}
         <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
       </div>
       <div class="btnrow"><button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button></div>
+      <div class="rest two">
+        <button type="button" class="btn" id="mr-combat">Combat Recovery<small>+<span data-lk="cmana">1</span> Mana, no Spell this round</small></button>
+        <button type="button" class="btn" id="mr-med">Meditate<small>10 min: Int vs <span data-f="10+F">11</span></small></button>
+      </div>
+      <div class="fields two">
+        <label>Meditation d20 (blank rolls for you)<input type="number" id="mr-d20" min="1" max="20" inputmode="numeric"></label>
+      </div>
       <p class="sub" id="hm-log" aria-live="polite"></p>
       <div class="tiles">
         <div><small>Evade</small><b id="vt-evade"></b></div>
@@ -657,7 +665,7 @@ ol.seq{padding-left:1.3rem}
         <div><small>AI Favor</small><b id="vt-fav"></b></div>
       </div>
       <p class="sub" id="vt-pet"></p>
-      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a></p>
+      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a><a class="rule" href="#r-manahr"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana recovery</a></p>
     </section>
 
     <section class="card" aria-labelledby="h-status">
@@ -680,8 +688,8 @@ ol.seq{padding-left:1.3rem}
       </div>
       <h3 class="mini-h">Rest</h3>
       <div class="rest">
-        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 5 Mana</small></button>
-        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, half Mana</small></button>
+        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 20% Mana (min 5)</small></button>
+        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, 50% Mana</small></button>
         <button type="button" class="btn" data-rest="long">Long rest<small>8 h: full, clears Fatigued</small></button>
       </div>
       <p class="rules-l"><a class="rule" href="#debuffs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Debuffs</a><a class="rule" href="#r-healing"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Rest</a></p>
@@ -1514,11 +1522,12 @@ ol.seq{padding-left:1.3rem}
     <article class="blk" id="r-healing">
       <h3>Healing and rest</h3>
       <p><b>Heal Spell:</b> every crawler has it. 2 Mana, an Interrupt, self only, heals 2 slots.</p>
-      <p><b>Each calm hour</b> outside combat: 1 slot and 5 Mana.</p>
+      <p><b>Each calm hour</b> outside combat: 1 slot, and 20% of your max Mana, rounded down, at least 5. <span class="tag">House rule</span></p>
       <p><b>Short rest</b> (2 h): 5 slots and half your max Mana, rounded down.</p>
       <p><b>Long rest</b> (8 h): full Health and Mana, clears all Fatigued.</p>
       <p><b>Full day</b> (30 h): full recovery, and the only cure for a Long-Term Major Injury.</p>
       <p>Rest means a saferoom or truly relaxing. Healing never goes past 100%.</p>
+      <p>Mana also comes back in combat and by meditating: see <a href="#r-manahr">House rule: Mana recovery</a>.</p>
       <p class="ref">Core p. 94–95, Crawlers &amp; Customization p. 15</p>
     </article>
 
@@ -1559,8 +1568,29 @@ ol.seq{padding-left:1.3rem}
     <article class="blk" id="r-mana">
       <h3>Mana</h3>
       <p><b>Max Mana</b> equals your Enhanced Intelligence score. Update it when Intelligence changes.</p>
-      <p>Get it back by resting (see Health), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
+      <p>Get it back by resting, Combat Recovery and Meditation (house rule below), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
       <p class="ref">Core p. 94, 96; Crawlers &amp; Customization p. 15</p>
+    </article>
+
+    <article class="blk" id="r-manahr">
+      <h3>House rule: Mana recovery</h3>
+      <p>Replaces the book’s Mana recovery.</p>
+      <p><b>Calm hour</b> (one uninterrupted hour, calm): 20% of max Mana, rounded down, at least 5.</p>
+      <p><b>Short rest</b> (2 h): 50% of max Mana, rounded down.</p>
+      <p><b>Long rest</b> (8 h) or Full Day’s Rest: all Mana.</p>
+      <p><b>Combat Recovery:</b> at Combat Step 5: Clean Up, if you didn’t cast a Spell this round, regain half the floor number, rounded up: <span class="lv" data-lk="cmana">1</span> Mana. Every round you qualify.</p>
+      <p><b>Meditation</b> (10 uninterrupted minutes): Unopposed Int Check against 10 + Floor = <span class="lv" data-f="10+F">11</span>.</p>
+      <table class="mini">
+        <thead><tr><th>Result</th><th>Mana back</th></tr></thead>
+        <tbody>
+          <tr><td>Critical Success</td><td>20% of max</td></tr>
+          <tr><td>Success</td><td>10% of max</td></tr>
+          <tr><td>Failure</td><td>5% of max</td></tr>
+          <tr><td>Critical Failure</td><td>None</td></tr>
+        </tbody>
+      </table>
+      <p>Rounded down. Once per hour, and an hour used to meditate isn’t a Calm Hour. Not while travelling, in combat, crafting, on guard duty or doing anything strenuous.</p>
+      <p class="ref">House rule</p>
     </article>
 
     <article class="blk">
@@ -1732,8 +1762,8 @@ ol.seq{padding-left:1.3rem}
 </aside>
 
 <footer class="foot">
-  <div class="upd" id="upd" data-version="1.5.3">
-    <p>Crawler Companion 1.5.3 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+  <div class="upd" id="upd" data-version="1.5.4">
+    <p>Crawler Companion 1.5.4 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
@@ -2221,12 +2251,14 @@ ol.seq{padding-left:1.3rem}
     num: function(F){ return String(F); },
     timer: function(F){ return ({1:"5 days",2:"6 days",3:"8 days",4:"10 days",5:"15 days"})[F]; },
     gold: function(F){ return ({1:"no gold",2:"1d6 gold",3:"2d4 gold",4:"2d6 gold",5:"2d8 gold"})[F]; },
-    upgrades: function(F){ return F <= 2 ? "Rank 5 only" : "Ranks 5, 10 and 15"; }
+    upgrades: function(F){ return F <= 2 ? "Rank 5 only" : "Ranks 5, 10 and 15"; },
+    cmana: function(F){ return String(Math.ceil(F / 2)); }
   };
   var LOOKEQ = {
     timer: function(F){ var d = ({1:5,2:6,3:8,4:10,5:15})[F]; return "Floor " + F + " usually collapses after " + d + " dungeon days\n" + d + " × 30 hours = " + (d * 30) + " hours"; },
     gold: function(F){ return "Each dead Mob on Floor " + F + " drops " + LOOK.gold(F) + " and 1d6 Misc. Junk.\nRoll once, then multiply by the number of bodies."; },
-    upgrades: function(F){ return "Floors 1–2: only Rank 5 upgrades work.\nFloor 3+: Rank 5, 10 and 15 upgrades work.\nYou’re on Floor " + F + "."; }
+    upgrades: function(F){ return "Floors 1–2: only Rank 5 upgrades work.\nFloor 3+: Rank 5, 10 and 15 upgrades work.\nYou’re on Floor " + F + "."; },
+    cmana: function(F){ return "House rule: half the floor number, rounded up\n" + F + " ÷ 2 = " + Math.ceil(F / 2) + " Mana each round you don’t cast a Spell"; }
   };
   var formulas = {};
   /* floor formulas are always "[A +] [B *] F", so they're parsed, never run as code */
@@ -2606,11 +2638,7 @@ ol.seq{padding-left:1.3rem}
     var untr = usesRank && $("ck-untr").checked;
     var rank = usesRank && !untr ? Math.max(0, num("ck-rank", 0)) : 0;
     var mod = c.mod[sel.value], evb = kind === "evade" ? c.evb : 0, other = num("ck-other", 0);
-    var pens = [];
-    if($("ck-minor").checked) pens.push(["Minor Injury", 2]);
-    if($("ck-major").checked) pens.push(["Major Injury", 5]);
-    if($("ck-sore").checked) pens.push(["Sore as Shit", 1]);
-    var fat = Math.max(0, num("ck-fat", 0)); if(fat) pens.push(["Fatigued × " + fat, fat]);
+    var pens = debPens();
     var pen = pens.reduce(function(s, p){ return s + p[1]; }, 0);
     var gsb = ck.src && ck.src.type === "s" && typeof D !== "undefined" && D ? gearSkillBonus(ck.src.name) : null, gearB = gsb ? gsb.n : 0;
     var bonus = rank + mod + evb + other + gearB - pen;
@@ -2631,6 +2659,15 @@ ol.seq{padding-left:1.3rem}
     else tl.push("Typed in: " + base);
     if(shift) tl.push(op(shift) + "  Mob has " + (shift > 0 ? "Advantage" : "Disadvantage") + "\n= " + (base + shift));
     return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr, pens: pens};
+  }
+  /* the Debuffs that come off every Check */
+  function debPens(){
+    var pens = [];
+    if($("ck-minor").checked) pens.push(["Minor Injury", 2]);
+    if($("ck-major").checked) pens.push(["Major Injury", 5]);
+    if($("ck-sore").checked) pens.push(["Sore as Shit", 1]);
+    var fat = Math.max(0, num("ck-fat", 0)); if(fat) pens.push(["Fatigued × " + fat, fat]);
+    return pens;
   }
   var KINDNAME = {skill: "Skill Check", attack: "Attack", evade: "Evade", stat: "Stat Check"};
   function ckRefresh(){
@@ -2881,12 +2918,38 @@ ol.seq{padding-left:1.3rem}
   document.querySelectorAll("[data-rest]").forEach(function(b){
     b.addEventListener("click", function(){
       var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana, fat = Math.max(0, num("ck-fat", 0));
-      if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + 5); }
+      /* house rule: a calm hour gives back 20% of max Mana, at least 5 */
+      if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + Math.max(5, Math.floor(c.mana / 5))); }
       if(r === "short"){ hm.slots = Math.min(10, hm.slots + 5); hm.mana = Math.min(c.mana, hm.mana + Math.floor(c.mana / 2)); }
       if(r === "long"){ hm.slots = 10; hm.mana = c.mana; $("ck-fat").value = 0; }
       hmLog(RESTNAME[r] + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" && fat ? ". Fatigued is gone too." : "."));
       hmRender(); if(r === "long") debChanged(); sheetChanged();
     });
+  });
+
+  /* house rule: Combat Recovery, at Clean Up in a round you didn't cast a Spell */
+  $("mr-combat").addEventListener("click", function(){
+    var c = crawler(), m0 = hm.mana, n = Math.ceil(floor / 2);
+    hm.mana = Math.min(c.mana, hm.mana + n);
+    hmLog("Combat Recovery: +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < n ? " (Mana is full)." : "."));
+    hmRender(); sheetChanged();
+  });
+  /* house rule: Meditation, 10 minutes and an Unopposed Int Check against 10 + Floor.
+     A natural 20 is a Critical Success and a natural 1 a Critical Failure, as for every Check. */
+  var MED = {crit: ["Critical Success", 20], success: ["Success", 10], fail: ["Failure", 5], fumble: ["Critical Failure", 0]};
+  $("mr-med").addEventListener("click", function(){
+    var c = crawler(), typed = num("mr-d20", NaN), d = typed >= 1 && typed <= 20 ? typed : rnd(20);
+    var pens = debPens(), pen = pens.reduce(function(s, p){ return s + p[1]; }, 0), bonus = c.mod.int - pen, dc = 10 + floor, tot = d + bonus;
+    var key = d === 20 ? "crit" : d === 1 ? "fumble" : tot >= dc ? "success" : "fail";
+    var want = Math.floor(c.mana * MED[key][1] / 100), m0 = hm.mana;
+    hm.mana = Math.min(c.mana, hm.mana + want);
+    var eq = "d20 " + (typed === d ? "typed" : "rolled") + " " + d + "\n" + op(c.mod.int) + "  Int Mod" + pens.map(function(p){ return "\n" + op(-p[1]) + "  " + p[0]; }).join("") +
+      "\n= " + tot + " vs 10 + Floor " + floor + " = " + dc + (key === "crit" || key === "fumble" ? "\nA natural " + d + " overrides the total" : "") +
+      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded down = " + want;
+    hmLog("Meditation, " + MED[key][0] + ": +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < want ? " (Mana is full)." : "."));
+    addHist(MED[key][0] + ", +" + (hm.mana - m0) + " Mana", "Meditation: " + (key === "crit" || key === "fumble" ? "natural " + d : tot + " vs " + dc), eq);
+    $("mr-d20").value = "";
+    hmRender(); sheetChanged();
   });
 
   /* ---------- dice tray ---------- */

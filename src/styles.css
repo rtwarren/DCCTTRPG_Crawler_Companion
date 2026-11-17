@@ -162,6 +162,7 @@ a.rule svg{flex:none}
 .rest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .rest .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px;font-weight:700;font-size:.9rem;text-align:center}
 .rest small{font-weight:400;font-size:.74rem;color:var(--soft)}
+.rest.two{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}
 .statin{width:100%;border-collapse:collapse}
 .statin th,.statin td{border-bottom:0;padding:2px 8px 2px 0;vertical-align:middle}
 .statin th{font-size:.78rem;color:var(--soft);font-weight:700;text-align:left}
