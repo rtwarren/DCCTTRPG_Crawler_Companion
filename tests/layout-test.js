@@ -81,6 +81,33 @@ function check(label, ok, got){ if(!ok) fails++; console.log((ok ? "PASS " : "FA
   await p.press("#ck-d1", "Tab");
   check("a d20 typed in from real dice goes in once", (await p.$$eval("#dt-hist li", l => l.length)) === 4, await p.$$eval("#dt-hist li", l => l.length));
 
+  // house rule: Mana recovery (Floor 3 and a Minor Injury from above)
+  const mana = async () => (await text("#vt-manatxt")).split(" of ")[0];
+  await p.fill("#cr-int", "60");
+  await p.click('[data-rest="long"]');
+  check("a long rest fills Mana", (await text("#vt-manatxt")) === "60 of 60", await text("#vt-manatxt"));
+  await p.fill("#hm-mana", "50"); await p.click("#hm-mana-b");
+  await p.click('[data-rest="hour"]');
+  check("a calm hour gives back 20% of max Mana", (await mana()) === "22", await mana());
+  await p.click('[data-rest="short"]');
+  check("a short rest gives back 50%", (await mana()) === "52", await mana());
+  await p.fill("#hm-mana", "50"); await p.click("#hm-mana-b");
+  await p.click("#mr-combat");
+  check("Combat Recovery on Floor 3 gives back 2", (await mana()) === "4", await mana());
+  check("its button shows the amount for the floor", /\+2 Mana/.test(await text("#mr-combat")), await text("#mr-combat"));
+  const med = async d => { await p.fill("#mr-d20", String(d)); await p.click("#mr-med"); return mana(); };
+  check("Meditation, natural 20: 20% of max", (await med(20)) === "16", await mana());
+  check("Meditation, Success (10 + Int Mod 6 − 2 vs 13): 10%", (await med(10)) === "22", await mana());
+  check("Meditation, Failure: 5%", (await med(2)) === "25", await mana());
+  check("Meditation, natural 1: none", (await med(1)) === "25", await mana());
+  check("Meditation goes in Recent rolls", /^Critical Failure, \+0 Mana/.test(await text("#dt-hist li")), await text("#dt-hist li"));
+  await p.fill("#cr-int", "20");
+  await p.click('[data-rest="long"]');
+  await p.fill("#hm-mana", "15"); await p.click("#hm-mana-b");
+  await p.click('[data-rest="hour"]');
+  check("a calm hour gives back at least 5", (await mana()) === "10", await mana());
+  check("the house rule is in the Rules drawer", (await p.$$eval("#rules #r-manahr .lv", l => l.map(x => x.textContent))).join() === "2,13", await p.$$eval("#rules #r-manahr .lv", l => l.map(x => x.textContent)));
+
   // tabs: the crawler's tabs and the roll tools are separate
   await p.click("#tt-gear");
   check("Gear & Inventory opens", await visible("#tp-gear") && !(await visible("#tp-skills")), "");

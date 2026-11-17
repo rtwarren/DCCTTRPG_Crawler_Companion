@@ -59,12 +59,14 @@
     num: function(F){ return String(F); },
     timer: function(F){ return ({1:"5 days",2:"6 days",3:"8 days",4:"10 days",5:"15 days"})[F]; },
     gold: function(F){ return ({1:"no gold",2:"1d6 gold",3:"2d4 gold",4:"2d6 gold",5:"2d8 gold"})[F]; },
-    upgrades: function(F){ return F <= 2 ? "Rank 5 only" : "Ranks 5, 10 and 15"; }
+    upgrades: function(F){ return F <= 2 ? "Rank 5 only" : "Ranks 5, 10 and 15"; },
+    cmana: function(F){ return String(Math.ceil(F / 2)); }
   };
   var LOOKEQ = {
     timer: function(F){ var d = ({1:5,2:6,3:8,4:10,5:15})[F]; return "Floor " + F + " usually collapses after " + d + " dungeon days\n" + d + " × 30 hours = " + (d * 30) + " hours"; },
     gold: function(F){ return "Each dead Mob on Floor " + F + " drops " + LOOK.gold(F) + " and 1d6 Misc. Junk.\nRoll once, then multiply by the number of bodies."; },
-    upgrades: function(F){ return "Floors 1–2: only Rank 5 upgrades work.\nFloor 3+: Rank 5, 10 and 15 upgrades work.\nYou’re on Floor " + F + "."; }
+    upgrades: function(F){ return "Floors 1–2: only Rank 5 upgrades work.\nFloor 3+: Rank 5, 10 and 15 upgrades work.\nYou’re on Floor " + F + "."; },
+    cmana: function(F){ return "House rule: half the floor number, rounded up\n" + F + " ÷ 2 = " + Math.ceil(F / 2) + " Mana each round you don’t cast a Spell"; }
   };
   var formulas = {};
   /* floor formulas are always "[A +] [B *] F", so they're parsed, never run as code */
@@ -444,11 +446,7 @@
     var untr = usesRank && $("ck-untr").checked;
     var rank = usesRank && !untr ? Math.max(0, num("ck-rank", 0)) : 0;
     var mod = c.mod[sel.value], evb = kind === "evade" ? c.evb : 0, other = num("ck-other", 0);
-    var pens = [];
-    if($("ck-minor").checked) pens.push(["Minor Injury", 2]);
-    if($("ck-major").checked) pens.push(["Major Injury", 5]);
-    if($("ck-sore").checked) pens.push(["Sore as Shit", 1]);
-    var fat = Math.max(0, num("ck-fat", 0)); if(fat) pens.push(["Fatigued × " + fat, fat]);
+    var pens = debPens();
     var pen = pens.reduce(function(s, p){ return s + p[1]; }, 0);
     var gsb = ck.src && ck.src.type === "s" && typeof D !== "undefined" && D ? gearSkillBonus(ck.src.name) : null, gearB = gsb ? gsb.n : 0;
     var bonus = rank + mod + evb + other + gearB - pen;
@@ -469,6 +467,15 @@
     else tl.push("Typed in: " + base);
     if(shift) tl.push(op(shift) + "  Mob has " + (shift > 0 ? "Advantage" : "Disadvantage") + "\n= " + (base + shift));
     return {kind: kind, bonus: bonus, net: net, lines: lines, base: base, shift: shift, tgt: base + shift, tgtEq: tl.join("\n"), untr: untr, pens: pens};
+  }
+  /* the Debuffs that come off every Check */
+  function debPens(){
+    var pens = [];
+    if($("ck-minor").checked) pens.push(["Minor Injury", 2]);
+    if($("ck-major").checked) pens.push(["Major Injury", 5]);
+    if($("ck-sore").checked) pens.push(["Sore as Shit", 1]);
+    var fat = Math.max(0, num("ck-fat", 0)); if(fat) pens.push(["Fatigued × " + fat, fat]);
+    return pens;
   }
   var KINDNAME = {skill: "Skill Check", attack: "Attack", evade: "Evade", stat: "Stat Check"};
   function ckRefresh(){
@@ -719,12 +726,38 @@
   document.querySelectorAll("[data-rest]").forEach(function(b){
     b.addEventListener("click", function(){
       var c = crawler(), r = b.getAttribute("data-rest"), s0 = hm.slots, m0 = hm.mana, fat = Math.max(0, num("ck-fat", 0));
-      if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + 5); }
+      /* house rule: a calm hour gives back 20% of max Mana, at least 5 */
+      if(r === "hour"){ hm.slots = Math.min(10, hm.slots + 1); hm.mana = Math.min(c.mana, hm.mana + Math.max(5, Math.floor(c.mana / 5))); }
       if(r === "short"){ hm.slots = Math.min(10, hm.slots + 5); hm.mana = Math.min(c.mana, hm.mana + Math.floor(c.mana / 2)); }
       if(r === "long"){ hm.slots = 10; hm.mana = c.mana; $("ck-fat").value = 0; }
       hmLog(RESTNAME[r] + ": +" + plural(hm.slots - s0, "slot") + ", +" + (hm.mana - m0) + " Mana" + (r === "long" && fat ? ". Fatigued is gone too." : "."));
       hmRender(); if(r === "long") debChanged(); sheetChanged();
     });
+  });
+
+  /* house rule: Combat Recovery, at Clean Up in a round you didn't cast a Spell */
+  $("mr-combat").addEventListener("click", function(){
+    var c = crawler(), m0 = hm.mana, n = Math.ceil(floor / 2);
+    hm.mana = Math.min(c.mana, hm.mana + n);
+    hmLog("Combat Recovery: +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < n ? " (Mana is full)." : "."));
+    hmRender(); sheetChanged();
+  });
+  /* house rule: Meditation, 10 minutes and an Unopposed Int Check against 10 + Floor.
+     A natural 20 is a Critical Success and a natural 1 a Critical Failure, as for every Check. */
+  var MED = {crit: ["Critical Success", 20], success: ["Success", 10], fail: ["Failure", 5], fumble: ["Critical Failure", 0]};
+  $("mr-med").addEventListener("click", function(){
+    var c = crawler(), typed = num("mr-d20", NaN), d = typed >= 1 && typed <= 20 ? typed : rnd(20);
+    var pens = debPens(), pen = pens.reduce(function(s, p){ return s + p[1]; }, 0), bonus = c.mod.int - pen, dc = 10 + floor, tot = d + bonus;
+    var key = d === 20 ? "crit" : d === 1 ? "fumble" : tot >= dc ? "success" : "fail";
+    var want = Math.floor(c.mana * MED[key][1] / 100), m0 = hm.mana;
+    hm.mana = Math.min(c.mana, hm.mana + want);
+    var eq = "d20 " + (typed === d ? "typed" : "rolled") + " " + d + "\n" + op(c.mod.int) + "  Int Mod" + pens.map(function(p){ return "\n" + op(-p[1]) + "  " + p[0]; }).join("") +
+      "\n= " + tot + " vs 10 + Floor " + floor + " = " + dc + (key === "crit" || key === "fumble" ? "\nA natural " + d + " overrides the total" : "") +
+      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded down = " + want;
+    hmLog("Meditation, " + MED[key][0] + ": +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < want ? " (Mana is full)." : "."));
+    addHist(MED[key][0] + ", +" + (hm.mana - m0) + " Mana", "Meditation: " + (key === "crit" || key === "fumble" ? "natural " + d : tot + " vs " + dc), eq);
+    $("mr-d20").value = "";
+    hmRender(); sheetChanged();
   });
 
   /* ---------- dice tray ---------- */

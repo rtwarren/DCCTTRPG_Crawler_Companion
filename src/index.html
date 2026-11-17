@@ -110,6 +110,13 @@
         <button type="button" class="btn" id="hm-mana-b">Spend Mana</button>
       </div>
       <div class="btnrow"><button type="button" class="btn" id="hm-spell">Cast Heal (2 Mana)</button></div>
+      <div class="rest two">
+        <button type="button" class="btn" id="mr-combat">Combat Recovery<small>+<span data-lk="cmana">1</span> Mana, no Spell this round</small></button>
+        <button type="button" class="btn" id="mr-med">Meditate<small>10 min: Int vs <span data-f="10+F">11</span></small></button>
+      </div>
+      <div class="fields two">
+        <label>Meditation d20 (blank rolls for you)<input type="number" id="mr-d20" min="1" max="20" inputmode="numeric"></label>
+      </div>
       <p class="sub" id="hm-log" aria-live="polite"></p>
       <div class="tiles">
         <div><small>Evade</small><b id="vt-evade"></b></div>
@@ -117,7 +124,7 @@
         <div><small>AI Favor</small><b id="vt-fav"></b></div>
       </div>
       <p class="sub" id="vt-pet"></p>
-      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a></p>
+      <p class="rules-l"><a class="rule" href="#health"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Health</a><a class="rule" href="#r-mana"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana</a><a class="rule" href="#r-manahr"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Mana recovery</a></p>
     </section>
 
     <section class="card" aria-labelledby="h-status">
@@ -140,8 +147,8 @@
       </div>
       <h3 class="mini-h">Rest</h3>
       <div class="rest">
-        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 5 Mana</small></button>
-        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, half Mana</small></button>
+        <button type="button" class="btn" data-rest="hour">Calm hour<small>1 slot, 20% Mana (min 5)</small></button>
+        <button type="button" class="btn" data-rest="short">Short rest<small>2 h: 5 slots, 50% Mana</small></button>
         <button type="button" class="btn" data-rest="long">Long rest<small>8 h: full, clears Fatigued</small></button>
       </div>
       <p class="rules-l"><a class="rule" href="#debuffs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Debuffs</a><a class="rule" href="#r-healing"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>Rule: Rest</a></p>
@@ -974,11 +981,12 @@
     <article class="blk" id="r-healing">
       <h3>Healing and rest</h3>
       <p><b>Heal Spell:</b> every crawler has it. 2 Mana, an Interrupt, self only, heals 2 slots.</p>
-      <p><b>Each calm hour</b> outside combat: 1 slot and 5 Mana.</p>
+      <p><b>Each calm hour</b> outside combat: 1 slot, and 20% of your max Mana, rounded down, at least 5. <span class="tag">House rule</span></p>
       <p><b>Short rest</b> (2 h): 5 slots and half your max Mana, rounded down.</p>
       <p><b>Long rest</b> (8 h): full Health and Mana, clears all Fatigued.</p>
       <p><b>Full day</b> (30 h): full recovery, and the only cure for a Long-Term Major Injury.</p>
       <p>Rest means a saferoom or truly relaxing. Healing never goes past 100%.</p>
+      <p>Mana also comes back in combat and by meditating: see <a href="#r-manahr">House rule: Mana recovery</a>.</p>
       <p class="ref">Core p. 94–95, Crawlers &amp; Customization p. 15</p>
     </article>
 
@@ -1019,8 +1027,29 @@
     <article class="blk" id="r-mana">
       <h3>Mana</h3>
       <p><b>Max Mana</b> equals your Enhanced Intelligence score. Update it when Intelligence changes.</p>
-      <p>Get it back by resting (see Health), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
+      <p>Get it back by resting, Combat Recovery and Meditation (house rule below), Mana Potions (full), Mana Toast in some saferooms, or a Replenish Buff (Int Mana every 10 minutes).</p>
       <p class="ref">Core p. 94, 96; Crawlers &amp; Customization p. 15</p>
+    </article>
+
+    <article class="blk" id="r-manahr">
+      <h3>House rule: Mana recovery</h3>
+      <p>Replaces the book’s Mana recovery.</p>
+      <p><b>Calm hour</b> (one uninterrupted hour, calm): 20% of max Mana, rounded down, at least 5.</p>
+      <p><b>Short rest</b> (2 h): 50% of max Mana, rounded down.</p>
+      <p><b>Long rest</b> (8 h) or Full Day’s Rest: all Mana.</p>
+      <p><b>Combat Recovery:</b> at Combat Step 5: Clean Up, if you didn’t cast a Spell this round, regain half the floor number, rounded up: <span class="lv" data-lk="cmana">1</span> Mana. Every round you qualify.</p>
+      <p><b>Meditation</b> (10 uninterrupted minutes): Unopposed Int Check against 10 + Floor = <span class="lv" data-f="10+F">11</span>.</p>
+      <table class="mini">
+        <thead><tr><th>Result</th><th>Mana back</th></tr></thead>
+        <tbody>
+          <tr><td>Critical Success</td><td>20% of max</td></tr>
+          <tr><td>Success</td><td>10% of max</td></tr>
+          <tr><td>Failure</td><td>5% of max</td></tr>
+          <tr><td>Critical Failure</td><td>None</td></tr>
+        </tbody>
+      </table>
+      <p>Rounded down. Once per hour, and an hour used to meditate isn’t a Calm Hour. Not while travelling, in combat, crafting, on guard duty or doing anything strenuous.</p>
+      <p class="ref">House rule</p>
     </article>
 
     <article class="blk">

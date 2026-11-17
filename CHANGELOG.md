@@ -2,6 +2,13 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.5.4 (2026-11-16)
+
+- **House rule: Mana recovery.** A calm hour now gives back 20% of your max Mana, rounded down, at least 5. Short and long rests are unchanged (50% and all).
+- **Combat Recovery.** In the Mana card: at Clean Up in a round you didn't cast a Spell, press it to get back half the floor number in Mana, rounded up.
+- **Meditate.** In the Mana card: rolls an Int Check against 10 + Floor (or takes the d20 you type) and gives back 20% of max Mana on a natural 20, 10% on a Success, 5% on a Failure and none on a natural 1. Debuffs count against the roll, and it goes in Recent rolls.
+- The house rule is in the Rules drawer under Magic & gear, and Healing and rest points to it.
+
 ## 1.5.3 (2026-11-15)
 
 - **New layout: your crawler first.** The top bar holds your crawler's name and Level, the floor, your linked sheet with Save, the Rules button and a More menu. The floor's target numbers sit under it. Health, Mana, Evade, DR, AI Favor, Buffs and Debuffs, resting and your Stats are on the left. Skills, Gear & Inventory, Pet and Notes are in the middle. Check, Damage, Dice and Recent rolls are on the right. On a narrow screen the columns stack.
