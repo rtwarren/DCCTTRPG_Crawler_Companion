@@ -749,11 +749,11 @@
     var c = crawler(), typed = num("mr-d20", NaN), d = typed >= 1 && typed <= 20 ? typed : rnd(20);
     var pens = debPens(), pen = pens.reduce(function(s, p){ return s + p[1]; }, 0), bonus = c.mod.int - pen, dc = 10 + floor, tot = d + bonus;
     var key = d === 20 ? "crit" : d === 1 ? "fumble" : tot >= dc ? "success" : "fail";
-    var want = Math.floor(c.mana * MED[key][1] / 100), m0 = hm.mana;
+    var want = Math.ceil(c.mana * MED[key][1] / 100), m0 = hm.mana;
     hm.mana = Math.min(c.mana, hm.mana + want);
     var eq = "d20 " + (typed === d ? "typed" : "rolled") + " " + d + "\n" + op(c.mod.int) + "  Int Mod" + pens.map(function(p){ return "\n" + op(-p[1]) + "  " + p[0]; }).join("") +
       "\n= " + tot + " vs 10 + Floor " + floor + " = " + dc + (key === "crit" || key === "fumble" ? "\nA natural " + d + " overrides the total" : "") +
-      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded down = " + want;
+      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded up = " + want;
     hmLog("Meditation, " + MED[key][0] + ": +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < want ? " (Mana is full)." : "."));
     addHist(MED[key][0] + ", +" + (hm.mana - m0) + " Mana", "Meditation: " + (key === "crit" || key === "fumble" ? "natural " + d : tot + " vs " + dc), eq);
     $("mr-d20").value = "";

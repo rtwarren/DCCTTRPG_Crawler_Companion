@@ -5,6 +5,7 @@ Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), bui
 ## 1.5.5 (2026-11-19)
 
 - Fixed: the Dying countdown is rounds equal to your Constitution, not your Con Mod (Core p. 94). The worked-out numbers, the Health card and the rules say so now.
+- House rule: Meditation now rounds its share of max Mana up, not down.
 
 ## 1.5.4 (2026-11-16)
 
