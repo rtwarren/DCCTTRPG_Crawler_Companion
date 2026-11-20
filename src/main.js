@@ -319,7 +319,7 @@
       ["Health Bar", "10 slots of " + c.slot, "Each slot holds your Con Mod (" + c.slot + ")\n10 × " + c.slot + " = " + (c.slot * 10) + " Health"],
       ["Max Mana", String(c.mana), "Max Mana = Enhanced Intelligence score = " + c.mana + "\nShort rest gives back half: " + c.mana + " ÷ 2 = " + Math.floor(c.mana / 2)],
       ["Hold breath", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
-      ["Dying countdown", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
+      ["Dying countdown", plural(c.score.con, "round"), "Enhanced Constitution = " + c.score.con + " rounds (Core p. 94)"],
       ["Jump", "up to " + (c.jump + c.mod.str) + " ft", "Jumping Rank " + c.jump + " + Str Mod " + c.mod.str + " = " + (c.jump + c.mod.str) + " ft" + (c.jump ? "" : "\nNo Ranks: roll with Disadvantage")],
       ["Lift", (c.score.str * 15) + " lb", "Strength " + c.score.str + " × 15 = " + (c.score.str * 15) + " lb"],
       ["Throw", c.score.str + " lb, " + (c.score.str * 10) + " ft", "Weight up to Strength: " + c.score.str + " lb\nDistance: Strength " + c.score.str + " × 10 = " + (c.score.str * 10) + " ft"],
@@ -696,7 +696,7 @@
       bar.appendChild(cell);
     }
     fill($("hm-status"), ["Each slot holds " + c.slot + " (Con Mod). " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health." +
-      (hm.slots === 0 ? " Dying: " + plural(c.mod.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
+      (hm.slots === 0 ? " Dying: " + plural(c.score.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
     $("hm-status").classList.toggle("dying", hm.slots === 0);
     var h = hmCalc(), pv = $("hm-preview");
     if(!num("hm-dmg", 0)) fill(pv, ["Enter damage to see how many slots it costs."]);
@@ -749,11 +749,11 @@
     var c = crawler(), typed = num("mr-d20", NaN), d = typed >= 1 && typed <= 20 ? typed : rnd(20);
     var pens = debPens(), pen = pens.reduce(function(s, p){ return s + p[1]; }, 0), bonus = c.mod.int - pen, dc = 10 + floor, tot = d + bonus;
     var key = d === 20 ? "crit" : d === 1 ? "fumble" : tot >= dc ? "success" : "fail";
-    var want = Math.floor(c.mana * MED[key][1] / 100), m0 = hm.mana;
+    var want = Math.ceil(c.mana * MED[key][1] / 100), m0 = hm.mana;
     hm.mana = Math.min(c.mana, hm.mana + want);
     var eq = "d20 " + (typed === d ? "typed" : "rolled") + " " + d + "\n" + op(c.mod.int) + "  Int Mod" + pens.map(function(p){ return "\n" + op(-p[1]) + "  " + p[0]; }).join("") +
       "\n= " + tot + " vs 10 + Floor " + floor + " = " + dc + (key === "crit" || key === "fumble" ? "\nA natural " + d + " overrides the total" : "") +
-      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded down = " + want;
+      "\n" + MED[key][0] + ": " + MED[key][1] + "% of " + c.mana + " max Mana, rounded up = " + want;
     hmLog("Meditation, " + MED[key][0] + ": +" + (hm.mana - m0) + " Mana" + (hm.mana - m0 < want ? " (Mana is full)." : "."));
     addHist(MED[key][0] + ", +" + (hm.mana - m0) + " Mana", "Meditation: " + (key === "crit" || key === "fumble" ? "natural " + d : tot + " vs " + dc), eq);
     $("mr-d20").value = "";

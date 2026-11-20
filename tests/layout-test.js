@@ -106,6 +106,7 @@ function check(label, ok, got){ if(!ok) fails++; console.log((ok ? "PASS " : "FA
   await p.fill("#hm-mana", "15"); await p.click("#hm-mana-b");
   await p.click('[data-rest="hour"]');
   check("a calm hour gives back at least 5", (await mana()) === "10", await mana());
+  check("Meditation rounds up (5% of 20 is 1, 10% is 2)", (await med(2)) === "11" && (await med(10)) === "13", await mana());
   check("the house rule is in the Rules drawer", (await p.$$eval("#rules #r-manahr .lv", l => l.map(x => x.textContent))).join() === "2,13", await p.$$eval("#rules #r-manahr .lv", l => l.map(x => x.textContent)));
 
   // tabs: the crawler's tabs and the roll tools are separate

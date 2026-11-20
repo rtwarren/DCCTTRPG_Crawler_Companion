@@ -2,6 +2,11 @@
 
 Versions of the Crawler Companion (called Crawler Cheat Sheet before 1.4.0), built as `dist/Crawler_Companion_v<version>.html`. Each one is tagged in git (for example `v1.4.0`), and from 1.4.0 each tag is published as a GitHub Release with the page attached. The build reads the version from the first heading below.
 
+## 1.5.5 (2026-11-19)
+
+- Fixed: the Dying countdown is rounds equal to your Constitution, not your Con Mod (Core p. 94). The worked-out numbers, the Health card and the rules say so now.
+- House rule: Meditation now rounds its share of max Mana up, not down.
+
 ## 1.5.4 (2026-11-16)
 
 - **House rule: Mana recovery.** A calm hour now gives back 20% of your max Mana, rounded down, at least 5. Short and long rests are unchanged (50% and all).
