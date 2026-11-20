@@ -319,7 +319,7 @@
       ["Health Bar", "10 slots of " + c.slot, "Each slot holds your Con Mod (" + c.slot + ")\n10 × " + c.slot + " = " + (c.slot * 10) + " Health"],
       ["Max Mana", String(c.mana), "Max Mana = Enhanced Intelligence score = " + c.mana + "\nShort rest gives back half: " + c.mana + " ÷ 2 = " + Math.floor(c.mana / 2)],
       ["Hold breath", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
-      ["Dying countdown", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
+      ["Dying countdown", plural(c.score.con, "round"), "Enhanced Constitution = " + c.score.con + " rounds (Core p. 94)"],
       ["Jump", "up to " + (c.jump + c.mod.str) + " ft", "Jumping Rank " + c.jump + " + Str Mod " + c.mod.str + " = " + (c.jump + c.mod.str) + " ft" + (c.jump ? "" : "\nNo Ranks: roll with Disadvantage")],
       ["Lift", (c.score.str * 15) + " lb", "Strength " + c.score.str + " × 15 = " + (c.score.str * 15) + " lb"],
       ["Throw", c.score.str + " lb, " + (c.score.str * 10) + " ft", "Weight up to Strength: " + c.score.str + " lb\nDistance: Strength " + c.score.str + " × 10 = " + (c.score.str * 10) + " ft"],
@@ -696,7 +696,7 @@
       bar.appendChild(cell);
     }
     fill($("hm-status"), ["Each slot holds " + c.slot + " (Con Mod). " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health." +
-      (hm.slots === 0 ? " Dying: " + plural(c.mod.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
+      (hm.slots === 0 ? " Dying: " + plural(c.score.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
     $("hm-status").classList.toggle("dying", hm.slots === 0);
     var h = hmCalc(), pv = $("hm-preview");
     if(!num("hm-dmg", 0)) fill(pv, ["Enter damage to see how many slots it costs."]);

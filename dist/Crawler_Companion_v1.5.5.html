@@ -1513,7 +1513,7 @@ ol.seq{padding-left:1.3rem}
     <article class="blk">
       <h3>Zero and Dying</h3>
       <p>At 0% you can’t act until healed. Healed during step 4, you can still use any Actions you had left.</p>
-      <p>Losing your last slot gives the <b>Dying</b> Debuff: a countdown of Con Mod rounds. It drops by 1 at each Clean Up and each time you’d take damage. Heal 1 slot (10%) to stop it.</p>
+      <p>Losing your last slot gives the <b>Dying</b> Debuff: a countdown of rounds equal to your Con. It drops by 1 at each Clean Up and each time you’d take damage. Heal 1 slot (10%) to stop it.</p>
       <p>While Dying: no Actions, no moving, no talking, no HUD.</p>
       <p>If Debuff damage would drop you to 0%, roll a Con Stat Check against <span class="lv" data-f="10+F">11</span> at Clean Up (free). Success ends that Debuff and skips the damage.</p>
       <p class="ref">Core p. 94, 96–97</p>
@@ -1651,7 +1651,7 @@ ol.seq{padding-left:1.3rem}
           <tr><td>Blood Trail</td><td><span class="lv" data-d="1d6">1d6+1</span> each round. <span class="tag">Stacks</span></td><td data-label="Ends">Bandage (an Action) or First Aid</td></tr>
           <tr><td>Burned</td><td><span class="lv" data-d="1d10">1d10+1</span> Fire each round.</td><td data-label="Ends">End of combat or 5 min. As an Action, Dex Stat Check (<span class="lv" data-f="10+F">11</span>) to put it out</td></tr>
           <tr><td>Drowning</td><td><span class="lv" data-d="1d6">1d6+1</span> each round.</td><td data-label="Ends">Head above water</td></tr>
-          <tr><td>Dying</td><td>At 0%. Countdown of Con Mod rounds, −1 at Clean Up and each time you’d take damage.</td><td data-label="Ends">Death, or healing 1+ slot</td></tr>
+          <tr><td>Dying</td><td>At 0%. Countdown of rounds equal to your Con, −1 at Clean Up and each time you’d take damage.</td><td data-label="Ends">Death, or healing 1+ slot</td></tr>
           <tr><td>Enraged</td><td>Only Attack and Move Actions.</td><td data-label="Ends">2 rounds (20 s)</td></tr>
           <tr><td>Fatigued</td><td>−1 to all Checks, Move halved. <span class="tag">Stacks</span></td><td data-label="Ends">Long rest</td></tr>
           <tr><td>Held</td><td>No Move Actions or Steps; you can still Evade. Attacks against you have Advantage.</td><td data-label="Ends">Released, or escape with a Str-Opposed Escape Artist Check (Floors 1–2 also allow a Dex Stat Check)</td></tr>
@@ -1762,8 +1762,8 @@ ol.seq{padding-left:1.3rem}
 </aside>
 
 <footer class="foot">
-  <div class="upd" id="upd" data-version="1.5.4">
-    <p>Crawler Companion 1.5.4 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
+  <div class="upd" id="upd" data-version="1.5.5">
+    <p>Crawler Companion 1.5.5 <button type="button" class="btn small" id="upd-check">Check for updates</button></p>
     <div id="upd-out" role="status"></div>
   </div>
   <p>Summarised from the Dungeon Crawler Carl RPG Core Rulebook (Royal Court Edition), Rules for Survival, and Crawlers &amp; Customization. When a specific Skill, Spell or item says something different, the specific text wins, and the GM can patch any rule.</p>
@@ -2511,7 +2511,7 @@ ol.seq{padding-left:1.3rem}
       ["Health Bar", "10 slots of " + c.slot, "Each slot holds your Con Mod (" + c.slot + ")\n10 × " + c.slot + " = " + (c.slot * 10) + " Health"],
       ["Max Mana", String(c.mana), "Max Mana = Enhanced Intelligence score = " + c.mana + "\nShort rest gives back half: " + c.mana + " ÷ 2 = " + Math.floor(c.mana / 2)],
       ["Hold breath", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
-      ["Dying countdown", plural(c.mod.con, "round"), "Con Mod = " + c.mod.con + " rounds"],
+      ["Dying countdown", plural(c.score.con, "round"), "Enhanced Constitution = " + c.score.con + " rounds (Core p. 94)"],
       ["Jump", "up to " + (c.jump + c.mod.str) + " ft", "Jumping Rank " + c.jump + " + Str Mod " + c.mod.str + " = " + (c.jump + c.mod.str) + " ft" + (c.jump ? "" : "\nNo Ranks: roll with Disadvantage")],
       ["Lift", (c.score.str * 15) + " lb", "Strength " + c.score.str + " × 15 = " + (c.score.str * 15) + " lb"],
       ["Throw", c.score.str + " lb, " + (c.score.str * 10) + " ft", "Weight up to Strength: " + c.score.str + " lb\nDistance: Strength " + c.score.str + " × 10 = " + (c.score.str * 10) + " ft"],
@@ -2888,7 +2888,7 @@ ol.seq{padding-left:1.3rem}
       bar.appendChild(cell);
     }
     fill($("hm-status"), ["Each slot holds " + c.slot + " (Con Mod). " + (hm.slots * c.slot) + " of " + (10 * c.slot) + " Health." +
-      (hm.slots === 0 ? " Dying: " + plural(c.mod.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
+      (hm.slots === 0 ? " Dying: " + plural(c.score.con, "round") + " on the countdown. Heal 1 slot to stop it." : "")]);
     $("hm-status").classList.toggle("dying", hm.slots === 0);
     var h = hmCalc(), pv = $("hm-preview");
     if(!num("hm-dmg", 0)) fill(pv, ["Enter damage to see how many slots it costs."]);
